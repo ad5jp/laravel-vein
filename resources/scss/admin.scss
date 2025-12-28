@@ -1,0 +1,22 @@
+@import "admin-variables";
+@import "bootstrap/bootstrap";
+
+body {
+    padding-top: 5em;
+    background: #FFF5F3;
+}
+
+.max-width-sm {
+    max-width: 540px;
+}
+.max-width-md {
+    max-width: 720px;
+}
+
+.section {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #FFF;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0.2);
+}
