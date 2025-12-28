@@ -36,7 +36,8 @@ class NavigationManager
                     if (class_exists($class_name)) {
                         $model = new $class_name();
 
-                        // TODO Taxonomy, Page
+                        // TODO Taxonomy, Page の考慮
+                        // TODO 並び順 (menuOrder) の考慮
                         if ($model instanceof Model && $model instanceof Entry) {
                             $nav = new Nav();
                             $nav->label = $model->menuName();
