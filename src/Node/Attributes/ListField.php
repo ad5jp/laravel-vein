@@ -26,7 +26,7 @@ class ListField
 
     }
 
-    public function getValue(Model $model): string
+    public function getValue(Model $model): ?string
     {
         if ($this->value instanceof Closure) {
             return ($this->value)($model);
