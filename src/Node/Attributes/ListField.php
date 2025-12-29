@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Node\Attributes;
 
+use AD5jp\Vein\Form\Contracts\LabelledEnum;
+use BackedEnum;
 use Closure;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
@@ -30,7 +32,15 @@ class ListField
             return ($this->value)($model);
         }
 
-        return (string)$model->{$this->value};
+        $value = $model->{$this->value};
+
+        if ($value instanceof LabelledEnum) {
+            return $value->label();
+        } elseif ($value instanceof BackedEnum) {
+            return $value->name;
+        }
+
+        return (string)$value;
     }
 
     /**

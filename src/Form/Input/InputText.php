@@ -13,11 +13,17 @@ class InputText implements Input
     {
         $value = $values ? $values->$key : $default;
 
-        return sprintf(
-            '<label class="form-label">%s</label><input type="text" name="%s" value="%s" class="form-control">',
-            e($label),
+        $output = '';
+
+        if ($label) {
+            $output .= sprintf('<label class="form-label">%s</label>', e($label));
+        }
+        $output .= sprintf(
+            '<input type="text" name="%s" value="%s" class="form-control">',
             e($key),
             e($value),
         );
+
+        return $output;
     }
 }

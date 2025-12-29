@@ -90,15 +90,17 @@ DataBaseSeeder 等を用いて User テーブルにレコードを作成。
 お知らせ、商品案内、導入事例など。  
   
 ### Taxonomy  
-エントリーを分類するために存在する、カテゴリやタグなどの概念。  
+Entry を分類するために存在する、カテゴリやタグなどの概念。  
 Entry と N対1（単一選択）か、N対N（複数選択）かを問わない。  
+通常、ID、名称、並び順のみを持つ。  
+（説明文やサムネイル画像等、多くの情報をもつ場合は Entry として扱う）。
   
 ### Page  
 サイト内で常に1つだけ存在するコンテンツ。  
 会社案内やプライバシーポリシーなど。  
   
 ### Record  
-Entryまたは Page と1対Nのサブデータとなるもの。  
+Entry または Page と1対Nのサブデータとなるもの。  
 独立したページにはならない。  
 例えば、商品Entryにおけるカラーバリエーション（名称、品番、価格）や、  
 会社案内Pageにおける沿革（年、月、概要、説明文）など。  
@@ -135,6 +137,22 @@ config/vein.php の **admin_guard** に設定する。
 config/vein.php の **admin_uri** に設定する。  
   
   
+# リファレンス（作成中）
+- Entry の基本
+- Entry の一覧画面
+- [Entry の編集画面](doc/entry-edit.md)
+- Taxonomy の基本
+- Taxonomy の一覧・編集画面
+- Page の基本
+- Page の編集画面
+- Record の基本
+- Record の編集UI
+- ListField の詳細
+- SearchField の詳細
+- EditField の詳細
+- [Input の種類](doc/input-variations.md)
+- 独自 Input の作成
+
 # 開発予定 (TODO)  
 ## ログイン関連  
 - パスワードリマインダー
@@ -142,7 +160,7 @@ config/vein.php の **admin_uri** に設定する。
 - パスワード変更画面
   
 ## Inputの追加  
-- SelectEnum  
+- SelectEnum (済)  
 - SelectModel  
 - RadioEnum  
 - RadioModel  

@@ -18,12 +18,18 @@ class TextArea implements Input
     {
         $value = $values ? $values->$key : $default;
 
-        return sprintf(
-            '<label class="form-label">%s</label><textarea name="%s" class="form-control" rows="%s">%s</textarea>',
-            e($label),
+        $output = '';
+
+        if ($label) {
+            $output .= sprintf('<label class="form-label">%s</label>', e($label));
+        }
+        $output .= sprintf(
+            '<textarea name="%s" class="form-control" rows="%s">%s</textarea>',
             e($key),
             e($this->rows),
             e($value),
         );
+
+        return $output;
     }
 }

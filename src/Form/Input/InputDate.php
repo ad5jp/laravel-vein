@@ -18,11 +18,17 @@ class InputDate implements Input
             $value = $value->format('Y-m-d');
         }
 
-        return sprintf(
-            '<label class="form-label">%s</label><input type="date" name="%s" value="%s" class="form-control">',
-            e($label),
+        $output = '';
+
+        if ($label) {
+            $output .= sprintf('<label class="form-label">%s</label>', e($label));
+        }
+        $output .= sprintf(
+            '<input type="date" name="%s" value="%s" class="form-control">',
             e($key),
             e($value),
         );
+
+        return $output;
     }
 }
