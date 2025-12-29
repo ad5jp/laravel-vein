@@ -25,7 +25,7 @@ class SelectEnum implements Input
     public function render(?Model $values, string $key, ?string $label, mixed $default = null): string
     {
         $value = $values ? $values->$key : $default;
-        if (! $value instanceof $this->enum) {
+        if ($value && !($value instanceof $this->enum)) {
             $value = ($this->enum)::tryFrom($value);
         }
 
