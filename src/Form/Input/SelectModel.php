@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Form\Input;
 
 use AD5jp\Vein\Form\Contracts\Input;
+use AD5jp\Vein\Form\Helpers\InputHelper;
 use BackedEnum;
 use Closure;
 use Exception;
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class SelectModel implements Input
 {
+    use InputHelper;
+
     public function __construct(
         public string $model,
         public string $modelLabel,
@@ -45,7 +48,7 @@ class SelectModel implements Input
     /**
      * @return array{int|string, string}
      */
-    public function parseOptions(): array
+    private function parseOptions(): array
     {
         $query = ($this->model)::query();
 

@@ -6,12 +6,16 @@ namespace AD5jp\Vein\Form\Input;
 
 use AD5jp\Vein\Form\Contracts\Input;
 use AD5jp\Vein\Form\Contracts\LabelledEnum;
+use AD5jp\Vein\Form\Helpers\InputHelper;
 use BackedEnum;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 
 class SelectEnum implements Input
 {
+    use InputHelper;
+
     public function __construct(public string $enum)
     {
         if (!enum_exists($enum)) {
@@ -44,10 +48,26 @@ class SelectEnum implements Input
         return $output;
     }
 
+    public function beforeSave(Model $model, string $key, Request $request): Model
+    {
+        $value = $request->$key;
+
+        if ($value !== null) {
+            if (is_numeric($value)) {
+                $value = (int)$value;
+            }
+
+            $value = ($this->enum)::from($value);
+        }
+
+        $model->$key = $value;
+        return $model;
+    }
+
     /**
      * @return array{int|string, string}
      */
-    public function parseOptions(): array
+    private function parseOptions(): array
     {
         $values = array_map(fn (BackedEnum $enum) => $enum->value, ($this->enum)::cases());
 

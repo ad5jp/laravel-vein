@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Form\Input;
 
 use AD5jp\Vein\Form\Contracts\Input;
+use AD5jp\Vein\Form\Helpers\InputHelper;
 use Illuminate\Database\Eloquent\Model;
 
 class TextArea implements Input
 {
+    use InputHelper;
+
     public function __construct(
         public int $rows = 5,
     ) {

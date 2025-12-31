@@ -82,12 +82,14 @@ class AddController extends Controller
         $entry = $model->newInstance();
 
         foreach ($editFields as $editField) {
-            $entry->{$editField->key} = $request->input($editField->key);
-            // TODO ファイルの処理
-            // TODO リレーション等の処理
+            $entry = $editField->beforeSave($entry, $request);
         }
 
         $entry->save();
+
+        foreach ($editFields as $editField) {
+            $entry = $editField->afterSave($entry, $request);
+        }
 
         return redirect()->route('vein.edit', ['node' => $node, 'id' => $entry->getKey()]);
     }

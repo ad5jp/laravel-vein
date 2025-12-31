@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Form\Input;
 
 use AD5jp\Vein\Form\Contracts\Input;
+use AD5jp\Vein\Form\Helpers\InputHelper;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
 
 class InputDate implements Input
 {
+    use InputHelper;
+
     public function render(?Model $values, string $key, ?string $label, mixed $default = null): string
     {
         $value = $values ? $values->$key : $default;

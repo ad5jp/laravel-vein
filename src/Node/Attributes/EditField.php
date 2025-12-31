@@ -8,6 +8,7 @@ use AD5jp\Vein\Form\Contracts\Input;
 use AD5jp\Vein\Form\InputManager;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 
 class EditField
 {
@@ -34,6 +35,26 @@ class EditField
         }
 
         return $this->input->render($values, $this->key, $this->label, $this->default);
+    }
+
+    public function beforeSave(Model $model, Request $request): Model
+    {
+        if (is_string($this->input)) {
+            $input_manager = new InputManager();
+            $this->input = $input_manager->resolve($this->input);
+        }
+
+        return $this->input->beforeSave($model, $this->key, $request);
+    }
+
+    public function afterSave(Model $model, Request $request): Model
+    {
+        if (is_string($this->input)) {
+            $input_manager = new InputManager();
+            $this->input = $input_manager->resolve($this->input);
+        }
+
+        return $this->input->afterSave($model, $this->key, $request);
     }
 
     public function columnClass(): string
