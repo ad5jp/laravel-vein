@@ -4,71 +4,83 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Form\Input;
 
-use AD5jp\Vein\Form\Contracts\Input;
+use AD5jp\Vein\Form\Contracts\Form;
 use AD5jp\Vein\Form\Contracts\LabelledEnum;
 use BackedEnum;
+use Closure;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
-class CheckboxesEnum implements Input
+class CheckboxesEnum extends FormControl implements Form
 {
-    public function __construct(public string $enum)
-    {
+    public function __construct(
+        public string $key,
+        public string $enum,
+        public ?string $label = null,
+        public mixed $default = null,
+        public int $colSize = 12,
+        public bool $required = false,
+        public ?Closure $beforeSaving = null,
+        public ?Closure $afterSaving = null,
+        public ?Closure $searching = null,
+    ) {
         if (!enum_exists($enum)) {
             throw new Exception("{$enum} は Enum ではありません");
         }
         if (!is_subclass_of($enum, BackedEnum::class)) {
             throw new Exception("{$enum} は BackedEnum ではありません");
         }
+
+        if ($default === null) {
+            $default = [];
+        } elseif (!is_array($default)) {
+            $default = [$default];
+        }
+
+        parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
 
-    public function render(?Model $values, string $key, ?string $label, mixed $default = []): string
+    public function render(?Model $values = null): string
     {
-        list($relation_name, $saving_field) = $this->parseKey($values, $key);
+        list($relation_name, $saving_field) = $this->parseKey($values, $this->key);
 
-        $value = is_array($default) ? $default : [$default];
-        if ($values) {
-            $value = $values->$relation_name->map(fn (Model $related) => $related->$saving_field)->all();
-        }
+        $value = $values ? $values->$relation_name->map(fn (Model $related) => $related->$saving_field)->all() : $this->default;
         $value = array_map(function ($v) {
             return $v instanceof BackedEnum ? $v->value : $v;
         }, $value);
 
-        $output = '';
+        $html = '';
 
-        if ($label) {
-            $output .= sprintf('<label class="form-label">%s</label>', e($label));
-        }
-        $output .= '<div>';
+        $html .= '<div>';
         foreach ($this->parseOptions() as $enum_value => $enum_label) {
-            $output .= sprintf(
+            $html .= sprintf(
                 '<label class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="%s[]" value="%s"%s><span class="form-check-label" >%s</span></label>',
-                e($key),
+                e($this->key),
                 e($enum_value),
                 (in_array($enum_value, $value) ? ' checked' : ''),
                 e($enum_label),
             );
         }
-        $output .= '</div>';
+        $html .= '</div>';
 
-        return $output;
+        return $this->wrap($html);
     }
 
-    public function beforeSave(Model $model, string $key, Request $request): Model
+    public function beforeSave(Model $model, Request $request): Model
     {
         // DO NOTHING
         return $model;
     }
 
-    public function afterSave(Model $model, string $key, Request $request): Model
+    public function afterSave(Model $model, Request $request): Model
     {
         // リレーションを差分更新する
 
         // キーの検査
-        list($relation_name, $saving_field) = $this->parseKey($model, $key);
+        list($relation_name, $saving_field) = $this->parseKey($model, $this->key);
 
         // リレーションオブジェクトを取得
         /** @var HasMany $has_many */
@@ -77,10 +89,10 @@ class CheckboxesEnum implements Input
         $child_key = $has_many->getForeignKeyName();
 
         // リクエストの取得（Enum配列に変換）
-        $request_values = $request->input($key, []);
+        $request_values = $request->input($this->key, []);
 
         if (!is_array($request_values)) {
-            throw new Exception('invalid request value for CheckboxesEnum ' . $key);
+            throw new Exception('invalid request value for CheckboxesEnum ' . $this->key);
         }
 
         $request_values = array_map(function ($value) {

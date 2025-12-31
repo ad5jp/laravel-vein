@@ -1,12 +1,26 @@
-# Input の種類
+# FormControl の種類
 
-| クラス名       | 略称      |
-| ------------- | -------- |
-| InputText     | text     |
-| InputDate     | date     |
-| TextArea      | textarea |
-| SelectEnum    | -        |
-| SelectModel   | -        |
+| クラス名        | 略称      |
+| -------------- | -------- |
+| InputText      | text     |
+| InputDate      | date     |
+| TextArea       | textarea |
+| SelectEnum     | -        |
+| SelectModel    | -        |
+| CheckboxesEnum | -        |
+
+# 共通プロパティ
+
+| プロパティ      | 必須 | 型      | 概要                    |
+| ------------- | --- | ------- | ---------------------- |
+| $key          | YES | string  | 対応するModelのプロパティ |
+| $label        |  -  | string  | ラベル文字列             |
+| $default      |  -  | mixed   | デフォルト値             |
+| $colSize      |  -  | int     | 入力欄の幅 (画面幅＝12)   |
+| $required     |  -  | bool    | 入力必須か               |
+| $beforeSaving |  -  | Closure |                        |
+| $afterSaving  |  -  | Closure |                        |
+| $searching    |  -  | Closure |                        |
 
 # SelectEnum
 
@@ -19,13 +33,11 @@
 | $enum      | YES | class-string    | 選択肢となるEnumのクラス名 |
 
 ```php
-new EditField(
-    key: 'color',
-    label: '色',
-    input: new SelectEnum(
-        enum: Color::class,
-    ),
-    column_size: 3,
+new SelectEnum(
+    key: 'category',
+    label: 'カテゴリ',
+    enum: Category::class,
+    colSize: 3,
 ),
 ```
 
@@ -38,18 +50,18 @@ new EditField(
 ```php
 use AD5jp\Vein\Form\Contracts\LabelledEnum;
 
-enum Color: int implements LabelledEnum
+enum Category: int implements LabelledEnum
 {
-    case RED = 1;
-    case BLUE = 2;
-    case YELLOW = 3;
+    case OUTER = 1;
+    case SHIRT = 2;
+    case SHOES = 3;
 
     public function label(): string
     {
         return match ($this) {
-            self::RED => '赤',
-            self::BLUE => '青',
-            self::YELLOW => '黄色',
+            self::OUTER => 'アウター',
+            self::SHIRT => 'シャツ',
+            self::SHOES => 'シューズ',
         };
     }
 }
@@ -70,15 +82,12 @@ enum Color: int implements LabelledEnum
 | $modelWhere  |     | array|Closure   | 選択肢を特定のレコードに絞り込む場合の条件 |
 
 ```php
-new EditField(
+new SelectModel(
     key: 'maker_id',
     label: 'メーカー',
-    input: new SelectModel(
-        model: Maker::class,
-        modelLabel: 'maker_name',
-        modelOrder: 'priority',
-    ),
-    column_size: 3,
+    model: Maker::class,
+    modelLabel: 'maker_name',
+    colSize: 3,
 ),
 ```
 

@@ -4,53 +4,59 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Form\Input;
 
-use AD5jp\Vein\Form\Contracts\Input;
+use AD5jp\Vein\Form\Contracts\Form;
 use AD5jp\Vein\Form\Contracts\LabelledEnum;
-use AD5jp\Vein\Form\Helpers\InputHelper;
 use BackedEnum;
+use Closure;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
-class SelectEnum implements Input
+class SelectEnum extends FormControl implements Form
 {
-    use InputHelper;
-
-    public function __construct(public string $enum)
-    {
+    public function __construct(
+        public string $key,
+        public string $enum,
+        public ?string $label = null,
+        public mixed $default = null,
+        public int $colSize = 12,
+        public bool $required = false,
+        public ?Closure $beforeSaving = null,
+        public ?Closure $afterSaving = null,
+        public ?Closure $searching = null,
+    ) {
         if (!enum_exists($enum)) {
             throw new Exception("{$enum} は Enum ではありません");
         }
         if (!is_subclass_of($enum, BackedEnum::class)) {
             throw new Exception("{$enum} は BackedEnum ではありません");
         }
+
+        parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
 
-    public function render(?Model $values, string $key, ?string $label, mixed $default = null): string
+    public function render(?Model $values = null): string
     {
-        $value = $values ? $values->$key : $default;
+        $value = $values ? $values->{$this->key} : $this->default;
         if ($value && !($value instanceof $this->enum)) {
             $value = ($this->enum)::tryFrom($value);
         }
 
-        $output = '';
+        $html = '';
 
-        if ($label) {
-            $output .= sprintf('<label class="form-label">%s</label>', e($label));
-        }
-        $output .= sprintf('<select name="%s" class="form-select">', e($key));
-        $output .= '<option value="">-- 選択してください --</option>';
+        $html .= sprintf('<select name="%s" class="form-select">', e($this->key));
+        $html .= '<option value="">-- 選択してください --</option>';
         foreach ($this->parseOptions() as $enum_value => $enum_label) {
-            $output .= sprintf('<option value="%s"%s>%s</option>', e($enum_value), ($enum_value === $value?->value ? ' selected' : ''), e($enum_label));
+            $html .= sprintf('<option value="%s"%s>%s</option>', e($enum_value), ($enum_value === $value?->value ? ' selected' : ''), e($enum_label));
         }
-        $output .= '</select>';
+        $html .= '</select>';
 
-        return $output;
+        return $this->wrap($html);
     }
 
-    public function beforeSave(Model $model, string $key, Request $request): Model
+    public function beforeSave(Model $model, Request $request): Model
     {
-        $value = $request->$key;
+        $value = $request->{$this->key};
 
         if ($value !== null) {
             if (is_numeric($value)) {
@@ -60,7 +66,7 @@ class SelectEnum implements Input
             $value = ($this->enum)::from($value);
         }
 
-        $model->$key = $value;
+        $model->{$this->key} = $value;
         return $model;
     }
 

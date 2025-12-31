@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Http\Controllers;
 
+use AD5jp\Vein\Form\InputManager;
 use AD5jp\Vein\Node\NodeManager;
 use AD5jp\Vein\Node\Attributes\EditField;
 use AD5jp\Vein\Node\Contracts\Entry;
@@ -82,7 +83,8 @@ class EditController extends Controller
         $entry = $model->findOrFail($id);
 
         // フィールド情報取得
-        $editFields = EditField::parse($model->editFields());
+        $manager = new InputManager();
+        $editFields = $manager->parseEditField($model->editFields());
 
         return view('vein::entry-edit', [
             'node' => $node,
@@ -102,7 +104,8 @@ class EditController extends Controller
         $entry = $model->findOrFail($id);
 
         // フィールド情報取得
-        $editFields = EditField::parse($model->editFields());
+        $manager = new InputManager();
+        $editFields = $manager->parseEditField($model->editFields());
 
         // 保存
         foreach ($editFields as $editField) {

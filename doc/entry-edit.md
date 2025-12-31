@@ -19,44 +19,46 @@ public function editFields(): array
 
 Enum や他の Model を参照する項目、ファイルアップロード項目、複数入力項目、  
 保存時に加工が必要な項目、独自の入力欄を追加する場合などは、  
-EditField オブジェクトを用いて定義します。  
+Form オブジェクトを用いて定義します。  
 
 ```php
 public function editFields(): array
 {
     return [
-        new EditField(
-            key: 'title',
-            label: 'タイトル',
-            input: 'text',
+        new InputText(
+            key: 'product_name',
+            label: '商品名',
         ),
-        new EditField(
-            key: 'publish_date',
-            label: '公開日',
-            input: 'date',
-            default: today()->format('Y-m-d'),
-            column_size: 4,
-        ),
-        new EditField(
-            key: 'publish_date',
+        new SelectEnum(
+            key: 'category',
             label: 'カテゴリ',
-            input: new SelectModel(
-                model: Category::class,
-                optionLabel: 'category_name',
-                optionOrder: 'priority',
-            ),
-            column_size: 6,
+            enum: Category::class,
+            colSize: 3,
+        ),
+        new SelectModel(
+            key: 'maker_id',
+            label: 'メーカー',
+            model: Maker::class,
+            modelLabel: 'maker_name',
+            colSize: 3,
+        ),
+        new CheckboxesEnum(
+            key: 'colors:color',
+            label: 'カラーバリエーション',
+            enum: Color::class,
+        ),
+        new TextArea(
+            key: 'content',
+            label: '開発内容',
         ),
     ];
 }
 ```
 
-配列と EditField オブジェクトとを混在させることも可能です。  
+配列と Form オブジェクトとを混在させることも可能です。  
 
 **関連**  
-[EditField の詳細]  
-[Input の種類]  
-[独自 Input の作成]  
+[FormControl の種類](doc/input-variations.md)  
 
 # バリデーション
 
@@ -66,7 +68,7 @@ TODO
 
 ## 入力欄の幅
 
-EditField オブジェクトの column_size で定義することができます（12＝画面幅100%）。  
+Form オブジェクトの columncolSize_size で定義することができます（12＝画面幅100%）。  
 
 ## 複数入力欄の結合
 

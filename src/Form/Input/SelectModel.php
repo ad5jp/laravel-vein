@@ -4,45 +4,48 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Form\Input;
 
-use AD5jp\Vein\Form\Contracts\Input;
-use AD5jp\Vein\Form\Helpers\InputHelper;
-use BackedEnum;
+use AD5jp\Vein\Form\Contracts\Form;
 use Closure;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 
-class SelectModel implements Input
+class SelectModel extends FormControl implements Form
 {
-    use InputHelper;
-
     public function __construct(
+        public string $key,
         public string $model,
         public string $modelLabel,
         public string|Closure|null $modelOrder = null,
         public array|Closure|null $modelWhere = null,
+        public ?string $label = null,
+        public mixed $default = null,
+        public int $colSize = 12,
+        public bool $required = false,
+        public ?Closure $beforeSaving = null,
+        public ?Closure $afterSaving = null,
+        public ?Closure $searching = null,
     ) {
         if (!class_exists($model) || !is_subclass_of($model, Model::class)) {
             throw new Exception("Model {$model} が存在しません");
         }
+
+        parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
 
-    public function render(?Model $values, string $key, ?string $label, mixed $default = null): string
+    public function render(?Model $values = null): string
     {
-        $value = $values ? $values->$key : $default;
+        $value = $values ? $values->{$this->key} : $this->default;
 
-        $output = '';
+        $html = '';
 
-        if ($label) {
-            $output .= sprintf('<label class="form-label">%s</label>', e($label));
-        }
-        $output .= sprintf('<select name="%s" class="form-select">', e($key));
-        $output .= '<option value="">-- 選択してください --</option>';
+        $html .= sprintf('<select name="%s" class="form-select">', e($this->key));
+        $html .= '<option value="">-- 選択してください --</option>';
         foreach ($this->parseOptions() as $model_value => $model_label) {
-            $output .= sprintf('<option value="%s"%s>%s</option>', e($model_value), ($model_value === $value ? ' selected' : ''), e($model_label));
+            $html .= sprintf('<option value="%s"%s>%s</option>', e($model_value), ($model_value === $value ? ' selected' : ''), e($model_label));
         }
-        $output .= '</select>';
+        $html .= '</select>';
 
-        return $output;
+        return $this->wrap($html);
     }
 
     /**

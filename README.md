@@ -148,9 +148,7 @@ config/vein.php の **admin_uri** に設定する。
 - Record の基本
 - Record の編集UI
 - ListField の詳細
-- SearchField の詳細
-- EditField の詳細
-- [Input の種類](doc/input-variations.md)
+- [FormControl の種類](doc/input-variations.md)
 - 独自 Input の作成
 
 # 開発予定 (TODO)  

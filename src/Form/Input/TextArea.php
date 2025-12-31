@@ -4,35 +4,37 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Form\Input;
 
-use AD5jp\Vein\Form\Contracts\Input;
-use AD5jp\Vein\Form\Helpers\InputHelper;
+use AD5jp\Vein\Form\Contracts\Form;
+use Closure;
 use Illuminate\Database\Eloquent\Model;
 
-class TextArea implements Input
+class TextArea extends FormControl implements Form
 {
-    use InputHelper;
-
     public function __construct(
+        public string $key,
+        public ?string $label = null,
+        public mixed $default = null,
+        public int $colSize = 12,
+        public bool $required = false,
+        public ?Closure $beforeSaving = null,
+        public ?Closure $afterSaving = null,
+        public ?Closure $searching = null,
         public int $rows = 5,
     ) {
+        parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
 
-    public function render(?Model $values, string $key, ?string $label, mixed $default = null): string
+    public function render(?Model $values = null): string
     {
-        $value = $values ? $values->$key : $default;
+        $value = $values ? $values->{$this->key} : $this->default;
 
-        $output = '';
-
-        if ($label) {
-            $output .= sprintf('<label class="form-label">%s</label>', e($label));
-        }
-        $output .= sprintf(
+        $html = sprintf(
             '<textarea name="%s" class="form-control" rows="%s">%s</textarea>',
-            e($key),
+            e($this->key),
             e($this->rows),
             e($value),
         );
 
-        return $output;
+        return $this->wrap($html);
     }
 }
