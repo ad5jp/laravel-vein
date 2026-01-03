@@ -8,6 +8,7 @@
 | SelectEnum     | -        |
 | SelectModel    | -        |
 | CheckboxesEnum | -        |
+| FileUpload     | -        |
 
 # 共通プロパティ
 
@@ -126,3 +127,25 @@ new SelectModel(
 )
 ```
 
+# FileUpload
+ファイルアップロードのUIを表示させます。
+
+## プロパティ
+
+| プロパティ     | 必須 | 型              | 概要                                 |
+| ------------ | --- | --------------- | ----------------------------------- |
+| $disk        |     | string          | ファイルの保存先の Disk                |
+| $directory   |     | string          | ファイルの保存先のディレクトリ           |
+
+```php
+new FileUpload(
+    key: 'thumbnail',
+    label: 'サムネイル'
+)
+```
+
+**key** には、 BelongsTo リレーションのリレーション名をセットします。
+リレーション先の Model には、File インターフェイスが実装されている必要があります。
+
+**disk** および **directory** を省略した場合、config/vein.php に指定された
+upload_disk および upload_path が使用されます。

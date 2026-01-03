@@ -6,6 +6,8 @@
     <title>Document</title>
     <link rel="stylesheet" href="{{ asset('vein-assets/admin.css') }}">
     <script src="{{ asset('vein-assets/bootstrap.js') }}"></script>
+    <script src="{{ asset('vein-assets/jquery.js') }}"></script>
+    <meta name="csrf" content="{{ csrf_token() }}">
 </head>
 <body>
 

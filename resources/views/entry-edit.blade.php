@@ -27,4 +27,6 @@
         @csrf
     </form>
 </div>
+
+@include('vein::parts.uploader')
 @endsection

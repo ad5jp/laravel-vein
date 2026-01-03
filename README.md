@@ -149,6 +149,7 @@ config/vein.php の **admin_uri** に設定する。
 - Record の編集UI
 - ListField の詳細
 - [FormControl の種類](doc/input-variations.md)
+- ファイルアップロードについて
 - 独自 Input の作成
 
 # 開発予定 (TODO)  
@@ -164,11 +165,11 @@ config/vein.php の **admin_uri** に設定する。
 - RadioModel  
 - SelectMultipleEnum  
 - SelectMultipleModel  
-- CheckboxesEnum  
+- CheckboxesEnum (済)    
 - CheckboxesModel  
 - Wysiwyg  
-- File  
-- FileMultiple  
+- FileUpload (済)  
+- FileUploadMultiple  
 - Records  
   
 ## Entry以外のNodeの対応  

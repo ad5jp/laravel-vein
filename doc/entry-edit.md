@@ -58,7 +58,7 @@ public function editFields(): array
 配列と Form オブジェクトとを混在させることも可能です。  
 
 **関連**  
-[FormControl の種類](doc/input-variations.md)  
+[FormControl の種類](input-variations.md)  
 
 # バリデーション
 

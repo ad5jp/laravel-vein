@@ -7,6 +7,7 @@ use AD5jp\Vein\Http\Controllers\EditController;
 use AD5jp\Vein\Http\Controllers\HomeController;
 use AD5jp\Vein\Http\Controllers\ListController;
 use AD5jp\Vein\Http\Controllers\SigninController;
+use AD5jp\Vein\Http\Controllers\UploadController;
 use Illuminate\Support\Facades\Route;
 
 $admin_uri = config('vein.admin_uri');
@@ -25,6 +26,8 @@ Route::group(['middleware' => ['web'], 'prefix' => $admin_uri], static function 
         Route::get('/{node}/{id}', [EditController::class, 'init'])->name('vein.edit');
         Route::post('/{node}/{id}', [EditController::class, 'save']);
         Route::post('/{node}/{id}/delete', [EditController::class, 'delete'])->name('vein.delete');
+
+        Route::post('/upload', [UploadController::class, 'uploadSingle'])->name('vein.upload');
 
         Route::post('/signout', [SigninController::class, 'signout'])->name('vein.signout');
     });

@@ -19,4 +19,6 @@
         </form>
     </section>
 </div>
+
+@include('vein::parts.uploader')
 @endsection
