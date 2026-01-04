@@ -46,7 +46,7 @@ abstract class FormControl
 
     protected function wrap(string $html): string
     {
-        if (self::$inCol === false) {
+        if (self::$inGroup === false) {
             if ($this->label) {
                 $html = sprintf('<label class="form-label">%s</label>%s', e($this->label), $html);
             }
@@ -75,5 +75,50 @@ abstract class FormControl
         }
 
         return $html;
+    }
+
+    public static function startRow(): void
+    {
+        self::$inRow = true;
+    }
+
+    public static function endRow(): void
+    {
+        self::$inRow = false;
+    }
+
+    public static function inRow(): bool
+    {
+        return self::$inRow;
+    }
+
+    public static function startCol(): void
+    {
+        self::$inCol = true;
+    }
+
+    public static function endCol(): void
+    {
+        self::$inCol = false;
+    }
+
+    public static function inCol(): bool
+    {
+        return self::$inCol;
+    }
+
+    public static function startGroup(): void
+    {
+        self::$inGroup = true;
+    }
+
+    public static function endGroup(): void
+    {
+        self::$inGroup = false;
+    }
+
+    public static function inGroup(): bool
+    {
+        return self::$inGroup;
     }
 }

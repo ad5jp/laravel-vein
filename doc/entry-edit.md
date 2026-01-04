@@ -68,8 +68,37 @@ TODO
 
 ## 入力欄の幅
 
-Form オブジェクトの columncolSize_size で定義することができます（12＝画面幅100%）。  
+Form オブジェクトの colSize で定義することができます（12＝画面幅100%）。  
+
+## 横並び
+
+Row オブジェクトを用いることで、複数の Form オブジェクトを横並びに配置できます。
+
+```php
+new Row([
+    new InputText(
+        key: 'last_name',
+        label: '姓',
+    ),
+    new InputText(
+        key: 'first_name',
+        label: '名',
+    ),
+]),
+```
 
 ## 複数入力欄の結合
 
-TODO
+Group オブジェクトを用いることで、複数の Form オブジェクトを結合して表示できます。
+
+```php
+new Group(
+    label: '販売期間',
+    colSize: 6,
+    children: [
+        new InputDate(key: 'sale_from'),
+        '〜',
+        new InputDate(key: 'sale_to'),
+    ],
+),
+```
