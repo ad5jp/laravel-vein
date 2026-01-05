@@ -192,8 +192,8 @@ config/vein.php の **admin_uri** に設定する。
 ## Inputの追加  
 - SelectEnum (済)  
 - SelectModel (済)    
-- RadioEnum  
-- RadioModel  
+- RadioEnum (済)  
+- RadioModel (済)  
 - SelectMultipleEnum  
 - SelectMultipleModel  
 - CheckboxesEnum (済)    

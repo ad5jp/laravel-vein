@@ -73,7 +73,7 @@ class SelectEnum extends FormControl implements Form
     /**
      * @return array{int|string, string}
      */
-    private function parseOptions(): array
+    protected function parseOptions(): array
     {
         $values = array_map(fn (BackedEnum $enum) => $enum->value, ($this->enum)::cases());
 

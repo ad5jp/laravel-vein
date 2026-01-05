@@ -51,7 +51,7 @@ class SelectModel extends FormControl implements Form
     /**
      * @return array{int|string, string}
      */
-    private function parseOptions(): array
+    protected function parseOptions(): array
     {
         $query = ($this->model)::query();
 

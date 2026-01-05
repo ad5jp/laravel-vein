@@ -6,7 +6,9 @@
 | InputDate      | date     |
 | TextArea       | textarea |
 | SelectEnum     | -        |
+| RadioEnum      | -        |
 | SelectModel    | -        |
+| RadioModel     | -        |
 | CheckboxesEnum | -        |
 | FileUpload     | -        |
 
@@ -68,7 +70,15 @@ enum Category: int implements LabelledEnum
 }
 ```
 
-# SelectEnum
+# RadioEnum
+
+ラジオボタンにより、Enum の値を選択させます。
+
+## プロパティ
+
+SelectEnum と同様
+
+# SelectModel
 
 セレクトボックスにより、別の Model のレコードを選択させます。  
 選択肢となる Model は、必ずしも Entry や Taxonomy である必要はありません。  
@@ -126,6 +136,14 @@ new SelectModel(
     modelWhere: fn (Builder $builder) => $builder->whereIn('status', [1, 2]),
 )
 ```
+
+# RadioModel
+
+ラジオボタンにより、別の Model のレコードを選択させます。  
+
+## プロパティ
+
+SelectModel と同様
 
 # FileUpload
 ファイルアップロードのUIを表示させます。
