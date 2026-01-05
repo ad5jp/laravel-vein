@@ -145,6 +145,52 @@ new SelectModel(
 
 SelectModel と同様
 
+# CheckboxesEnum
+
+チェックボックスにより、Enum の値を複数選択させます。
+
+## プロパティ
+
+| プロパティ   | 必須 | 型              | 概要                    |
+| ---------- | --- | --------------- | ---------------------- |
+| $enum      | YES | class-string    | 選択肢となるEnumのクラス名 |
+
+```php
+new CheckboxesEnum(
+    key: 'features:feature',
+    label: '特徴',
+    enum: Feature::class,
+),
+```
+
+**key** には、HasMany リレーションのリレーション名と、  
+Enum の値が格納されるリレーション先の Model のプロパティ名を連結してセットします。  
+
+```php
+class Product extends Model implements Entry
+{
+    public function features(): HasMany
+    {
+        $this->hasMany(ProductFeature::class);
+    }
+}
+
+/**
+ * @property Feature $feature
+ */
+class ProductFeature extends Model
+{
+    protected function casts(): array
+    {
+        return [
+            'feature' => Feature::class,
+        ];
+    }    
+}
+```
+
+選択肢となる Enum については、SelectEnum を参照してください。
+
 # FileUpload
 ファイルアップロードのUIを表示させます。
 
