@@ -1,15 +1,38 @@
 # Laravel Vein  
   
-# コンセプト  
-Laravel を用いてWebサイトを開発する際に、モデルに所定のインターフェースを実装するだけで、  
-自動的にコンテンツ管理画面を生成することができる。  
+## Laravel Vein とは
   
-フロントサイトに対する機能は一切持たない。  
-ルーティング、コントローラ、ビュー等、全て自前で実装する必要がある。  
-逆に言えば、フロントサイトは何の制約もなく、自由に開発することができる。  
+Laravel Vein は、Laravel アプリケーション向けに設計された  
+**開発者志向のコンテンツ管理システム（CMS）**です。  
   
-また、後述のいくつかのルールを除き、基本的にテーブル定義に関する制約はなく、  
-自由にテーブルを定義することができる。  
+Eloquent の Model に所定の Interface を実装するだけで、  
+そのモデルは自動的に管理画面から編集可能になります。  
+追加の設定や定義は必要ありません。  
+  
+Laravel Vein は、コンテンツの登録・更新といった **管理機能に特化**しており、  
+表示機能やフロントエンド向けの API はあえて提供していません。  
+コンテンツの取得・公開・描画方法は、アプリケーション側に委ねられます。  
+  
+本パッケージは、既存の Laravel アプリケーションに自然に組み込める CMS コアとして設計されており、  
+Blade、REST API、GraphQL、Inertia、Livewire など、どのような構成とも共存可能です。  
+  
+ドメインモデルを中心に据えた設計で、  
+フロントエンドや API の構成を強制しない CMS を求める開発者のためのパッケージです。  
+
+## What's Laravel Vein
+
+Laravel Vein is a **developer-oriented Content Management System (CMS)** for Laravel applications.  
+  
+By simply implementing a predefined interface on your Eloquent models,  
+they automatically become editable through an administrative UI—no additional configuration required.  
+  
+Laravel Vein focuses on **content creation and management**, while intentionally **excluding frontend rendering and content delivery APIs**.  
+This design allows developers to fully control how content is queried, exposed, and displayed within their applications.  
+  
+Built to be **embedded into Laravel applications**, Laravel Vein adapts naturally to your existing architecture,  
+whether you use Blade, REST APIs, GraphQL, Inertia, Livewire, or any custom approach.  
+  
+If you are looking for a lightweight CMS core that integrates seamlessly with your domain models and does not impose frontend opinions, Laravel Vein is built for you.  
   
   
 # クイックスタート  
