@@ -19,7 +19,7 @@ abstract class FormControl
         public string $key,
         public ?string $label = null,
         public mixed $default = null,
-        public int $colSize = 12,
+        public int $colSize = 4,
         public bool $required = false,
         public ?Closure $beforeSaving = null,
         public ?Closure $afterSaving = null,

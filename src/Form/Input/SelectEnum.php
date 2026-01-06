@@ -19,7 +19,7 @@ class SelectEnum extends FormControl implements Form
         public string $enum,
         public ?string $label = null,
         public mixed $default = null,
-        public int $colSize = 12,
+        public int $colSize = 4,
         public bool $required = false,
         public ?Closure $beforeSaving = null,
         public ?Closure $afterSaving = null,
