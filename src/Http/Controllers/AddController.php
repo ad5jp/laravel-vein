@@ -6,7 +6,6 @@ namespace AD5jp\Vein\Http\Controllers;
 
 use AD5jp\Vein\Form\InputManager;
 use AD5jp\Vein\Node\NodeManager;
-use AD5jp\Vein\Node\Attributes\EditField;
 use AD5jp\Vein\Node\Contracts\Entry;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;

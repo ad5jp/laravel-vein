@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Node\Contracts;
 
-use AD5jp\Vein\Node\Attributes\EditField;
+use AD5jp\Vein\Form\Contracts\Form;
 use AD5jp\Vein\Node\Attributes\ListField;
 use AD5jp\Vein\Node\Attributes\SearchField;
 use Illuminate\Database\Eloquent\Builder;
@@ -31,7 +31,7 @@ interface Entry
     public function listItemPerPage(): int;
 
     /**
-     * @return array<EditField|array{0:string}|array{0:string, 1:string}|array{0:string, 1:string, 2:string}>
+     * @return array<Form|array{0:string}|array{0:string, 1:string}|array{0:string, 1:string, 2:string}>
      */
     public function editFields(): array;
 
