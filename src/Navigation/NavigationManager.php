@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Navigation;
 
 use AD5jp\Vein\Node\Contracts\Entry;
+use AD5jp\Vein\Node\Contracts\Page;
 use AD5jp\Vein\Node\Contracts\Taxonomy;
 use AD5jp\Vein\Node\NodeManager;
 use Exception;
@@ -37,15 +38,15 @@ class NavigationManager
                     if (class_exists($class_name)) {
                         $model = new $class_name();
 
-                        // TODO Page の考慮
-                        // TODO 並び順 (menuOrder) の考慮
-                        if ($model instanceof Model && ($model instanceof Entry || $model instanceof Taxonomy)) {
+                        // TODO 階層化できるように
+                        if ($model instanceof Model && ($model instanceof Entry || $model instanceof Taxonomy || $model instanceof Page)) {
                             $nav = new Nav();
                             $nav->label = $model->menuName();
                             $nav->link = route(
                                 'vein.list',
                                 ['node' => $node_manager->slug($model)]
                             );
+                            $nav->order = $model->menuOrder();
 
                             $navs[] = $nav;
                         }
@@ -53,6 +54,8 @@ class NavigationManager
                 }
             }
         }
+
+        usort($navs, fn (Nav $a, Nav $b) => $a->order <=> $b->order);
 
         // TODO キャッシュに書き込み
         return $navs;
