@@ -48,8 +48,9 @@ class ServiceProvider extends SupportServiceProvider
         // publish config & assets
         $this->publishes([
             __DIR__ . '/../config/vein.php' => config_path('vein.php'),
-            __DIR__ . '/../assets/admin.css' => public_path('vein-assets/admin.css'),
-            __DIR__ . '/../assets/bootstrap.js' => public_path('vein-assets/bootstrap.js'),
+            //__DIR__ . '/../assets/admin.css' => public_path('vein-assets/admin.css'),
+            //__DIR__ . '/../assets/bootstrap.js' => public_path('vein-assets/bootstrap.js'),
+            __DIR__ . '/../assets' => public_path('vein-assets'),
         ]);
     }
 

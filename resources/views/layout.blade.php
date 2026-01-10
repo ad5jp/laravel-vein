@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Vein</title>
     <link rel="stylesheet" href="{{ asset('vein-assets/admin.css') }}">
+    <link rel="stylesheet" href="{{ asset('vein-assets/bootstrap-icons.css') }}">
     <script src="{{ asset('vein-assets/bootstrap.js') }}"></script>
     <script src="{{ asset('vein-assets/jquery.js') }}"></script>
     <meta name="csrf" content="{{ csrf_token() }}">
@@ -13,22 +14,9 @@
 
 <nav class="navbar bg-dark border-bottom border-bottom-dark navbar-expand-md fixed-top" data-bs-theme="dark">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#">Vein</a>
+    <button class="navbar-brand btn" onclick="toggleSidebar()"><i class="bi bi-list"></i> Vein</button>
     @auth
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item">
-          <a class="nav-link" aria-current="page" href="{{ route('vein.home') }}">Home</a>
-        </li>
-        @foreach ($navs as $nav)
-        <li class="nav-item">
-          <a class="nav-link" href="{{ $nav->link }}">{{ $nav->label }}</a>
-        </li>
-        @endforeach
-      </ul>
       <ul class="navbar-nav ms-auto">
         <li class="nav-item ms-auto">
           <button class="nav-link" form="signout">ログアウト</button>
@@ -41,7 +29,33 @@
 
 <form action="{{ route('vein.signout') }}" method="post" id="signout">@csrf</form>
 
-@yield('content')
+<div class="wrap">
+  @auth
+  <div class="sidebar">
+    <nav class="sidenav">
+      <ul class="sidenav-list">
+        <li class="sidenav-item">
+          <a class="sidenav-link" aria-current="page" href="{{ route('vein.home') }}">ダッシュボード</a>
+        </li>
+        @foreach ($navs as $nav)
+        <li class="sidenav-item">
+          <a class="sidenav-link" href="{{ $nav->link }}">{{ $nav->label }}</a>
+        </li>
+        @endforeach
+      </ul>
+    </nav>
+  </div>
+  @endauth
+  <main class="main">
+    @yield('content')
+  </main>
+</div>
+
+<script>
+function toggleSidebar() {
+  $('body').toggleClass('md-sidebar-hide').toggleClass('sm-sidebar-show')
+}
+</script>
 
 </body>
 </html>
