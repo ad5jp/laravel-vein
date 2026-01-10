@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class RadioModel extends SelectModel implements Form
 {
-    public function render(?Model $values = null): string
+    public function renderInline(?Model $values = null): string
     {
         $value = $values ? $values->{$this->key} : $this->default;
 
@@ -27,6 +27,6 @@ class RadioModel extends SelectModel implements Form
         }
         $html .= '</div>';
 
-        return $this->wrap($html);
+        return $html;
     }
 }

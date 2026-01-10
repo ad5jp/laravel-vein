@@ -32,7 +32,7 @@ class SelectModel extends FormControl implements Form
         parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
 
-    public function render(?Model $values = null): string
+    public function renderInline(?Model $values = null): string
     {
         $value = $values ? $values->{$this->key} : $this->default;
 
@@ -45,7 +45,7 @@ class SelectModel extends FormControl implements Form
         }
         $html .= '</select>';
 
-        return $this->wrap($html);
+        return $html;
     }
 
     /**

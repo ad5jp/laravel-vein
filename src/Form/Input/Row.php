@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Form\Input;
 
 use AD5jp\Vein\Form\Contracts\Form;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -23,17 +24,23 @@ class Row implements Form
         $html = '';
         $html .= '<div class="row mb-3">';
 
-        FormControl::startRow();
-
         foreach ($this->children as $child) {
-            $html .= $child->render($model);
+            $html .= $child->renderColumn($model);
         }
-
-        FormControl::endRow();
 
         $html .= '</div>';
 
         return $html;
+    }
+
+    public function renderColumn(?Model $model = null): string
+    {
+        throw new Exception('Row cannot be rendered as Column');
+    }
+
+    public function renderInline(?Model $model = null): string
+    {
+        throw new Exception('Row cannot be rendered inline');
     }
 
     public function beforeSave(Model $model, Request $request): Model

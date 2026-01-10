@@ -43,7 +43,7 @@ class CheckboxesEnum extends FormControl implements Form
         parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
 
-    public function render(?Model $values = null): string
+    public function renderInline(?Model $values = null): string
     {
         list($relation_name, $saving_field) = $this->parseKey($values, $this->key);
 
@@ -66,7 +66,7 @@ class CheckboxesEnum extends FormControl implements Form
         }
         $html .= '</div>';
 
-        return $this->wrap($html);
+        return $html;
     }
 
     public function beforeSave(Model $model, Request $request): Model

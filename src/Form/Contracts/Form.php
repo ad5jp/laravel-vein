@@ -12,6 +12,10 @@ interface Form
 {
     public function render(?Model $values = null): string;
 
+    public function renderColumn(?Model $values = null): string;
+
+    public function renderInline(?Model $values = null): string;
+
     public function beforeSave(Model $values, Request $request): Model;
 
     public function afterSave(Model $values, Request $request): Model;

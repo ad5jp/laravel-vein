@@ -37,7 +37,7 @@ class FileUpload extends FormControl implements Form
         parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
 
-    public function render(?Model $values = null): string
+    public function renderInline(?Model $values = null): string
     {
         $preview_html = '';
 
@@ -71,7 +71,7 @@ class FileUpload extends FormControl implements Form
             $preview_html,
         );
 
-        return $this->wrap($html);
+        return $html;
     }
 
     public function beforeSave(Model $model, Request $request): Model

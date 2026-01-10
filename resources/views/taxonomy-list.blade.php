@@ -7,9 +7,6 @@
         <a href="{{ route('vein.add', ['node' => $node]) }}" class="btn btn-primary">新規</a>
     </div>
     <section class="section">
-        @php
-            \AD5jp\Vein\Form\Input\FormControl::startRow();
-        @endphp
         @foreach ($taxonomies as $taxonomy)
         <form class="row align-items-end mb-3 __edit_form" data-id="{{ $taxonomy->getKey() }}">
             @csrf
@@ -17,7 +14,7 @@
             <div class="col" style="flex-basis: calc(100% - 280px);">
                 <div class="row">
                     @foreach ($editFields as $editField)
-                    {!! $editField->render($taxonomy) !!}
+                    {!! $editField->renderColumn($taxonomy) !!}
                     @endforeach
                 </div>
             </div>
@@ -33,7 +30,7 @@
             <div class="col" style="flex-basis: calc(100% - 280px);">
                 <div class="row">
                     @foreach ($editFields as $editField)
-                        {!! $editField->render() !!}
+                        {!! $editField->renderColumn() !!}
                     @endforeach
                 </div>
             </div>
@@ -41,9 +38,6 @@
                 <button class="btn btn-primary">ADD</button>
             </div>
         </form>
-        @php
-            \AD5jp\Vein\Form\Input\FormControl::endRow();
-        @endphp
     </section>
 </div>
 

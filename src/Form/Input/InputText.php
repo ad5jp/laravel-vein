@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class InputText extends FormControl implements Form
 {
-    public function render(?Model $values = null): string
+    public function renderInline(?Model $values = null): string
     {
         $value = $values ? $values->{$this->key} : $this->default;
 
@@ -19,6 +19,6 @@ class InputText extends FormControl implements Form
             e($value),
         );
 
-        return $this->wrap($html);
+        return $html;
     }
 }

@@ -21,18 +21,15 @@ class Group extends FormControl implements Form
         parent::__construct('__', $label, null, $colSize);
     }
 
-    public function render(?Model $model = null): string
+    public function renderInline(?Model $model = null): string
     {
         $html = '';
-        $html .= '<div class="input-group">';
 
-        FormControl::startRow();
-        FormControl::startCol();
-        FormControl::startGroup();
+        $html .= '<div class="input-group">';
 
         foreach ($this->children as $child) {
             if ($child instanceof Form) {
-                $html .= $child->render($model);
+                $html .= $child->renderInline($model);
             } elseif (is_string($child)) {
                 $html .= sprintf('<span class="input-group-text">%s</span>', $child);
             } else {
@@ -40,13 +37,9 @@ class Group extends FormControl implements Form
             }
         }
 
-        FormControl::endRow();
-        FormControl::endCol();
-        FormControl::endGroup();
-
         $html .= '</div>';
 
-        return $this->wrap($html);
+        return $html;
     }
 
     public function beforeSave(Model $model, Request $request): Model

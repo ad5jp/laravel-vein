@@ -35,7 +35,7 @@ class SelectEnum extends FormControl implements Form
         parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
 
-    public function render(?Model $values = null): string
+    public function renderInline(?Model $values = null): string
     {
         $value = $values ? $values->{$this->key} : $this->default;
         if ($value && !($value instanceof $this->enum)) {
@@ -51,7 +51,7 @@ class SelectEnum extends FormControl implements Form
         }
         $html .= '</select>';
 
-        return $this->wrap($html);
+        return $html;
     }
 
     public function beforeSave(Model $model, Request $request): Model

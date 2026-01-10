@@ -24,7 +24,7 @@ class TextArea extends FormControl implements Form
         parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
 
-    public function render(?Model $values = null): string
+    public function renderInline(?Model $values = null): string
     {
         $value = $values ? $values->{$this->key} : $this->default;
 
@@ -35,6 +35,6 @@ class TextArea extends FormControl implements Form
             e($value),
         );
 
-        return $this->wrap($html);
+        return $html;
     }
 }

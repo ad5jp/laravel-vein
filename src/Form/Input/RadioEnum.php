@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class RadioEnum extends SelectEnum implements Form
 {
-    public function render(?Model $values = null): string
+    public function renderInline(?Model $values = null): string
     {
         $value = $values ? $values->{$this->key} : $this->default;
         if ($value && !($value instanceof $this->enum)) {
@@ -30,6 +30,6 @@ class RadioEnum extends SelectEnum implements Form
         }
         $html .= '</div>';
 
-        return $this->wrap($html);
+        return $html;
     }
 }
