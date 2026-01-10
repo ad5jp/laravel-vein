@@ -7,10 +7,12 @@ namespace AD5jp\Vein\Http\Controllers;
 use AD5jp\Vein\Form\InputManager;
 use AD5jp\Vein\Node\NodeManager;
 use AD5jp\Vein\Node\Contracts\Entry;
+use AD5jp\Vein\Node\Contracts\Taxonomy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class AddController extends Controller
 {
@@ -33,7 +35,7 @@ class AddController extends Controller
         abort(404);
     }
 
-    public function save(string $node, Request $request): RedirectResponse
+    public function save(string $node, Request $request): RedirectResponse|JsonResponse
     {
         $manager = new NodeManager();
         $model = $manager->resolve($node);
@@ -42,14 +44,34 @@ class AddController extends Controller
             abort(404);
         }
 
-        if ($model instanceof Entry) {
-            return $this->saveEntry($model, $node, $request);
+        if (!$model instanceof Entry && !$model instanceof Taxonomy) {
+            abort(404);
         }
 
-        // TODO Taxonomy
-        // TODO Page
+        // TODO バリデーション
 
-        abort(404);
+        // フィールド情報取得
+        $manager = new InputManager();
+        $editFields = $manager->parseEditField($model->editFields());
+
+        // 保存
+        $record = $model->newInstance();
+
+        foreach ($editFields as $editField) {
+            $record = $editField->beforeSave($record, $request);
+        }
+
+        $record->save();
+
+        foreach ($editFields as $editField) {
+            $record = $editField->afterSave($record, $request);
+        }
+
+        if ($model instanceof Entry) {
+            return redirect()->route('vein.edit', ['node' => $node, 'id' => $record->getKey()]);
+        }
+
+        return response()->json(['message' => '登録しました', 'key' => $record->getKey()]);
     }
 
     /**
@@ -69,32 +91,4 @@ class AddController extends Controller
             'editFields' => $editFields,
         ]);
     }
-
-    private function saveEntry(Entry $model, string $node, Request $request): RedirectResponse
-    {
-        assert($model instanceof Model);
-
-        // TODO バリデーション
-
-        // フィールド情報取得
-        $manager = new InputManager();
-        $editFields = $manager->parseEditField($model->editFields());
-
-        // 保存
-        $entry = $model->newInstance();
-
-        foreach ($editFields as $editField) {
-            $entry = $editField->beforeSave($entry, $request);
-        }
-
-        $entry->save();
-
-        foreach ($editFields as $editField) {
-            $entry = $editField->afterSave($entry, $request);
-        }
-
-        return redirect()->route('vein.edit', ['node' => $node, 'id' => $entry->getKey()]);
-    }
-
-
 }

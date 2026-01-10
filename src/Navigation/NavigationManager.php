@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Navigation;
 
 use AD5jp\Vein\Node\Contracts\Entry;
+use AD5jp\Vein\Node\Contracts\Taxonomy;
 use AD5jp\Vein\Node\NodeManager;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
@@ -36,9 +37,9 @@ class NavigationManager
                     if (class_exists($class_name)) {
                         $model = new $class_name();
 
-                        // TODO Taxonomy, Page の考慮
+                        // TODO Page の考慮
                         // TODO 並び順 (menuOrder) の考慮
-                        if ($model instanceof Model && $model instanceof Entry) {
+                        if ($model instanceof Model && ($model instanceof Entry || $model instanceof Taxonomy)) {
                             $nav = new Nav();
                             $nav->label = $model->menuName();
                             $nav->link = route(
