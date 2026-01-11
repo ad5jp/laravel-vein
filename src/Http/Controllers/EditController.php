@@ -17,7 +17,7 @@ use Illuminate\View\View;
 
 class EditController extends Controller
 {
-    public function init(string $node, mixed $id): View
+    public function init(string $node, mixed $id = null): View
     {
         $manager = new NodeManager();
         $model = $manager->resolve($node);
@@ -26,17 +26,30 @@ class EditController extends Controller
             abort(404);
         }
 
+        // 更新対象レコード取得
         if ($model instanceof Entry) {
-            return $this->initForEntry($model, $id, $node);
+            $record = $model->findOrFail($id);
+            $view = 'vein::entry-edit';
+        } elseif ($model instanceof Page) {
+            $record = $model->firstOrNew();
+            $view = 'vein::page-edit';
+        } else {
+            abort(404);
         }
 
-        // TODO Taxonomy
-        // TODO Page
+        // フィールド情報取得
+        $manager = new InputManager();
+        $editFields = $manager->parseEditField($model->editFields());
 
-        abort(404);
+        return view($view, [
+            'node' => $node,
+            'model' => $model,
+            'record' => $record,
+            'editFields' => $editFields,
+        ]);
     }
 
-    public function save(string $node, mixed $id, Request $request): RedirectResponse|JsonResponse
+    public function save(Request $request, string $node, mixed $id = null): RedirectResponse|JsonResponse
     {
         $manager = new NodeManager();
         $model = $manager->resolve($node);
@@ -103,27 +116,5 @@ class EditController extends Controller
         }
 
         return response()->json(['message' => '削除しました']);
-    }
-
-    /**
-     * @param Entry&Model $entry
-     */
-    private function initForEntry(Entry $model, mixed $id, string $node): View
-    {
-        assert($model instanceof Model);
-
-        // 対象データ取得
-        $entry = $model->findOrFail($id);
-
-        // フィールド情報取得
-        $manager = new InputManager();
-        $editFields = $manager->parseEditField($model->editFields());
-
-        return view('vein::entry-edit', [
-            'node' => $node,
-            'model' => $model,
-            'entry' => $entry,
-            'editFields' => $editFields,
-        ]);
     }
 }

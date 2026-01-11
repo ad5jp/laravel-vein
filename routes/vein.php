@@ -21,6 +21,8 @@ Route::group(['middleware' => ['web'], 'prefix' => $admin_uri], static function 
     Route::group(['middleware' => ["auth:{$guard}"]], static function (): void {
         Route::get('/', [HomeController::class, 'init'])->name('vein.home');
         Route::get('/{node}', [ListController::class, 'init'])->name('vein.list');
+        Route::get('/page/{node}', [EditController::class, 'init'])->name('vein.page');
+        Route::post('/page/{node}', [EditController::class, 'save']);
         Route::get('/{node}/add', [AddController::class, 'init'])->name('vein.add');
         Route::post('/{node}/add', [AddController::class, 'save']);
         Route::get('/{node}/{id}', [EditController::class, 'init'])->name('vein.edit');

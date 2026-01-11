@@ -6,7 +6,7 @@ namespace AD5jp\Vein\Node\Helpers;
 
 use Illuminate\Validation\Validator;
 
-trait TaxonomyHelper
+trait PageHelper
 {
     public function menuName(): string
     {
@@ -16,12 +16,7 @@ trait TaxonomyHelper
 
     public function menuOrder(): int
     {
-        return 300;
-    }
-
-    public function orderColumn(): ?string
-    {
-        return null;
+        return 200;
     }
 
     public function editValidator(): ?Validator

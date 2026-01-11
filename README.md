@@ -181,7 +181,7 @@ config/vein.php の **admin_uri** に設定する。
 - ListField の詳細
 - [FormControl の種類](doc/input-variations.md)
 - ファイルアップロードについて
-- 独自 Input の作成
+- 独自フォーム要素の作成
 
 # 開発予定 (TODO)  
 ## ログイン関連  
@@ -204,9 +204,11 @@ config/vein.php の **admin_uri** に設定する。
 - Records  
   
 ## Entry以外のNodeの対応  
-- Taxonomy  
-- Page
+- Taxonomy (済)  
+- Page (済)  
 
 ## その他
+- Taxonomy のソート機能
+- ダッシュボード
 - メニューの階層化
 - 各ファイルに記載された TODO

@@ -42,9 +42,10 @@ class NavigationManager
                         if ($model instanceof Model && ($model instanceof Entry || $model instanceof Taxonomy || $model instanceof Page)) {
                             $nav = new Nav();
                             $nav->label = $model->menuName();
-                            $nav->link = route(
-                                'vein.list',
-                                ['node' => $node_manager->slug($model)]
+                            $nav->link = (
+                                $model instanceof Page
+                                ? route('vein.page', ['node' => $node_manager->slug($model)])
+                                : route('vein.list', ['node' => $node_manager->slug($model)])
                             );
                             $nav->order = $model->menuOrder();
 

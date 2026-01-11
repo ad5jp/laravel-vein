@@ -6,6 +6,7 @@ namespace AD5jp\Vein\Form;
 
 use AD5jp\Vein\Form\Contracts\Form;
 use AD5jp\Vein\Form\Input\InputDate;
+use AD5jp\Vein\Form\Input\InputNumber;
 use AD5jp\Vein\Form\Input\InputText;
 use AD5jp\Vein\Form\Input\TextArea;
 use Exception;
@@ -39,6 +40,7 @@ class InputManager
         return match ($input) {
             'text' => new InputText(key: $key, label: $label),
             'date' => new InputDate(key: $key, label: $label),
+            'number' => new InputNumber(key: $key, label: $label),
             'textarea' => new TextArea(key: $key, label: $label),
             default => throw new Exception('invalid input: ' . $input),
         };
