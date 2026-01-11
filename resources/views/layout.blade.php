@@ -10,7 +10,7 @@
     <script src="{{ asset('vein-assets/jquery.js') }}"></script>
     <meta name="csrf" content="{{ csrf_token() }}">
 </head>
-<body>
+<body class="@yield('body_class')">
 
 <nav class="navbar bg-dark border-bottom border-bottom-dark navbar-expand-md fixed-top" data-bs-theme="dark">
   <div class="container-fluid">

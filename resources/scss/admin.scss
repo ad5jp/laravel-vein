@@ -71,6 +71,9 @@ body {
   .md-sidebar-hide .main {
     width: 100%;
   }
+  .no-sidebar .main {
+    width: 100%;
+  }
 }
 @media (max-width: 767px) {
   .main {

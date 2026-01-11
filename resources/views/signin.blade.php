@@ -1,5 +1,7 @@
 @extends('vein::layout')
 
+@section('body_class', 'no-sidebar');
+
 @section('content')
 <div class="container max-width-sm">
     <h1 class="page-title">ログイン</h1>
