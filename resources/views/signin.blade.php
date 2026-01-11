@@ -1,6 +1,6 @@
 @extends('vein::layout')
 
-@section('body_class', 'no-sidebar');
+@section('body_class', 'no-sidebar')
 
 @section('content')
 <div class="container max-width-sm">

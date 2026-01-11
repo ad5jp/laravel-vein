@@ -20,6 +20,11 @@ trait EntryHelper
         return 100;
     }
 
+    public function menuIcon(): ?string
+    {
+        return 'journal-text';
+    }
+
     /**
      * @return SearchField[]
      */

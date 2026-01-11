@@ -59,6 +59,10 @@ body {
 .sidenav-link:hover {
   background: rgba(255,255,255,0.1);
 }
+.sidenav-link i {
+  display: inline-block;
+  width: 1.5em;
+}
 
 .main {
   padding-top: 2rem;

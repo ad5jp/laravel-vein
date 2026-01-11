@@ -6,6 +6,7 @@ namespace AD5jp\Vein\Navigation;
 
 use AD5jp\Vein\Node\Contracts\Entry;
 use AD5jp\Vein\Node\Contracts\Page;
+use AD5jp\Vein\Node\Contracts\RootNode;
 use AD5jp\Vein\Node\Contracts\Taxonomy;
 use AD5jp\Vein\Node\NodeManager;
 use Exception;
@@ -38,10 +39,10 @@ class NavigationManager
                     if (class_exists($class_name)) {
                         $model = new $class_name();
 
-                        // TODO 階層化できるように
-                        if ($model instanceof Model && ($model instanceof Entry || $model instanceof Taxonomy || $model instanceof Page)) {
+                        if ($model instanceof Model && $model instanceof RootNode) {
                             $nav = new Nav();
                             $nav->label = $model->menuName();
+                            $nav->icon = $model->menuIcon();
                             $nav->link = (
                                 $model instanceof Page
                                 ? route('vein.page', ['node' => $node_manager->slug($model)])

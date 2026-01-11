@@ -19,6 +19,11 @@ trait PageHelper
         return 200;
     }
 
+    public function menuIcon(): ?string
+    {
+        return 'file-richtext';
+    }
+
     public function editValidator(): ?Validator
     {
         return null;

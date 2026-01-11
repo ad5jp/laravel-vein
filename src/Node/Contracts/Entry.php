@@ -10,12 +10,8 @@ use AD5jp\Vein\Node\Attributes\SearchField;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Validator;
 
-interface Entry
+interface Entry extends RootNode
 {
-    public function menuName(): string;
-
-    public function menuOrder(): int;
-
     /**
      * @return array<ListField|array{0:string}|array{0:string, 1:string}|array{0:string, 1:string, 2:bool}>
      */

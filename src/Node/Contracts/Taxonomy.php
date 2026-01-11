@@ -6,12 +6,8 @@ namespace AD5jp\Vein\Node\Contracts;
 
 use Illuminate\Validation\Validator;
 
-interface Taxonomy
+interface Taxonomy extends RootNode
 {
-    public function menuName(): string;
-
-    public function menuOrder(): int;
-
     public function orderColumn(): ?string;
 
     /**

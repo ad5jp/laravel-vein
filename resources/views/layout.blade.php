@@ -35,11 +35,11 @@
     <nav class="sidenav">
       <ul class="sidenav-list">
         <li class="sidenav-item">
-          <a class="sidenav-link" aria-current="page" href="{{ route('vein.home') }}">ダッシュボード</a>
+          <a class="sidenav-link" aria-current="page" href="{{ route('vein.home') }}"><i class="bi bi-speedometer2"></i> ダッシュボード</a>
         </li>
         @foreach ($navs as $nav)
         <li class="sidenav-item">
-          <a class="sidenav-link" href="{{ $nav->link }}">{{ $nav->label }}</a>
+          <a class="sidenav-link" href="{{ $nav->link }}"><i class="bi bi-{{ $nav->icon }}"></i> {{ $nav->label }}</a>
         </li>
         @endforeach
       </ul>

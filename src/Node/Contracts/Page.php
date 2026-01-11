@@ -6,12 +6,8 @@ namespace AD5jp\Vein\Node\Contracts;
 
 use Illuminate\Validation\Validator;
 
-interface Page
+interface Page extends RootNode
 {
-    public function menuName(): string;
-
-    public function menuOrder(): int;
-
     /**
      * @return array<Form|array{0:string}|array{0:string, 1:string}|array{0:string, 1:string, 2:string}>
      */

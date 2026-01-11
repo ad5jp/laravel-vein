@@ -8,6 +8,8 @@ class Nav
 {
     public string $label;
 
+    public ?string $icon;
+
     public ?string $link;
 
     public int $order;

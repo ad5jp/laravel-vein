@@ -19,6 +19,11 @@ trait TaxonomyHelper
         return 300;
     }
 
+    public function menuIcon(): ?string
+    {
+        return 'list-ul';
+    }
+
     public function orderColumn(): ?string
     {
         return null;
