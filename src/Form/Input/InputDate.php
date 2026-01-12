@@ -10,9 +10,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class InputDate extends FormControl implements Form
 {
-    public function renderInline(?Model $values = null): string
+    public function renderInline(Model $values): string
     {
-        $value = $values ? $values->{$this->key} : $this->default;
+        $value = $values->{$this->key} ?? $this->default;
 
         if ($value instanceof DateTimeInterface) {
             $value = $value->format('Y-m-d');

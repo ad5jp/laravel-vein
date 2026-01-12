@@ -40,7 +40,7 @@ abstract class FormControl
         return $builder->where($this->key, $request->input($this->key));
     }
 
-    public function render(?Model $values = null): string
+    public function render(Model $values): string
     {
         return sprintf(
             '<div class="row mb-3">%s</div>',
@@ -48,7 +48,7 @@ abstract class FormControl
         );
     }
 
-    public function renderColumn(?Model $values = null): string
+    public function renderColumn(Model $values): string
     {
         $html = $this->renderInline($values);
 
@@ -72,5 +72,5 @@ abstract class FormControl
         return $html;
     }
 
-    public abstract function renderInline(?Model $values = null): string;
+    public abstract function renderInline(Model $values): string;
 }

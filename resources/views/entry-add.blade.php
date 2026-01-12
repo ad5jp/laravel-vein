@@ -11,7 +11,7 @@
         <form action="{{ route('vein.add', ['node' => $node]) }}" method="post">
             @csrf
             @foreach ($editFields as $editField)
-            {!! $editField->render() !!}
+            {!! $editField->render($record) !!}
             @endforeach
             <div class="text-end">
                 <button type="submit" class="btn btn-primary">登録</button>

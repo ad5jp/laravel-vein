@@ -19,7 +19,7 @@ class Row implements Form
 
     }
 
-    public function render(?Model $model = null): string
+    public function render(Model $model): string
     {
         $html = '';
         $html .= '<div class="row mb-3">';
@@ -33,12 +33,12 @@ class Row implements Form
         return $html;
     }
 
-    public function renderColumn(?Model $model = null): string
+    public function renderColumn(Model $model): string
     {
         throw new Exception('Row cannot be rendered as Column');
     }
 
-    public function renderInline(?Model $model = null): string
+    public function renderInline(Model $model): string
     {
         throw new Exception('Row cannot be rendered inline');
     }

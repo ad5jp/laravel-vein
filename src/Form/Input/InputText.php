@@ -9,9 +9,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class InputText extends FormControl implements Form
 {
-    public function renderInline(?Model $values = null): string
+    public function renderInline(Model $values): string
     {
-        $value = $values ? $values->{$this->key} : $this->default;
+        $value = $values->{$this->key} ?? $this->default;
 
         $html = sprintf(
             '<input type="text" name="%s" value="%s" class="form-control">',

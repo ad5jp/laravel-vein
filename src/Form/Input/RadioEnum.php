@@ -9,9 +9,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class RadioEnum extends SelectEnum implements Form
 {
-    public function renderInline(?Model $values = null): string
+    public function renderInline(Model $values): string
     {
-        $value = $values ? $values->{$this->key} : $this->default;
+        $value = $values->{$this->key} ?? $this->default;
         if ($value && !($value instanceof $this->enum)) {
             $value = ($this->enum)::tryFrom($value);
         }

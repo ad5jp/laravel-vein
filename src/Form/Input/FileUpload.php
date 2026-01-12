@@ -37,11 +37,11 @@ class FileUpload extends FormControl implements Form
         parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
 
-    public function renderInline(?Model $values = null): string
+    public function renderInline(Model $values): string
     {
         $preview_html = '';
 
-        $file = $values ? $values->{$this->key} : null;
+        $file = $values->{$this->key} ?? null;
 
         if ($file) {
             /** @var Model&File $file */

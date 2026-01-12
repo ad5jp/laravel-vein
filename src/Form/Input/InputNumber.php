@@ -12,9 +12,9 @@ class InputNumber extends FormControl implements Form
 {
     // TODO Prefix/Suffix をつける（Groupとの関係に注意）
 
-    public function renderInline(?Model $values = null): string
+    public function renderInline(Model $values): string
     {
-        $value = $values ? $values->{$this->key} : $this->default;
+        $value = $values->{$this->key} ?? $this->default;
 
         $html = sprintf(
             '<input type="number" name="%s" value="%s" class="form-control">',

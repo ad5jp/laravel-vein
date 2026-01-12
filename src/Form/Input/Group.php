@@ -21,7 +21,7 @@ class Group extends FormControl implements Form
         parent::__construct('__', $label, null, $colSize);
     }
 
-    public function renderInline(?Model $model = null): string
+    public function renderInline(Model $model): string
     {
         $html = '';
 

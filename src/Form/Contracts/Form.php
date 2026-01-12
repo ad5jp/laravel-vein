@@ -10,11 +10,11 @@ use Illuminate\Http\Request;
 
 interface Form
 {
-    public function render(?Model $values = null): string;
+    public function render(Model $values): string;
 
-    public function renderColumn(?Model $values = null): string;
+    public function renderColumn(Model $values): string;
 
-    public function renderInline(?Model $values = null): string;
+    public function renderInline(Model $values): string;
 
     public function beforeSave(Model $values, Request $request): Model;
 

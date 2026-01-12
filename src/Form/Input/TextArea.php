@@ -24,9 +24,9 @@ class TextArea extends FormControl implements Form
         parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
 
-    public function renderInline(?Model $values = null): string
+    public function renderInline(Model $values): string
     {
-        $value = $values ? $values->{$this->key} : $this->default;
+        $value = $values->{$this->key} ?? $this->default;
 
         $html = sprintf(
             '<textarea name="%s" class="form-control" rows="%s">%s</textarea>',

@@ -43,11 +43,11 @@ class CheckboxesEnum extends FormControl implements Form
         parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
 
-    public function renderInline(?Model $values = null): string
+    public function renderInline(Model $values): string
     {
         list($relation_name, $saving_field) = $this->parseKey($values, $this->key);
 
-        $value = $values ? $values->$relation_name->map(fn (Model $related) => $related->$saving_field)->all() : $this->default;
+        $value = $values->$relation_name->map(fn (Model $related) => $related->$saving_field)->all() ?: $this->default;
         $value = array_map(function ($v) {
             return $v instanceof BackedEnum ? $v->value : $v;
         }, $value);
@@ -145,7 +145,7 @@ class CheckboxesEnum extends FormControl implements Form
     /**
      * @return array{0: string, 1:string}
      */
-    private function parseKey(?Model $model, string $key): array
+    private function parseKey(Model $model, string $key): array
     {
         $segments = explode(':', $key);
 
@@ -154,10 +154,6 @@ class CheckboxesEnum extends FormControl implements Form
         }
 
         list($relation_name, $saving_field) = $segments;
-
-        if ($model === null) {
-            return [$relation_name, $saving_field];
-        }
 
         foreach ([$relation_name, Str::camel($relation_name)] as $relation_method_name) {
             if (method_exists($model, $relation_method_name)) {

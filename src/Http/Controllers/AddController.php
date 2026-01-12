@@ -88,6 +88,7 @@ class AddController extends Controller
         return view('vein::entry-add', [
             'node' => $node,
             'model' => $model,
+            'record' => $model->newInstance(),
             'editFields' => $editFields,
         ]);
     }
