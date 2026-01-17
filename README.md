@@ -208,9 +208,9 @@ config/vein.php の **admin_uri** に設定する。
 - Page (済)  
 
 ## その他
-- Taxonomy のソート機能
+- Taxonomy のソート機能 (済)  
 - ダッシュボード
 - メニューの階層化
 - 各ファイルに記載された TODO
-- Entry の検索機能
+- Entry の検索機能 (済)  
 - 多言語

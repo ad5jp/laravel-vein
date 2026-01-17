@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ asset('vein-assets/bootstrap-icons.css') }}">
     <script src="{{ asset('vein-assets/bootstrap.js') }}"></script>
     <script src="{{ asset('vein-assets/jquery.js') }}"></script>
+    <script src="{{ asset('vein-assets/jquery-ui.js') }}"></script>
     <meta name="csrf" content="{{ csrf_token() }}">
 </head>
 <body class="@yield('body_class')">

@@ -9,10 +9,11 @@ use AD5jp\Vein\Node\NodeManager;
 use AD5jp\Vein\Node\Attributes\ListField;
 use AD5jp\Vein\Node\Contracts\Entry;
 use AD5jp\Vein\Node\Contracts\Taxonomy;
-use Exception;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class ListController extends Controller
@@ -102,5 +103,34 @@ class ListController extends Controller
             'editFields' => $editFields,
             'taxonomies' => $taxonomies
         ]);
+    }
+
+    public function sort(string $node, Request $request): JsonResponse
+    {
+        $manager = new NodeManager();
+        $model = $manager->resolve($node);
+
+        if (!$model instanceof Taxonomy) {
+            abort(404);
+        }
+
+        if (!$orderColumn = $model->orderColumn()) {
+            abort(404);
+        }
+
+        $ids = array_values(array_filter(explode(',', $request->input('ids', ''))));
+
+        DB::transaction(function () use ($ids, $model, $orderColumn) {
+            foreach ($ids as $index => $id) {
+                $found = $model->find($id);
+                if ($found) {
+                    $found->$orderColumn = $index;
+                    $found->save();
+                }
+            }
+        });
+
+        // 保存
+        return response()->json(['message' => '並び順を変更しました']);
     }
 }

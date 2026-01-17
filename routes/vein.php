@@ -25,6 +25,7 @@ Route::group(['middleware' => ['web'], 'prefix' => $admin_uri], static function 
         Route::post('/page/{node}', [EditController::class, 'save']);
         Route::get('/{node}/add', [AddController::class, 'init'])->name('vein.add');
         Route::post('/{node}/add', [AddController::class, 'save']);
+        Route::post('/{node}/sort', [ListController::class, 'sort'])->name('vein.sort');
         Route::get('/{node}/{id}', [EditController::class, 'init'])->name('vein.edit');
         Route::post('/{node}/{id}', [EditController::class, 'save']);
         Route::post('/{node}/{id}/delete', [EditController::class, 'delete'])->name('vein.delete');

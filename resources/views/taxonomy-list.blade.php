@@ -4,29 +4,34 @@
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="mb-0">{{ $model->menuName() }}</h1>
-        <a href="{{ route('vein.add', ['node' => $node]) }}" class="btn btn-primary">新規</a>
     </div>
     <section class="section">
-        @foreach ($taxonomies as $taxonomy)
-        <form class="row align-items-end mb-3 __edit_form" data-id="{{ $taxonomy->getKey() }}">
-            @csrf
-            <div class="col" style="flex-basis: 20px;">≡</div>
-            <div class="col" style="flex-basis: calc(100% - 280px);">
-                <div class="row">
-                    @foreach ($editFields as $editField)
-                    {!! $editField->renderColumn($taxonomy) !!}
-                    @endforeach
+        <div class="__list">
+            @foreach ($taxonomies as $taxonomy)
+            <form class="row align-items-end mb-3 __edit_form" data-id="{{ $taxonomy->getKey() }}">
+                @csrf
+                @if ($model->orderColumn())
+                <div class="col __sort_handle bg-light py-2" style="flex-basis: 20px;"><i class="bi bi-list"></i></div>
+                @endif
+                <div class="col" style="flex-basis: calc(100% - 280px);">
+                    <div class="row">
+                        @foreach ($editFields as $editField)
+                        {!! $editField->renderColumn($taxonomy) !!}
+                        @endforeach
+                    </div>
                 </div>
-            </div>
-            <div class="col" style="flex-basis: 200px;">
-                <button class="btn btn-primary">EDIT</button>
-                <button class="btn btn-outline-danger __delete_button" type="button">DELETE</button>
-            </div>
-        </form>
-        @endforeach
+                <div class="col" style="flex-basis: 200px;">
+                    <button class="btn btn-primary">EDIT</button>
+                    <button class="btn btn-outline-danger __delete_button" type="button">DELETE</button>
+                </div>
+            </form>
+            @endforeach
+        </div>
         <form class="row align-items-end mb-3 __add_form">
             @csrf
-            <div class="col __col_handle" style="flex-basis: 20px;"></div>
+            @if ($model->orderColumn())
+            <div class="col __sort_handle bg-light py-2" style="flex-basis: 20px; opacity: 0;"><i class="bi bi-list"></i></div>
+            @endif
             <div class="col" style="flex-basis: calc(100% - 280px);">
                 <div class="row">
                     @foreach ($editFields as $editField)
@@ -45,10 +50,45 @@
 const add_api = '{{ route("vein.add", [$node]) }}';
 const edit_api = '{{ route("vein.edit", [$node, 9999]) }}';
 const delete_api = '{{ route("vein.delete", [$node, 9999]) }}';
+const sort_api = '{{ route("vein.sort", [$node]) }}';
+const token = '{{ csrf_token() }}';
 </script>
+@if ($model->orderColumn())
 <script>
-// TODO ソート
+$(function() {
+    $(".__list").sortable({
+        handle: ".__sort_handle",
+        update: function () {
+            try {
+                const ids = [];
+                $('.__edit_form').each(function () {
+                    ids.push($(this).data('id'));
+                });
 
+                const payload = new FormData();
+                payload.append('_token', token);
+                payload.append('ids', ids);
+
+                fetch(sort_api, {
+                    method: 'POST',
+                    body: payload,
+                })
+                .then(response => response.json())
+                .then(data => {
+
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    });
+});
+</script>
+@endif
+<script>
 $(document).on('submit', '.__edit_form', function () {
     try {
         const key = $(this).data('id');
@@ -91,8 +131,8 @@ $(document).on('submit', '.__add_form', function () {
             clone.find('.__col_action').empty();
             clone.find('.__col_action').append('<button class="btn btn-primary">EDIT</button>');
             clone.find('.__col_action').append('<button class="btn btn-outline-danger __delete_button" type="button">DELETE</button>');
-            clone.find('.__col_handle').text('≡');
-            clone.insertBefore($(this));
+            clone.find('.__sort_handle').css('opacity', 1);
+            clone.appendTo($('.__list'));
 
             $(this)[0].reset();
         })

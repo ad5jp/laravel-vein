@@ -68,6 +68,10 @@ class AddController extends Controller
                 $record = $editField->beforeSave($record, $request);
             }
 
+            if ($model instanceof Taxonomy && $orderColumn = $model->orderColumn()) {
+                $record->$orderColumn = ($model->max($orderColumn) ?? 0) + 1;
+            }
+
             $record->save();
 
             foreach ($editFields as $editField) {
