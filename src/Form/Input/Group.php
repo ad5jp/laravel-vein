@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Form\Input;
 
 use AD5jp\Vein\Form\Contracts\Form;
+use AD5jp\Vein\Form\Contracts\SearchForm;
 use Exception;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
-class Group extends FormControl implements Form
+class Group extends FormControl implements Form, SearchForm
 {
     public function __construct(
         public ?string $label = null,
@@ -68,11 +69,22 @@ class Group extends FormControl implements Form
     public function searchQuery(Builder $builder, Arrayable|array $request): Builder
     {
         foreach ($this->children as $child) {
-            if ($child instanceof Form) {
+            if ($child instanceof SearchForm) {
                 $builder = $child->searchQuery($builder, $request);
             }
         }
 
         return $builder;
+    }
+
+    public function afterSearch(Model $model, Arrayable|array $request): Model
+    {
+        foreach ($this->children as $child) {
+            if ($child instanceof SearchForm) {
+                $model = $child->afterSearch($model, $request);
+            }
+        }
+
+        return $model;
     }
 }

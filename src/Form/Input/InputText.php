@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Form\Input;
 
 use AD5jp\Vein\Form\Contracts\Form;
+use AD5jp\Vein\Form\Contracts\SearchForm;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
-class InputText extends FormControl implements Form
+class InputText extends FormControl implements Form, SearchForm
 {
     public function renderInline(Model $values): string
     {
@@ -20,5 +23,24 @@ class InputText extends FormControl implements Form
         );
 
         return $html;
+    }
+
+    public function searchQuery(Builder $builder, Arrayable|array $request): Builder
+    {
+        if ($request instanceof Arrayable) {
+            $request = $request->toArray();
+        }
+
+        $value = $request[$this->key] ?? null;
+
+        if ($value === null) {
+            return $builder;
+        }
+
+        if ($this->searching) {
+            return ($this->searching)($builder, $value);
+        }
+
+        return $builder->where($this->key, 'like', "%$value%");
     }
 }

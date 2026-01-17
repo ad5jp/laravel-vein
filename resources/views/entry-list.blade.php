@@ -7,7 +7,17 @@
         <a href="{{ route('vein.add', ['node' => $node]) }}" class="btn btn-primary">新規</a>
     </div>
     <section class="section">
-        {{-- TODO 検索フォーム --}}
+        @if (count($searchFields) > 0)
+        <form action="{{ route('vein.list', ['node' => $node]) }}" class="row align-items-end mb-3">
+            @foreach ($searchFields as $searchField)
+            {!! $searchField->renderColumn($search) !!}
+            @endforeach
+            <div class="col">
+                <button class="btn btn-primary">SEARCH</button>
+            </div>
+        </form>
+        @endif
+
         <table class="table">
             <thead>
                 <tr>
@@ -32,7 +42,7 @@
             </tbody>
         </table>
 
-        {{-- TODO ページング --}}
+        {!! $entries->links() !!}
     </section>
 </div>
 @endsection

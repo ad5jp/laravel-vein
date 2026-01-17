@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Form;
 
 use AD5jp\Vein\Form\Contracts\Form;
+use AD5jp\Vein\Form\Contracts\SearchForm;
 use AD5jp\Vein\Form\Input\InputDate;
 use AD5jp\Vein\Form\Input\InputNumber;
 use AD5jp\Vein\Form\Input\InputText;
@@ -19,15 +20,33 @@ class InputManager
     public function parseEditField(array $editFields): array
     {
         return array_map(function ($editField) {
-            if ($editField instanceof Form) {
-                return $editField;
-            }
-
             if (is_array($editField)) {
                 return $this->resolve($editField);
             }
 
-            throw new Exception('invalid element for editFields: ' . var_export($editField, true));
+            if (!$editField instanceof Form) {
+                throw new Exception('invalid element for editFields: ' . var_export($editField, true));
+            }
+
+            return $editField;
+        }, $editFields);
+    }
+
+    /**
+     * @return SearchForm[]
+     */
+    public function parseSearchField(array $editFields): array
+    {
+        return array_map(function ($editField) {
+            if (is_array($editField)) {
+                return $this->resolve($editField);
+            }
+
+            if (!$editField instanceof SearchForm) {
+                throw new Exception('invalid element for searchFields: ' . var_export($editField, true));
+            }
+
+            return $editField;
         }, $editFields);
     }
 

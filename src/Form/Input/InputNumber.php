@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Form\Input;
 
 use AD5jp\Vein\Form\Contracts\Form;
+use AD5jp\Vein\Form\Contracts\SearchForm;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
 
-class InputNumber extends FormControl implements Form
+class InputNumber extends FormControl implements Form, SearchForm
 {
     // TODO Prefix/Suffix をつける（Groupとの関係に注意）
 

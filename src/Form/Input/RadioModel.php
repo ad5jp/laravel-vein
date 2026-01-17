@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Form\Input;
 
 use AD5jp\Vein\Form\Contracts\Form;
+use AD5jp\Vein\Form\Contracts\SearchForm;
 use Illuminate\Database\Eloquent\Model;
 
-class RadioModel extends SelectModel implements Form
+class RadioModel extends SelectModel implements Form, SearchForm
 {
     public function renderInline(Model $values): string
     {

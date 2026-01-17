@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Form\Input;
 
 use AD5jp\Vein\Form\Contracts\Form;
+use AD5jp\Vein\Form\Contracts\SearchForm;
 use Closure;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 
-class SelectModel extends FormControl implements Form
+class SelectModel extends FormControl implements Form, SearchForm
 {
     public function __construct(
         public string $key,

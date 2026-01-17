@@ -26,9 +26,9 @@ trait EntryHelper
     }
 
     /**
-     * @return SearchField[]
+     * @return array<Form|array{0:string}|array{0:string, 1:string}|array{0:string, 1:string, 2:string}>
      */
-    public function listSearch(): array
+    public function searchFields(): array
     {
         return [];
     }

@@ -52,7 +52,21 @@ abstract class FormControl
             return $builder;
         }
 
+        if ($this->searching) {
+            return ($this->searching)($builder, $value);
+        }
+
         return $builder->where($this->key, $value);
+    }
+
+    public function afterSearch(Model $model, Arrayable|array $request): Model
+    {
+        if ($request instanceof Arrayable) {
+            $request = $request->toArray();
+        }
+
+        $model->{$this->key} = $request[$this->key] ?? null;
+        return $model;
     }
 
     public function render(Model $values): string
