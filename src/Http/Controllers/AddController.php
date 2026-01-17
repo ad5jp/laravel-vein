@@ -8,9 +8,9 @@ use AD5jp\Vein\Form\InputManager;
 use AD5jp\Vein\Node\NodeManager;
 use AD5jp\Vein\Node\Contracts\Entry;
 use AD5jp\Vein\Node\Contracts\Taxonomy;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -22,17 +22,23 @@ class AddController extends Controller
         $model = $manager->resolve($node);
 
         if ($model === null) {
+
+        }
+
+        if (!$model instanceof Entry) {
             abort(404);
         }
 
-        if ($model instanceof Entry) {
-            return $this->initForEntry($model, $node);
-        }
+        // フィールド情報取得
+        $manager = new InputManager();
+        $editFields = $manager->parseEditField($model->editFields());
 
-        // TODO Taxonomy
-        // TODO Page
-
-        abort(404);
+        return view('vein::entry-add', [
+            'node' => $node,
+            'model' => $model,
+            'record' => $model->newInstance(),
+            'editFields' => $editFields,
+        ]);
     }
 
     public function save(string $node, Request $request): RedirectResponse|JsonResponse
@@ -55,41 +61,26 @@ class AddController extends Controller
         $editFields = $manager->parseEditField($model->editFields());
 
         // 保存
-        $record = $model->newInstance();
+        $record = DB::transaction(function () use ($model, $editFields, $request) {
+            $record = $model->newInstance();
 
-        foreach ($editFields as $editField) {
-            $record = $editField->beforeSave($record, $request);
-        }
+            foreach ($editFields as $editField) {
+                $record = $editField->beforeSave($record, $request);
+            }
 
-        $record->save();
+            $record->save();
 
-        foreach ($editFields as $editField) {
-            $record = $editField->afterSave($record, $request);
-        }
+            foreach ($editFields as $editField) {
+                $record = $editField->afterSave($record, $request);
+            }
+
+            return $record;
+        });
 
         if ($model instanceof Entry) {
             return redirect()->route('vein.edit', ['node' => $node, 'id' => $record->getKey()]);
         }
 
         return response()->json(['message' => '登録しました', 'key' => $record->getKey()]);
-    }
-
-    /**
-     * @param Entry&Model $entry
-     */
-    private function initForEntry(Entry $model, string $node): View
-    {
-        assert($model instanceof Model);
-
-        // フィールド情報取得
-        $manager = new InputManager();
-        $editFields = $manager->parseEditField($model->editFields());
-
-        return view('vein::entry-add', [
-            'node' => $node,
-            'model' => $model,
-            'record' => $model->newInstance(),
-            'editFields' => $editFields,
-        ]);
     }
 }

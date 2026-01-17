@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class EditController extends Controller
@@ -74,15 +75,19 @@ class EditController extends Controller
         $editFields = $manager->parseEditField($model->editFields());
 
         // 保存
-        foreach ($editFields as $editField) {
-            $record = $editField->beforeSave($record, $request);
-        }
+        $record = DB::transaction(function () use ($record, $editFields, $request) {
+            foreach ($editFields as $editField) {
+                $record = $editField->beforeSave($record, $request);
+            }
 
-        $record->save();
+            $record->save();
 
-        foreach ($editFields as $editField) {
-            $record = $editField->afterSave($record, $request);
-        }
+            foreach ($editFields as $editField) {
+                $record = $editField->afterSave($record, $request);
+            }
+
+            return $record;
+        });
 
         if ($model instanceof Entry || $model instanceof Page) {
             return redirect()->route('vein.edit', ['node' => $node, 'id' => $record->getKey()]);
