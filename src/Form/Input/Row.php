@@ -6,6 +6,7 @@ namespace AD5jp\Vein\Form\Input;
 
 use AD5jp\Vein\Form\Contracts\Form;
 use Exception;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -43,7 +44,7 @@ class Row implements Form
         throw new Exception('Row cannot be rendered inline');
     }
 
-    public function beforeSave(Model $model, Request $request): Model
+    public function beforeSave(Model $model, Arrayable|array $request): Model
     {
         foreach ($this->children as $child) {
             $model = $child->beforeSave($model, $request);
@@ -52,7 +53,7 @@ class Row implements Form
         return $model;
     }
 
-    public function afterSave(Model $model, Request $request): Model
+    public function afterSave(Model $model, Arrayable|array $request): Model
     {
         foreach ($this->children as $child) {
             $model = $child->afterSave($model, $request);
@@ -61,7 +62,7 @@ class Row implements Form
         return $model;
     }
 
-    public function searchQuery(Builder $builder, Request $request): Builder
+    public function searchQuery(Builder $builder, Arrayable|array $request): Builder
     {
         foreach ($this->children as $child) {
             $builder = $child->searchQuery($builder, $request);

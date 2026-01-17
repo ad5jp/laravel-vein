@@ -9,6 +9,7 @@ use AD5jp\Vein\Form\Contracts\LabelledEnum;
 use BackedEnum;
 use Closure;
 use Exception;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
@@ -69,14 +70,18 @@ class CheckboxesEnum extends FormControl implements Form
         return $html;
     }
 
-    public function beforeSave(Model $model, Request $request): Model
+    public function beforeSave(Model $model, Arrayable|array $request): Model
     {
         // DO NOTHING
         return $model;
     }
 
-    public function afterSave(Model $model, Request $request): Model
+    public function afterSave(Model $model, Arrayable|array $request): Model
     {
+        if ($request instanceof Arrayable) {
+            $request = $request->toArray();
+        }
+
         // リレーションを差分更新する
 
         // キーの検査
@@ -89,7 +94,7 @@ class CheckboxesEnum extends FormControl implements Form
         $child_key = $has_many->getForeignKeyName();
 
         // リクエストの取得（Enum配列に変換）
-        $request_values = $request->input($this->key, []);
+        $request_values = $request[$this->key] ?? [];
 
         if (!is_array($request_values)) {
             throw new Exception('invalid request value for CheckboxesEnum ' . $this->key);

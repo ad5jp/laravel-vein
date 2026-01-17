@@ -48,3 +48,22 @@ $(function () {
     });
 });
 </script>
+
+<!-- TODO 別ファイルに切り出し -->
+<style>
+.__records_list_item {position: relative; padding-right: 3rem;}
+.__records_remove {position: absolute; right: 0.5rem; top: 0; bottom: 0; width: 2rem; height: 2rem; margin: auto;}
+</style>
+<script>
+$(document).on('click', '.__records_add', function () {
+    const $records = $(this).closest('.__records');
+
+    const index = $records.data('nextkey');
+    $records.data('nextkey', index + 1)
+    const template_html = $records.find('script').html().replaceAll('[0]', '[' + index + ']');
+    $records.find('.__records_list').append($(template_html));
+});
+$(document).on('click', '.__records_remove', function () {
+    $(this).closest('.__records_list_item').remove();
+});
+</script>

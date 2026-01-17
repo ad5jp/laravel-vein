@@ -30,7 +30,7 @@
             <div class="col" style="flex-basis: calc(100% - 280px);">
                 <div class="row">
                     @foreach ($editFields as $editField)
-                        {!! $editField->renderColumn() !!}
+                        {!! $editField->renderColumn($model) !!}
                     @endforeach
                 </div>
             </div>

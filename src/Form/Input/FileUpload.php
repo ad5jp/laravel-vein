@@ -9,6 +9,7 @@ use AD5jp\Vein\Form\UploadService;
 use AD5jp\Vein\Node\Contracts\File;
 use Closure;
 use Exception;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\Request;
@@ -37,8 +38,10 @@ class FileUpload extends FormControl implements Form
         parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
 
-    public function renderInline(Model $values): string
+    public function renderInline(Model $values, ?string $parent_key = null): string
     {
+        $this->verifyRelation($values, $this->key);
+
         $preview_html = '';
 
         $file = $values->{$this->key} ?? null;
@@ -74,13 +77,17 @@ class FileUpload extends FormControl implements Form
         return $html;
     }
 
-    public function beforeSave(Model $model, Request $request): Model
+    public function beforeSave(Model $model, Arrayable|array $request): Model
     {
+        if ($request instanceof Arrayable) {
+            $request = $request->toArray();
+        }
+
         $belongsTo = $this->verifyRelation($model, $this->key);
         /** @var Model&File $file */
         $foreign_key = $belongsTo->getForeignKeyName();
 
-        $value = $request->input($this->key);
+        $value = $request[$this->key] ?? null;
 
         // 値に変化がなければ、何もしない
         if ($model->$foreign_key === $value) {

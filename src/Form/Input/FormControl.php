@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Form\Input;
 
 use Closure;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -23,21 +24,35 @@ abstract class FormControl
     ) {
     }
 
-    public function beforeSave(Model $model, Request $request): Model
+    public function beforeSave(Model $model, Arrayable|array $request): Model
     {
-        $model->{$this->key} = $request->{$this->key};
+        if ($request instanceof Arrayable) {
+            $request = $request->toArray();
+        }
+
+        $model->{$this->key} = $request[$this->key] ?? null;
         return $model;
     }
 
-    public function afterSave(Model $model, Request $request): Model
+    public function afterSave(Model $model, Arrayable|array $request): Model
     {
         // DO NOTHING
         return $model;
     }
 
-    public function searchQuery(Builder $builder, Request $request): Builder
+    public function searchQuery(Builder $builder, Arrayable|array $request): Builder
     {
-        return $builder->where($this->key, $request->input($this->key));
+        if ($request instanceof Arrayable) {
+            $request = $request->toArray();
+        }
+
+        $value = $request[$this->key] ?? null;
+
+        if ($value === null) {
+            return $builder;
+        }
+
+        return $builder->where($this->key, $value);
     }
 
     public function render(Model $values): string

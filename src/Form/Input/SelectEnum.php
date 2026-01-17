@@ -9,6 +9,7 @@ use AD5jp\Vein\Form\Contracts\LabelledEnum;
 use BackedEnum;
 use Closure;
 use Exception;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
@@ -54,9 +55,13 @@ class SelectEnum extends FormControl implements Form
         return $html;
     }
 
-    public function beforeSave(Model $model, Request $request): Model
+    public function beforeSave(Model $model, Arrayable|array $request): Model
     {
-        $value = $request->{$this->key};
+        if ($request instanceof Arrayable) {
+            $request = $request->toArray();
+        }
+
+        $value = $request[$this->key] ?? null;
 
         if ($value !== null) {
             if (is_numeric($value)) {

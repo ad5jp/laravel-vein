@@ -6,6 +6,7 @@ namespace AD5jp\Vein\Form\Input;
 
 use AD5jp\Vein\Form\Contracts\Form;
 use Exception;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -42,7 +43,7 @@ class Group extends FormControl implements Form
         return $html;
     }
 
-    public function beforeSave(Model $model, Request $request): Model
+    public function beforeSave(Model $model, Arrayable|array $request): Model
     {
         foreach ($this->children as $child) {
             if ($child instanceof Form) {
@@ -53,7 +54,7 @@ class Group extends FormControl implements Form
         return $model;
     }
 
-    public function afterSave(Model $model, Request $request): Model
+    public function afterSave(Model $model, Arrayable|array $request): Model
     {
         foreach ($this->children as $child) {
             if ($child instanceof Form) {
@@ -64,7 +65,7 @@ class Group extends FormControl implements Form
         return $model;
     }
 
-    public function searchQuery(Builder $builder, Request $request): Builder
+    public function searchQuery(Builder $builder, Arrayable|array $request): Builder
     {
         foreach ($this->children as $child) {
             if ($child instanceof Form) {

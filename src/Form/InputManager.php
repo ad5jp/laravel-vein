@@ -13,6 +13,9 @@ use Exception;
 
 class InputManager
 {
+    /**
+     * @return Form[]
+     */
     public function parseEditField(array $editFields): array
     {
         return array_map(function ($editField) {

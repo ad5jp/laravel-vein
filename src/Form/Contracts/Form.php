@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Form\Contracts;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -16,9 +17,9 @@ interface Form
 
     public function renderInline(Model $values): string;
 
-    public function beforeSave(Model $values, Request $request): Model;
+    public function beforeSave(Model $values, Arrayable|array $request): Model;
 
-    public function afterSave(Model $values, Request $request): Model;
+    public function afterSave(Model $values, Arrayable|array $request): Model;
 
-    public function searchQuery(Builder $builder, Request $request): Builder;
+    public function searchQuery(Builder $builder, Arrayable|array $request): Builder;
 }
