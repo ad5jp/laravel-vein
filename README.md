@@ -201,7 +201,7 @@ config/vein.php の **admin_uri** に設定する。
 - Wysiwyg  
 - FileUpload (済)  
 - FileUploadMultiple  
-- Records  
+- Records (済)    
   
 ## Entry以外のNodeの対応  
 - Taxonomy (済)  
@@ -212,3 +212,5 @@ config/vein.php の **admin_uri** に設定する。
 - ダッシュボード
 - メニューの階層化
 - 各ファイルに記載された TODO
+- Entry の検索機能
+- 多言語
