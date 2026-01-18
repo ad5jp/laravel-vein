@@ -197,7 +197,7 @@ config/vein.php の **admin_uri** に設定する。
 - SelectMultipleEnum  
 - SelectMultipleModel  
 - CheckboxesEnum (済)    
-- CheckboxesModel  
+- CheckboxesModel (済)  
 - Wysiwyg  
 - FileUpload (済)  
 - FileUploadMultiple  
@@ -211,6 +211,7 @@ config/vein.php の **admin_uri** に設定する。
 - Taxonomy のソート機能 (済)  
 - ダッシュボード
 - メニューの階層化
-- 各ファイルに記載された TODO
 - Entry の検索機能 (済)  
+- バリデーション
 - 多言語
+- 各ファイルに記載された TODO

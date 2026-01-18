@@ -1,16 +1,18 @@
 # FormControl の種類
 
-| クラス名        | 略称      |
-| -------------- | -------- |
-| InputText      | text     |
-| InputDate      | date     |
-| TextArea       | textarea |
-| SelectEnum     | -        |
-| RadioEnum      | -        |
-| SelectModel    | -        |
-| RadioModel     | -        |
-| CheckboxesEnum | -        |
-| FileUpload     | -        |
+| クラス名         | 略称      |
+| --------------- | -------- |
+| InputText       | text     |
+| InputDate       | date     |
+| InputNumber     | number   |
+| TextArea        | textarea |
+| SelectEnum      | -        |
+| RadioEnum       | -        |
+| SelectModel     | -        |
+| RadioModel      | -        |
+| CheckboxesEnum  | -        |
+| CheckboxesModel | -        |
+| FileUpload      | -        |
 
 # 共通プロパティ
 
@@ -190,6 +192,70 @@ class ProductFeature extends Model
 ```
 
 選択肢となる Enum については、SelectEnum を参照してください。
+
+# CheckboxesModel
+
+チェックボックスにより、別の Model のレコードを複数選択させます。  
+選択肢となる Model は、必ずしも Entry や Taxonomy である必要はありません。  
+
+## 追加プロパティ
+
+| プロパティ     | 必須 | 型              | 概要                                 |
+| ------------ | --- | --------------- | ----------------------------------- |
+| $model       | YES | class-string    | 選択肢となるModelのクラス名             |
+| $modelLabel  | YES | string          | 選択肢に表示させるModelのプロパティ      |
+| $modelOrder  |     | string|Closure  | 選択肢のソート順となるModelのプロパティ   |
+| $modelWhere  |     | array|Closure   | 選択肢を特定のレコードに絞り込む場合の条件 |
+
+```php
+new CheckboxesModel(
+    key: 'item_colors:color_id',
+    label: 'カラー',
+    model: Color::class,
+    modelLabel: 'color_name',
+    colSize: 3,
+),
+```
+
+**key** には、HasMany リレーションのリレーション名と、  
+選択したIDが格納されるリレーション先の Model のプロパティ名を連結してセットします。  
+
+上記例の前提となる Model 構成は以下のとおりです。  
+
+```php
+/**
+ * @property int $id
+ */
+class Item extends Model implements Entry
+{
+    public function item_colors(): HasMany
+    {
+        return $this->hasMany(ItemColor::class);
+    }
+}
+
+/**
+ * @property int $id
+ * @property int $item_id
+ * @property int $color_id
+ */
+class ItemColor extends Model
+{
+
+}
+
+/**
+ * @property int $id
+ * @property string $color_name
+ */
+class Color extends Model
+{
+
+}
+```
+
+プロパティ $modelLabel, $modelOrder, $modelWhere については、  
+SelectModel を参照してください。
 
 # FileUpload
 ファイルアップロードのUIを表示させます。
