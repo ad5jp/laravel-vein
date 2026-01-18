@@ -6,9 +6,7 @@ namespace AD5jp\Vein\Node\Contracts;
 
 use AD5jp\Vein\Form\Contracts\Form;
 use AD5jp\Vein\Node\Attributes\ListField;
-use AD5jp\Vein\Node\Attributes\SearchField;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Validation\Validator;
 
 interface Entry extends RootNode
 {
@@ -31,5 +29,9 @@ interface Entry extends RootNode
      */
     public function editFields(): array;
 
-    public function editValidator(): ?Validator;
+    public function editValidatorRules(): array;
+
+    public function editValidatorMessages(): array;
+
+    public function editValidatorAttributes(): array;
 }

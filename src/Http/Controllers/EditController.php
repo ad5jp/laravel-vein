@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
 
 class EditController extends Controller
@@ -68,7 +69,15 @@ class EditController extends Controller
             abort(404);
         }
 
-        // TODO バリデーション
+        // バリデーション
+        if ($model->editValidatorRules()) {
+            Validator::make(
+                $request->all(),
+                $model->editValidatorRules(),
+                $model->editValidatorMessages(),
+                $model->editValidatorAttributes(),
+            )->validate();
+        }
 
         // フィールド情報取得
         $manager = new InputManager();

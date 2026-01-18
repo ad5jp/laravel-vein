@@ -7,7 +7,16 @@
         <a href="{{ route('vein.list', ['node' => $node]) }}" class="btn btn-secondary">一覧に戻る</a>
     </div>
     <section class="section">
-        {{-- TODO メッセージ --}}
+        @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
+
         <form action="{{ route('vein.add', ['node' => $node]) }}" method="post">
             @csrf
             @foreach ($editFields as $editField)

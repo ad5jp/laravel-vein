@@ -12,6 +12,7 @@ use Closure;
 use Exception;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
+use ReflectionEnum;
 
 class SelectEnum extends FormControl implements Form, SearchForm
 {
@@ -38,10 +39,8 @@ class SelectEnum extends FormControl implements Form, SearchForm
 
     public function renderInline(Model $values): string
     {
-        $value = $values->{$this->key} ?? $this->default;
-        if ($value && !($value instanceof $this->enum)) {
-            $value = ($this->enum)::tryFrom($value);
-        }
+        $value = $this->getValue($values);
+        $value = $this->regulateValue($value);
 
         $html = '';
 
@@ -89,5 +88,23 @@ class SelectEnum extends FormControl implements Form, SearchForm
         }
 
         return array_combine($values, $labels);
+    }
+
+    protected function regulateValue(mixed $value): mixed
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if ($value instanceof $this->enum) {
+            return $value;
+        }
+
+        $ref = new ReflectionEnum($this->enum);
+        if ($ref->getBackingType()->getName() === 'int') {
+            return ($this->enum)::tryFrom((int)$value);
+        }
+
+        return ($this->enum)::tryFrom((string)$value);
     }
 }

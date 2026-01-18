@@ -102,4 +102,9 @@ abstract class FormControl
     }
 
     public abstract function renderInline(Model $values): string;
+
+    protected function getValue(Model $values): mixed
+    {
+        return old($this->key, $values->{$this->key}) ?? $this->default;
+    }
 }

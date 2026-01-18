@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Node\Contracts;
 
-use Illuminate\Validation\Validator;
-
 interface Taxonomy extends RootNode
 {
     public function orderColumn(): ?string;
@@ -15,5 +13,9 @@ interface Taxonomy extends RootNode
      */
     public function editFields(): array;
 
-    public function editValidator(): ?Validator;
+    public function editValidatorRules(): array;
+
+    public function editValidatorMessages(): array;
+
+    public function editValidatorAttributes(): array;
 }

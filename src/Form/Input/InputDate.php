@@ -13,7 +13,7 @@ class InputDate extends FormControl implements Form, SearchForm
 {
     public function renderInline(Model $values): string
     {
-        $value = $values->{$this->key} ?? $this->default;
+        $value = $this->getValue($values);
 
         if ($value instanceof DateTimeInterface) {
             $value = $value->format('Y-m-d');

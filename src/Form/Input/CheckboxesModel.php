@@ -47,9 +47,8 @@ class CheckboxesModel extends FormControl implements Form
         list($relation_name, $saving_field) = $this->parseKey($values, $this->key);
 
         $value = $values->$relation_name->map(fn (Model $related) => $related->$saving_field)->all() ?: $this->default;
-        $value = array_map(function ($v) {
-            return $v instanceof BackedEnum ? $v->value : $v;
-        }, $value);
+        $value = old($this->key, $value);
+        $value = array_map($this->regulateValue(...), $value);
 
         $html = '';
 
@@ -170,5 +169,18 @@ class CheckboxesModel extends FormControl implements Form
         }
 
         throw new Exception('Model ' . get_class($model) . ' にリレーション ' . $relation_name . ' が定義されていません');
+    }
+
+    protected function regulateValue(mixed $value): mixed
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if ((new ($this->model)())->getKeyType() === 'string') {
+            return (string) $value;
+        }
+
+        return (int) $value;
     }
 }

@@ -12,7 +12,6 @@ use Exception;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class CheckboxesEnum extends FormControl implements Form
@@ -49,9 +48,8 @@ class CheckboxesEnum extends FormControl implements Form
         list($relation_name, $saving_field) = $this->parseKey($values, $this->key);
 
         $value = $values->$relation_name->map(fn (Model $related) => $related->$saving_field)->all() ?: $this->default;
-        $value = array_map(function ($v) {
-            return $v instanceof BackedEnum ? $v->value : $v;
-        }, $value);
+        $value = old($this->key, $value);
+        $value = array_map(fn ($v) => $v instanceof BackedEnum ? $v->value : $v, $value);
 
         $html = '';
 

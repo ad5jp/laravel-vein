@@ -12,7 +12,8 @@ class RadioModel extends SelectModel implements Form, SearchForm
 {
     public function renderInline(Model $values): string
     {
-        $value = $values->{$this->key} ?? $this->default;
+        $value = $this->getValue($values);
+        $value = $this->regulateValue($value);
 
         $html = '';
 

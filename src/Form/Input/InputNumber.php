@@ -15,7 +15,7 @@ class InputNumber extends FormControl implements Form, SearchForm
 
     public function renderInline(Model $values): string
     {
-        $value = $values->{$this->key} ?? $this->default;
+        $value = $this->getValue($values);
 
         $html = sprintf(
             '<input type="number" name="%s" value="%s" class="form-control">',

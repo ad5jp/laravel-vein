@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Node\Helpers;
 
-use Illuminate\Validation\Validator;
-
 trait TaxonomyHelper
 {
     public function menuName(): string
@@ -29,8 +27,18 @@ trait TaxonomyHelper
         return null;
     }
 
-    public function editValidator(): ?Validator
+    public function editValidatorRules(): array
     {
-        return null;
+        return [];
+    }
+
+    public function editValidatorMessages(): array
+    {
+        return [];
+    }
+
+    public function editValidatorAttributes(): array
+    {
+        return [];
     }
 }

@@ -12,10 +12,8 @@ class RadioEnum extends SelectEnum implements Form, SearchForm
 {
     public function renderInline(Model $values): string
     {
-        $value = $values->{$this->key} ?? $this->default;
-        if ($value && !($value instanceof $this->enum)) {
-            $value = ($this->enum)::tryFrom($value);
-        }
+        $value = $this->getValue($values);
+        $value = $this->regulateValue($value);
 
         $html = '';
 

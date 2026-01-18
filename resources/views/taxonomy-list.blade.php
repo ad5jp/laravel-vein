@@ -98,8 +98,19 @@ $(document).on('submit', '.__edit_form', function () {
         fetch(api, {
             method: 'POST',
             body: payload,
+            headers: {
+                "Accept": "application/json"
+            },
         })
-        .then(response => response.json())
+        .then(async response => {
+            const json = await response.json();
+            if (!response.ok) {
+                console.error(json);
+                alert(json.message);
+                throw new Error(json.message);
+            }
+            return json;
+        })
         .then(data => {
 
         })
@@ -121,9 +132,21 @@ $(document).on('submit', '.__add_form', function () {
         fetch(add_api, {
             method: 'POST',
             body: payload,
+            headers: {
+                "Accept": "application/json"
+            },
         })
-        .then(response => response.json())
+        .then(async response => {
+            const json = await response.json();
+            if (!response.ok) {
+                console.error(json);
+                alert(json.message);
+                throw new Error(json.message);
+            }
+            return json;
+        })
         .then(data => {
+            console.log(data);
             const clone = $(this).clone();
             clone.addClass('__edit_form');
             clone.removeClass('__add_form');
@@ -157,6 +180,9 @@ $(document).on('click', '.__delete_button', function () {
         fetch(api, {
             method: 'POST',
             body: payload,
+            headers: {
+                "Accept": "application/json"
+            },
         })
         .then(response => response.json())
         .then(data => {

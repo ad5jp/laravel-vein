@@ -44,10 +44,51 @@ class FileUpload extends FormControl implements Form
 
         $preview_html = '';
 
-        $file = $values->{$this->key} ?? null;
+        $file = $values->{$this->key};
+        $old = old($this->key);
 
-        if ($file) {
-            /** @var Model&File $file */
+        if ($old) {
+            if (str_starts_with($old, '{"')) {
+                // 新規アップロードファイルの old
+                $json = json_decode($old, true);
+                $tmp_file = Storage::disk(config('vein.temporary_disk'))->get($json['tmp_path']);
+                $service = new UploadService();
+                $preview = $service->forPreview($tmp_file, $json['mime_type'], $json['file_name']);
+
+                $preview_html = sprintf(
+                    '<div class="__uploader_preview_item col-6 col-md-3">'
+                    . '<img src="%s">'
+                    . '<input type="hidden" name="%s" value="%s">'
+                    . '<button class="__uploader_preview_remove" type="button"></button>'
+                    . '</div>',
+                    $preview,
+                    e($this->key),
+                    e($old),
+                );
+            } else {
+                // アップロード済IDの old
+                $belongsTo = $this->verifyRelation($values, $this->key);
+                $related_model = $belongsTo->getRelated();
+                $file = $related_model->find($old);
+                if ($file instanceof File) {
+                    $stored_file = Storage::disk($this->disk)->get($file->getFilePath());
+                    $service = new UploadService();
+                    $preview = $service->forPreview($stored_file, $file->getMimeType(), $file->getFileName());
+
+                    $preview_html = sprintf(
+                        '<div class="__uploader_preview_item col-6 col-md-3">'
+                        . '<img src="%s">'
+                        . '<input type="hidden" name="%s" value="%s">'
+                        . '<button class="__uploader_preview_remove" type="button"></button>'
+                        . '</div>',
+                        $preview,
+                        e($this->key),
+                        e($old),
+                    );
+                }
+            }
+        } elseif ($file instanceof Model && $file instanceof File) {
+            // 編集画面の初期表示時
             $stored_file = Storage::disk($this->disk)->get($file->getFilePath());
             $service = new UploadService();
             $preview = $service->forPreview($stored_file, $file->getMimeType(), $file->getFileName());
@@ -63,7 +104,6 @@ class FileUpload extends FormControl implements Form
                 e($file->getKey()),
             );
         }
-
 
         $html = sprintf(
             '<div class="__uploader" data-key="%s">'
@@ -88,6 +128,9 @@ class FileUpload extends FormControl implements Form
         $foreign_key = $belongsTo->getForeignKeyName();
 
         $value = $request[$this->key] ?? null;
+        if ($model->getKeyType() !== 'string' && is_numeric($value)) {
+            $value = (int)$value;
+        }
 
         // 値に変化がなければ、何もしない
         if ($model->$foreign_key === $value) {
@@ -111,6 +154,7 @@ class FileUpload extends FormControl implements Form
         // 一時ファイル情報 (JSON文字列) が送信されてきた場合
         if (str_starts_with($value, '{"')) {
             $json = json_decode($value, true);
+
             // 正規ディレクトリに移動
             $tmp_file = Storage::disk(config('vein.temporary_disk'))->get($json['tmp_path']);
             $store_path = $this->directory . '/' . basename($json['tmp_path']);
@@ -126,6 +170,7 @@ class FileUpload extends FormControl implements Form
             $new_file->save();
 
             $model->$foreign_key = $new_file->getKey();
+
             return $model;
         }
 

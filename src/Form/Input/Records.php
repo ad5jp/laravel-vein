@@ -28,8 +28,19 @@ class Records extends FormControl implements Form
         $editFields = $manager->parseEditField($record_model->editFields());
 
         // リレーションデータ取得
-        /** @var Collection<Model> */
         $records = $values->{$this->key};
+        // old の対応
+        // TODO Record のプロパティに親と同じプロパティ名があれば、親の old に上書きされる不具合がある
+        if ($old = old($this->key)) {
+            $records = collect();
+            foreach ($old as $row) {
+                $old_row = $record_model->newInstance();
+                foreach ($row as $key => $value) {
+                    $old_row->$key = $value;
+                }
+                $records->push($old_row);
+            }
+        }
 
         // 入力欄構築
         $html = '';

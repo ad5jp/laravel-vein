@@ -26,7 +26,7 @@ class TextArea extends FormControl implements Form
 
     public function renderInline(Model $values): string
     {
-        $value = $values->{$this->key} ?? $this->default;
+        $value = $this->getValue($values);
 
         $html = sprintf(
             '<textarea name="%s" class="form-control" rows="%s">%s</textarea>',

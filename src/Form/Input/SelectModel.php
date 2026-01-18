@@ -35,7 +35,8 @@ class SelectModel extends FormControl implements Form, SearchForm
 
     public function renderInline(Model $values): string
     {
-        $value = $values->{$this->key} ?? $this->default;
+        $value = $this->getValue($values);
+        $value = $this->regulateValue($value);
 
         $html = '';
 
@@ -71,5 +72,18 @@ class SelectModel extends FormControl implements Form, SearchForm
         return $query->get()->mapWithKeys(function (Model $model) {
             return [$model->getKey() => $model->{$this->modelLabel}];
         })->all();
+    }
+
+    protected function regulateValue(mixed $value): mixed
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if ((new ($this->model)())->getKeyType() === 'string') {
+            return (string) $value;
+        }
+
+        return (int) $value;
     }
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Node\Helpers;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Validation\Validator;
 
 trait EntryHelper
 {
@@ -43,8 +42,18 @@ trait EntryHelper
         return 20;
     }
 
-    public function editValidator(): ?Validator
+    public function editValidatorRules(): array
     {
-        return null;
+        return [];
+    }
+
+    public function editValidatorMessages(): array
+    {
+        return [];
+    }
+
+    public function editValidatorAttributes(): array
+    {
+        return [];
     }
 }
