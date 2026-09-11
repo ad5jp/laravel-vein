@@ -25,16 +25,17 @@
             <div class="text-end">
                 <button type="submit" class="btn btn-primary">更新</button>
             </div>
-            <div class="text-start">
-                <button type="submit" class="btn btn-sm btn-outline-danger" form="delete">削除</button>
-            </div>
         </form>
     </section>
 
-    {{-- TODO 確認ダイアログ --}}
-    <form action="{{ route('vein.delete', ['node' => $node, 'id' => $record->getKey()]) }}" method="post" id="delete">
-        @csrf
-    </form>
+    {{-- 更新から離して置く。並ぶと、更新のつもりで削除を押す距離になる --}}
+    <section class="section mt-5 pt-4 border-top">
+        <form action="{{ route('vein.delete', ['node' => $node, 'id' => $record->getKey()]) }}" method="post" id="delete">
+            @csrf
+            <button type="submit" class="btn btn-sm btn-outline-danger __confirm_delete">この{{ $model->menuName() }}を削除</button>
+            <p class="form-text mb-0">削除すると元に戻せません。</p>
+        </form>
+    </section>
 </div>
 
 @include('vein::parts.uploader')

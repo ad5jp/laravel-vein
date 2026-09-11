@@ -22,7 +22,7 @@
                 </div>
                 <div class="col" style="flex-basis: 200px;">
                     <button class="btn btn-primary">EDIT</button>
-                    <button class="btn btn-outline-danger __delete_button" type="button">DELETE</button>
+                    <button class="btn btn-outline-danger __delete_button __confirm_delete" type="button">DELETE</button>
                 </div>
             </form>
             @endforeach
@@ -144,7 +144,7 @@ $(document).on('submit', '.__add_form', function () {
             clone.data('id', data.key);
             clone.find('.__col_action').empty();
             clone.find('.__col_action').append('<button class="btn btn-primary">EDIT</button>');
-            clone.find('.__col_action').append('<button class="btn btn-outline-danger __delete_button" type="button">DELETE</button>');
+            clone.find('.__col_action').append('<button class="btn btn-outline-danger __delete_button __confirm_delete" type="button">DELETE</button>');
             clone.find('.__sort_handle').css('opacity', 1);
             clone.appendTo($('.__list'));
 
