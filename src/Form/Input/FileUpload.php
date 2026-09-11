@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Form\Input;
 
+use AD5jp\Vein\Form\Contracts\DeletesRelated;
 use AD5jp\Vein\Form\Contracts\Form;
 use AD5jp\Vein\Form\UploadService;
 use AD5jp\Vein\Node\Contracts\File;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class FileUpload extends FormControl implements Form
+class FileUpload extends FormControl implements DeletesRelated, Form
 {
     // TODO MimeType の指定
     public function __construct(
@@ -114,6 +115,23 @@ class FileUpload extends FormControl implements Form
         );
 
         return $html;
+    }
+
+    /**
+     * 親が削除されるとき、紐づくファイルのレコードと実体を消す。
+     */
+    public function deleteRelated(Model $model): void
+    {
+        $this->verifyRelation($model, $this->key);
+
+        $file = $model->{$this->key};
+
+        if (! $file instanceof Model || ! $file instanceof File) {
+            return;
+        }
+
+        Storage::disk($this->disk)->delete($file->getFilePath());
+        $file->delete();
     }
 
     public function beforeSave(Model $model, Arrayable|array $request): Model
