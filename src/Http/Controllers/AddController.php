@@ -91,7 +91,9 @@ class AddController extends Controller
         });
 
         if ($model instanceof Entry) {
-            return redirect()->route('vein.edit', ['node' => $node, 'id' => $record->getKey()]);
+            return redirect()
+                ->route('vein.edit', ['node' => $node, 'id' => $record->getKey()])
+                ->with('message.success', '追加しました');
         }
 
         return response()->json(['message' => '登録しました', 'key' => $record->getKey()]);
