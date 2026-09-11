@@ -48,6 +48,16 @@
   </div>
   @endauth
   <main class="main">
+    @foreach (['success' => 'success', 'error' => 'danger', 'info' => 'info'] as $type => $style)
+      @if (session()->has("message.{$type}"))
+      <div class="container">
+        <div class="alert alert-{{ $style }} alert-dismissible fade show" role="alert">
+          {{ session("message.{$type}") }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="閉じる"></button>
+        </div>
+      </div>
+      @endif
+    @endforeach
     @yield('content')
   </main>
 </div>
@@ -55,6 +65,25 @@
 <script>
 function toggleSidebar() {
   $('body').toggleClass('md-sidebar-hide').toggleClass('sm-sidebar-show')
+}
+
+// 通信が失敗しているのに成功したように見えるのを防ぐ。
+// 403 でも 500 でも、ここで例外にして呼び出し側に DOM を触らせない
+async function veinReadJson(response) {
+  let json = null;
+
+  try {
+    json = await response.json();
+  } catch (e) {
+    json = null;
+  }
+
+  if (!response.ok) {
+    console.error(json);
+    throw new Error((json && json.message) || '処理できませんでした。時間をおいて試してください。');
+  }
+
+  return json;
 }
 </script>
 

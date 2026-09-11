@@ -99,7 +99,9 @@ class EditController extends Controller
         });
 
         if ($model instanceof Entry || $model instanceof Page) {
-            return redirect()->route('vein.edit', ['node' => $node, 'id' => $record->getKey()]);
+            return redirect()
+                ->route('vein.edit', ['node' => $node, 'id' => $record->getKey()])
+                ->with('message.success', '保存しました');
         }
 
         return response()->json(['message' => '更新しました']);
@@ -125,7 +127,9 @@ class EditController extends Controller
         (new NodeDeleter)->delete($record);
 
         if ($model instanceof Entry) {
-            return redirect()->route('vein.list', ['node' => $node]);
+            return redirect()
+                ->route('vein.list', ['node' => $node])
+                ->with('message.success', '削除しました');
         }
 
         return response()->json(['message' => '削除しました']);
