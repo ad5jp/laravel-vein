@@ -51,32 +51,16 @@ class Records extends FormControl implements Form
         $html .= '<div class="list-group __records_list">';
         foreach ($records as $i => $record) {
             /** @var int $i */
-            $html .= '<div class="list-group-item __records_list_item">';
-            $html .= sprintf('<input type="hidden" name="%s" value="%s" />', $record->getKeyName(), $record->getKey());
-            foreach ($editFields as $editField) {
-                $input = $editField->render($record);
-                $input = preg_replace_callback('/name="(.*?)"/', fn ($matches) => $this->wrapName($matches, $i), $input); // name を置換
-                $html .= $input;
-            }
-            $html .= '<button type="button" class="btn btn-sm btn-outline-secondary __records_remove"><i class="bi bi-trash"></i></button>';
-            $html .= '</div>';
+            $html .= $this->renderRow($record, $editFields, $i);
         }
         $html .= '</div><!--//.__records_list-->';
         $html .= '<div class="mt-3 text-end">';
         $html .= sprintf('<button type="button" class="btn btn-outline-primary __records_add">%sを追加</button>', $this->label ?? '行');
         $html .= '</div>';
 
-        $record = $record_model->newInstance();
+        // 「追加」で複製されるテンプレート。JS が [0] を実際の添字に置換する
         $html .= '<script type="application/xml">';
-        $html .= '<div class="list-group-item __records_list_item">';
-        $html .= sprintf('<input type="hidden" name="%s" value="" />', $record->getKeyName());
-        foreach ($editFields as $editField) {
-            $input = $editField->render($record);
-            $input = preg_replace_callback('/name="(.*?)"/', fn ($matches) => $this->wrapName($matches, 0), $input); // name を置換
-            $html .= $input;
-        }
-        $html .= '<button type="button" class="btn btn-sm btn-outline-secondary __records_remove"><i class="bi bi-trash"></i></button>';
-        $html .= '</div>';
+        $html .= $this->renderRow($record_model->newInstance(), $editFields, 0);
         $html .= '</script>';
         $html .= '</div><!--//.__records-->';
 
@@ -120,7 +104,10 @@ class Records extends FormControl implements Form
         // update or create records
         foreach ($request_records as $request_record) {
             $request_record_key = $request_record[$record_model->getKeyName()] ?? null;
-            $record = $request_record_key ? $exist_records->first(fn (Model $row) => $row->getKey() === $request_record_key) : null;
+            // HTTP 経由の主キーは文字列、getKey() は整数で返ることが多い
+            $record = $this->isFilledKey($request_record_key)
+                ? $exist_records->first(fn (Model $row) => (string) $row->getKey() === (string) $request_record_key)
+                : null;
             if ($record === null) {
                 $record = $record_model->newInstance();
                 $record->$foreign_key = $model->getKey();
@@ -132,8 +119,14 @@ class Records extends FormControl implements Form
         }
 
         // delete missing records
-        $request_records_keys = array_column($request_records, $record_model->getKeyName());
-        $exist_records->filter(fn (Model $row) => ! in_array($row->getKey(), $request_records_keys))
+        $request_records_keys = array_map(
+            fn ($key) => (string) $key,
+            array_filter(
+                array_column($request_records, $record_model->getKeyName()),
+                fn ($key) => $this->isFilledKey($key),
+            ),
+        );
+        $exist_records->filter(fn (Model $row) => ! in_array((string) $row->getKey(), $request_records_keys, true))
             ->each(fn (Model $row) => $row->delete());
 
         return $model;
@@ -161,12 +154,68 @@ class Records extends FormControl implements Form
         throw new Exception('Model '.get_class($model).' にリレーション '.$key.' が定義されていません');
     }
 
-    private function wrapName(array $matches, int $index): string
+    /**
+     * 1 行分の入力欄を組み立てる。
+     *
+     * 主キーの hidden も含めて name を書き換えるのが要点。ここが漏れると
+     * 主キーが素の名前で送信され、受け側が既存行を見つけられなくなる。
+     *
+     * @param  Form[]  $editFields
+     */
+    private function renderRow(Model $record, array $editFields, int $index): string
     {
-        if (str_ends_with($matches[1], '[]')) {
-            return sprintf('name="%s[%s][%s][]"', $this->key, $index, $matches[1]);
+        $row = sprintf(
+            '<input type="hidden" name="%s" value="%s" />',
+            e($record->getKeyName()),
+            e((string) $record->getKey()),
+        );
+
+        foreach ($editFields as $editField) {
+            $row .= $editField->render($record);
         }
 
-        return sprintf('name="%s[%s][%s]"', $this->key, $index, $matches[1]);
+        return '<div class="list-group-item __records_list_item">'
+            .$this->wrapKeys($row, $index)
+            .'<button type="button" class="btn btn-sm btn-outline-secondary __records_remove"><i class="bi bi-trash"></i></button>'
+            .'</div>';
+    }
+
+    /**
+     * 行の中の name と data-key を、この Records の添字付きに書き換える。
+     *
+     * data-key も対象にするのは、FileUpload がそこから name を組み立てるため。
+     * 書き換えないと、行の中でアップロードしたファイルが行に紐づかない。
+     */
+    private function wrapKeys(string $html, int $index): string
+    {
+        $html = preg_replace_callback(
+            '/name="(.*?)"/',
+            fn (array $matches) => sprintf('name="%s"', $this->wrapKey($matches[1], $index)),
+            $html,
+        );
+
+        return preg_replace_callback(
+            '/data-key="(.*?)"/',
+            fn (array $matches) => sprintf('data-key="%s"', $this->wrapKey($matches[1], $index)),
+            $html,
+        );
+    }
+
+    private function wrapKey(string $key, int $index): string
+    {
+        // 配列で送る入力（チェックボックス等）は [] を外してから包み、末尾に戻す
+        if (str_ends_with($key, '[]')) {
+            return sprintf('%s[%s][%s][]', $this->key, $index, substr($key, 0, -2));
+        }
+
+        return sprintf('%s[%s][%s]', $this->key, $index, $key);
+    }
+
+    /**
+     * 主キーが送られてきたか。新しい行では空文字で届く。
+     */
+    private function isFilledKey(mixed $key): bool
+    {
+        return $key !== null && $key !== '';
     }
 }
