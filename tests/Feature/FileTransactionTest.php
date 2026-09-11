@@ -32,8 +32,8 @@ class FileTransactionTest extends TestCase
         Storage::fake(config('vein.upload_disk'));
         Storage::fake(config('vein.temporary_disk'));
 
-        Storage::disk(config('vein.upload_disk'))->put($this->oldPath, '旧');
-        Storage::disk(config('vein.temporary_disk'))->put('vein-tmp/new.png', '新');
+        Storage::disk(config('vein.upload_disk'))->put($this->oldPath, $this->pngBytes());
+        Storage::disk(config('vein.temporary_disk'))->put('vein-tmp/new.png', $this->pngBytes());
     }
 
     private function recordWithFile(): TestRecord
@@ -44,7 +44,7 @@ class FileTransactionTest extends TestCase
             'file_name' => 'old.png',
             'file_path' => $this->oldPath,
             'mime_type' => 'image/png',
-            'file_size' => 3,
+            'file_size' => strlen($this->pngBytes()),
         ]);
 
         $record = new TestRecord(['caption' => '1 枚目', 'test_file_id' => $file->id]);
@@ -59,7 +59,7 @@ class FileTransactionTest extends TestCase
             'tmp_path' => 'vein-tmp/new.png',
             'file_name' => 'new.png',
             'mime_type' => 'image/png',
-            'file_size' => 3,
+            'file_size' => strlen($this->pngBytes()),
         ])];
     }
 
