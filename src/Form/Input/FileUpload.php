@@ -67,7 +67,7 @@ class FileUpload extends FormControl implements DeletesRelated, Form
                     .'<input type="hidden" name="%s" value="%s">'
                     .'<button class="__uploader_preview_remove" type="button"></button>'
                     .'</div>',
-                    $preview,
+                    e($preview),
                     e($this->key),
                     e($old),
                 );
@@ -87,7 +87,7 @@ class FileUpload extends FormControl implements DeletesRelated, Form
                         .'<input type="hidden" name="%s" value="%s">'
                         .'<button class="__uploader_preview_remove" type="button"></button>'
                         .'</div>',
-                        $preview,
+                        e($preview),
                         e($this->key),
                         e($old),
                     );
@@ -105,7 +105,7 @@ class FileUpload extends FormControl implements DeletesRelated, Form
                 .'<input type="hidden" name="%s" value="%s">'
                 .'<button class="__uploader_preview_remove" type="button"></button>'
                 .'</div>',
-                $preview,
+                e($preview),
                 e($this->key),
                 e($file->getKey()),
             );
