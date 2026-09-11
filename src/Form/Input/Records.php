@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Form\Input;
 
+use AD5jp\Vein\Form\Contracts\DeletesRelated;
 use AD5jp\Vein\Form\Contracts\Form;
 use AD5jp\Vein\Form\InputManager;
 use AD5jp\Vein\Node\Contracts\Record;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
-class Records extends FormControl implements Form
+class Records extends FormControl implements DeletesRelated, Form
 {
     public function render(Model $values): string
     {
@@ -130,6 +131,29 @@ class Records extends FormControl implements Form
             ->each(fn (Model $row) => $row->delete());
 
         return $model;
+    }
+
+    /**
+     * 親が削除されるとき、子レコードも消す。
+     *
+     * 子がさらにファイルを持つことがあるので、子の editFields も辿る。
+     */
+    public function deleteRelated(Model $model): void
+    {
+        $relation = $this->verifyRelation($model, $this->key);
+
+        $manager = new InputManager;
+        $editFields = $manager->parseEditField($relation->getRelated()->editFields());
+
+        foreach ($model->{$this->key} as $record) {
+            foreach ($editFields as $editField) {
+                if ($editField instanceof DeletesRelated) {
+                    $editField->deleteRelated($record);
+                }
+            }
+
+            $record->delete();
+        }
     }
 
     private function verifyRelation(Model $model, string $key): HasMany
