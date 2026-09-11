@@ -40,6 +40,22 @@ class Row implements Form
         throw new Exception('Row cannot be rendered inline');
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    public function validationRules(Model $model): array
+    {
+        $rules = [];
+
+        foreach ($this->children as $child) {
+            if ($child instanceof FormControl) {
+                $rules = array_merge($rules, $child->validationRules($model));
+            }
+        }
+
+        return $rules;
+    }
+
     public function beforeSave(Model $model, Arrayable|array $request): Model
     {
         foreach ($this->children as $child) {

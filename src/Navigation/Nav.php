@@ -13,6 +13,4 @@ class Nav
     public ?string $link;
 
     public int $order;
-
-    public array $children = [];
 }
