@@ -15,7 +15,7 @@ $admin_uri = config('vein.admin_uri');
 
 Route::group(['middleware' => ['web'], 'prefix' => $admin_uri], static function (): void {
     Route::get('/signin', [SigninController::class, 'init'])->name('vein.signin');
-    Route::post('/signin', [SigninController::class, 'signin']);
+    Route::post('/signin', [SigninController::class, 'signin'])->middleware('throttle:5,1');
 
     $guard = config('vein.admin_guard') ?? config('auth.defaults.guard');
 
