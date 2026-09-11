@@ -22,21 +22,83 @@ abstract class FormControl
         public ?Closure $searching = null,
     ) {}
 
+    /**
+     * 保存の前処理。
+     *
+     * ここは上書きしない。要素ごとの処理は applyBeforeSave() に書く。
+     * beforeSaving の呼び出しをここに集めておかないと、要素を足すたびに
+     * 配線を書き忘れる。
+     */
     public function beforeSave(Model $model, Arrayable|array $request): Model
     {
         if ($request instanceof Arrayable) {
             $request = $request->toArray();
         }
 
+        $model = $this->applyBeforeSave($model, $request);
+
+        if ($this->beforeSaving) {
+            $model = ($this->beforeSaving)($model, $request) ?? $model;
+        }
+
+        return $model;
+    }
+
+    /**
+     * 保存の後処理。上書きしない（applyAfterSave() に書く）。
+     */
+    public function afterSave(Model $model, Arrayable|array $request): Model
+    {
+        if ($request instanceof Arrayable) {
+            $request = $request->toArray();
+        }
+
+        $model = $this->applyAfterSave($model, $request);
+
+        if ($this->afterSaving) {
+            $model = ($this->afterSaving)($model, $request) ?? $model;
+        }
+
+        return $model;
+    }
+
+    /**
+     * 要素ごとの保存前処理。上書きするならこちら。
+     *
+     * @param  array<string, mixed>  $request
+     */
+    protected function applyBeforeSave(Model $model, array $request): Model
+    {
         $model->{$this->key} = $request[$this->key] ?? null;
 
         return $model;
     }
 
-    public function afterSave(Model $model, Arrayable|array $request): Model
+    /**
+     * 要素ごとの保存後処理。上書きするならこちら。
+     *
+     * @param  array<string, mixed>  $request
+     */
+    protected function applyAfterSave(Model $model, array $request): Model
     {
-        // DO NOTHING
         return $model;
+    }
+
+    /**
+     * この要素が要求するバリデーション規則。
+     *
+     * required を指定した要素は、ここで規則を出す。
+     * 子を持つ要素（Group / Row / Records）は子の分をまとめて返す。
+     *
+     * @return array<string, mixed>
+     */
+    public function validationRules(Model $model): array
+    {
+        if (! $this->required) {
+            return [];
+        }
+
+        return [$this->key => ['required']];
     }
 
     public function searchQuery(Builder $builder, Arrayable|array $request): Builder

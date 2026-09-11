@@ -22,10 +22,17 @@
 | $label        |  -  | string  | ラベル文字列             |
 | $default      |  -  | mixed   | デフォルト値             |
 | $colSize      |  -  | int     | 入力欄の幅 (画面幅＝12)   |
-| $required     |  -  | bool    | 入力必須か               |
-| $beforeSaving |  -  | Closure |                        |
-| $afterSaving  |  -  | Closure |                        |
-| $searching    |  -  | Closure |                        |
+| $required     |  -  | bool    | 入力必須か。true にすると required のバリデーションが掛かる |
+| $beforeSaving |  -  | Closure | 保存前に呼ばれる。`fn (Model $model, array $request) => $model` |
+| $afterSaving  |  -  | Closure | 保存後に呼ばれる。引数と戻り値は $beforeSaving と同じ |
+| $searching    |  -  | Closure | 検索条件を組み立てる。`fn (Builder $builder, mixed $value) => $builder` |
+
+$beforeSaving / $afterSaving は Model を返してください。返さなかった場合は渡された Model が
+そのまま使われます。
+
+独自の入力要素を作るときは、beforeSave() / afterSave() ではなく
+applyBeforeSave() / applyAfterSave() を実装してください。上記の Closure の呼び出しは
+FormControl 側でまとめて行っています。
 
 # SelectEnum
 

@@ -4,23 +4,30 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Form\Input;
 
+use AD5jp\Vein\Form\Concerns\ResolvesRelations;
 use AD5jp\Vein\Form\Contracts\DeletesRelated;
 use AD5jp\Vein\Form\Contracts\Form;
 use AD5jp\Vein\Form\InputManager;
 use AD5jp\Vein\Node\Contracts\Record;
 use Exception;
-use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 
 class Records extends FormControl implements DeletesRelated, Form
 {
+    use ResolvesRelations;
+
+    private function relation(Model $model): HasMany
+    {
+        /** @var HasMany */
+        return $this->resolveRelation($model, $this->key, HasMany::class, Record::class);
+    }
+
     public function render(Model $values): string
     {
         // リレーション定義取得
-        $relation = $this->verifyRelation($values, $this->key);
+        $relation = $this->relation($values);
         $record_model = $relation->getRelated();
 
         // フィールド情報取得
@@ -78,20 +85,39 @@ class Records extends FormControl implements DeletesRelated, Form
         throw new Exception('Records cannot be rendered inline');
     }
 
-    public function beforeSave(Model $model, Arrayable|array $request): Model
+    /**
+     * 子レコードの規則は key.*.子のkey の形にする。
+     */
+    public function validationRules(Model $model): array
+    {
+        $rules = parent::validationRules($model);
+
+        $record_model = $this->relation($model)->getRelated();
+        $editFields = (new InputManager)->parseEditField($record_model->editFields());
+
+        foreach ($editFields as $editField) {
+            if (! $editField instanceof FormControl) {
+                continue;
+            }
+
+            foreach ($editField->validationRules($record_model) as $child_key => $child_rules) {
+                $rules[sprintf('%s.*.%s', $this->key, $child_key)] = $child_rules;
+            }
+        }
+
+        return $rules;
+    }
+
+    protected function applyBeforeSave(Model $model, array $request): Model
     {
         // DO NOTHING
         return $model;
     }
 
-    public function afterSave(Model $model, Arrayable|array $request): Model
+    protected function applyAfterSave(Model $model, array $request): Model
     {
-        if ($request instanceof Arrayable) {
-            $request = $request->toArray();
-        }
-
         // リレーション定義取得
-        $relation = $this->verifyRelation($model, $this->key);
+        $relation = $this->relation($model);
         $record_model = $relation->getRelated();
         $foreign_key = $relation->getForeignKeyName();
 
@@ -140,7 +166,7 @@ class Records extends FormControl implements DeletesRelated, Form
      */
     public function deleteRelated(Model $model): void
     {
-        $relation = $this->verifyRelation($model, $this->key);
+        $relation = $this->relation($model);
 
         $manager = new InputManager;
         $editFields = $manager->parseEditField($relation->getRelated()->editFields());
@@ -154,28 +180,6 @@ class Records extends FormControl implements DeletesRelated, Form
 
             $record->delete();
         }
-    }
-
-    private function verifyRelation(Model $model, string $key): HasMany
-    {
-        foreach ([$key, Str::camel($key)] as $relation_method_name) {
-            if (method_exists($model, $relation_method_name)) {
-                $relation = $model->$relation_method_name();
-
-                if (! $relation instanceof HasMany) {
-                    throw new Exception('Model '.get_class($model).' の '.$relation_method_name.'() は HasMany リレーションではありません');
-                }
-
-                $file_model = $relation->getRelated();
-                if (! $file_model instanceof Record) {
-                    throw new Exception('Model '.get_class($file_model).' は File インターフェイスを実装していません');
-                }
-
-                return $relation;
-            }
-        }
-
-        throw new Exception('Model '.get_class($model).' にリレーション '.$key.' が定義されていません');
     }
 
     /**
