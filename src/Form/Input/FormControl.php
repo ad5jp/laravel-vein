@@ -8,7 +8,6 @@ use Closure;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Request;
 
 abstract class FormControl
 {
@@ -21,8 +20,7 @@ abstract class FormControl
         public ?Closure $beforeSaving = null,
         public ?Closure $afterSaving = null,
         public ?Closure $searching = null,
-    ) {
-    }
+    ) {}
 
     public function beforeSave(Model $model, Arrayable|array $request): Model
     {
@@ -31,6 +29,7 @@ abstract class FormControl
         }
 
         $model->{$this->key} = $request[$this->key] ?? null;
+
         return $model;
     }
 
@@ -66,6 +65,7 @@ abstract class FormControl
         }
 
         $model->{$this->key} = $request[$this->key] ?? null;
+
         return $model;
     }
 
@@ -101,7 +101,7 @@ abstract class FormControl
         return $html;
     }
 
-    public abstract function renderInline(Model $values): string;
+    abstract public function renderInline(Model $values): string;
 
     protected function getValue(Model $values): mixed
     {

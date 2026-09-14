@@ -43,7 +43,7 @@ abstract class TestCase extends Orchestra
     {
         tap($app->make(Repository::class), function (Repository $config): void {
             // HTTP を叩くテストで暗号化キーが要る。値は毎回作り捨て。
-            $config->set('app.key', 'base64:' . base64_encode(random_bytes(32)));
+            $config->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
 
             $config->set('database.default', 'testing');
 
@@ -58,7 +58,7 @@ abstract class TestCase extends Orchestra
             ]);
 
             // Node を探す名前空間。先頭のバックスラッシュは必須。
-            $config->set('vein.model_namespaces', ['\\' . __NAMESPACE__ . '\\Fixtures']);
+            $config->set('vein.model_namespaces', ['\\'.__NAMESPACE__.'\\Fixtures']);
         });
     }
 
@@ -75,7 +75,7 @@ abstract class TestCase extends Orchestra
      */
     protected function createFixtureSchema(): void
     {
-        Schema::create((new TestUser())->getTable(), function ($table): void {
+        Schema::create((new TestUser)->getTable(), function ($table): void {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
@@ -84,14 +84,14 @@ abstract class TestCase extends Orchestra
             $table->timestamps();
         });
 
-        Schema::create((new TestEntry())->getTable(), function ($table): void {
+        Schema::create((new TestEntry)->getTable(), function ($table): void {
             $table->id();
             $table->string('title');
             $table->text('body')->nullable();
             $table->timestamps();
         });
 
-        Schema::create((new TestRecord())->getTable(), function ($table): void {
+        Schema::create((new TestRecord)->getTable(), function ($table): void {
             $table->id();
             $table->foreignId('test_entry_id');
             $table->string('caption')->nullable();

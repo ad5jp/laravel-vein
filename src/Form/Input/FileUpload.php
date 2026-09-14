@@ -12,7 +12,6 @@ use Exception;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -52,15 +51,15 @@ class FileUpload extends FormControl implements Form
                 // 新規アップロードファイルの old
                 $json = json_decode($old, true);
                 $tmp_file = Storage::disk(config('vein.temporary_disk'))->get($json['tmp_path']);
-                $service = new UploadService();
+                $service = new UploadService;
                 $preview = $service->forPreview($tmp_file, $json['mime_type'], $json['file_name']);
 
                 $preview_html = sprintf(
                     '<div class="__uploader_preview_item col-6 col-md-3">'
-                    . '<img src="%s">'
-                    . '<input type="hidden" name="%s" value="%s">'
-                    . '<button class="__uploader_preview_remove" type="button"></button>'
-                    . '</div>',
+                    .'<img src="%s">'
+                    .'<input type="hidden" name="%s" value="%s">'
+                    .'<button class="__uploader_preview_remove" type="button"></button>'
+                    .'</div>',
                     $preview,
                     e($this->key),
                     e($old),
@@ -72,15 +71,15 @@ class FileUpload extends FormControl implements Form
                 $file = $related_model->find($old);
                 if ($file instanceof File) {
                     $stored_file = Storage::disk($this->disk)->get($file->getFilePath());
-                    $service = new UploadService();
+                    $service = new UploadService;
                     $preview = $service->forPreview($stored_file, $file->getMimeType(), $file->getFileName());
 
                     $preview_html = sprintf(
                         '<div class="__uploader_preview_item col-6 col-md-3">'
-                        . '<img src="%s">'
-                        . '<input type="hidden" name="%s" value="%s">'
-                        . '<button class="__uploader_preview_remove" type="button"></button>'
-                        . '</div>',
+                        .'<img src="%s">'
+                        .'<input type="hidden" name="%s" value="%s">'
+                        .'<button class="__uploader_preview_remove" type="button"></button>'
+                        .'</div>',
                         $preview,
                         e($this->key),
                         e($old),
@@ -90,15 +89,15 @@ class FileUpload extends FormControl implements Form
         } elseif ($file instanceof Model && $file instanceof File) {
             // 編集画面の初期表示時
             $stored_file = Storage::disk($this->disk)->get($file->getFilePath());
-            $service = new UploadService();
+            $service = new UploadService;
             $preview = $service->forPreview($stored_file, $file->getMimeType(), $file->getFileName());
 
             $preview_html = sprintf(
                 '<div class="__uploader_preview_item col-6 col-md-3">'
-                . '<img src="%s">'
-                . '<input type="hidden" name="%s" value="%s">'
-                . '<button class="__uploader_preview_remove" type="button"></button>'
-                . '</div>',
+                .'<img src="%s">'
+                .'<input type="hidden" name="%s" value="%s">'
+                .'<button class="__uploader_preview_remove" type="button"></button>'
+                .'</div>',
                 $preview,
                 e($this->key),
                 e($file->getKey()),
@@ -107,9 +106,9 @@ class FileUpload extends FormControl implements Form
 
         $html = sprintf(
             '<div class="__uploader" data-key="%s">'
-            . '<div class="__uploader_preview row mb-2">%s</div>'
-            . '<input type="file" class="__uploader_input">'
-            . '</div>',
+            .'<div class="__uploader_preview row mb-2">%s</div>'
+            .'<input type="file" class="__uploader_input">'
+            .'</div>',
             e($this->key),
             $preview_html,
         );
@@ -129,11 +128,11 @@ class FileUpload extends FormControl implements Form
 
         $value = $request[$this->key] ?? null;
         if ($model->getKeyType() !== 'string' && is_numeric($value)) {
-            $value = (int)$value;
+            $value = (int) $value;
         }
 
         // 値に変化がなければ、何もしない
-        if ($model->$foreign_key === $value) {
+        if ($value === $model->$foreign_key) {
             return $model;
         }
 
@@ -148,6 +147,7 @@ class FileUpload extends FormControl implements Form
         // 変更後の値がなけれれば null にして終了
         if ($value === null) {
             $model->$foreign_key = null;
+
             return $model;
         }
 
@@ -157,7 +157,7 @@ class FileUpload extends FormControl implements Form
 
             // 正規ディレクトリに移動
             $tmp_file = Storage::disk(config('vein.temporary_disk'))->get($json['tmp_path']);
-            $store_path = $this->directory . '/' . basename($json['tmp_path']);
+            $store_path = $this->directory.'/'.basename($json['tmp_path']);
             Storage::disk($this->disk)->put($store_path, $tmp_file);
 
             // FILEモデルを保存
@@ -177,6 +177,7 @@ class FileUpload extends FormControl implements Form
         // 一時ファイルのパス以外 ＝ 保存済の ID が送信されてきた場合
         // （現状の実装では、IDが送られてくるのは値が変化していないときだけなので、ここに来ることはあり得ないが）
         $model->$foreign_key = $value;
+
         return $model;
     }
 
@@ -186,19 +187,19 @@ class FileUpload extends FormControl implements Form
             if (method_exists($model, $relation_method_name)) {
                 $relation = $model->$relation_method_name();
 
-                if (!$relation instanceof BelongsTo) {
-                    throw new Exception('Model ' . get_class($model) . ' の ' . $relation_method_name . '() は BelongsTo リレーションではありません');
+                if (! $relation instanceof BelongsTo) {
+                    throw new Exception('Model '.get_class($model).' の '.$relation_method_name.'() は BelongsTo リレーションではありません');
                 }
 
                 $file_model = $relation->getRelated();
-                if (!$file_model instanceof File) {
-                    throw new Exception('Model ' . get_class($file_model) . ' は File インターフェイスを実装していません');
+                if (! $file_model instanceof File) {
+                    throw new Exception('Model '.get_class($file_model).' は File インターフェイスを実装していません');
                 }
 
                 return $relation;
             }
         }
 
-        throw new Exception('Model ' . get_class($model) . ' にリレーション ' . $key . ' が定義されていません');
+        throw new Exception('Model '.get_class($model).' にリレーション '.$key.' が定義されていません');
     }
 }

@@ -11,6 +11,7 @@ trait EntryHelper
     public function menuName(): string
     {
         $class_name_parts = explode('\\', self::class);
+
         return $class_name_parts[array_key_last($class_name_parts)];
     }
 

@@ -15,7 +15,7 @@ class UploadController extends Controller
     {
         $uploaded_file = $request->file('upload');
 
-        if (!$uploaded_file->isValid()) {
+        if (! $uploaded_file->isValid()) {
             abort(400, $uploaded_file->getErrorMessage());
         }
 
@@ -23,7 +23,7 @@ class UploadController extends Controller
             // TODO リサイズ処理
             $path = $uploaded_file->store(trim(config('vein.temporary_path'), '/'), config('vein.temporary_disk'));
 
-            $service = new UploadService();
+            $service = new UploadService;
             $preview = $service->forPreview($uploaded_file->getContent(), $uploaded_file->getClientMimeType(), $uploaded_file->getClientOriginalName());
 
             $json = [

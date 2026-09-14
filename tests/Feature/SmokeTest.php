@@ -40,9 +40,9 @@ class SmokeTest extends TestCase
         $this->assertSame(['1 枚目', '2 枚目'], $entry->records()->pluck('caption')->all());
     }
 
-    public function test_Entry_のデフォルトが_EntryHelper_で埋まる(): void
+    public function test_entry_のデフォルトが_entry_helper_で埋まる(): void
     {
-        $entry = new TestEntry();
+        $entry = new TestEntry;
 
         $this->assertSame('TestEntry', $entry->menuName());
         $this->assertSame(20, $entry->listItemPerPage());

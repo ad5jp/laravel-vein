@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Http\Controllers;
 
 use AD5jp\Vein\Form\InputManager;
-use AD5jp\Vein\Node\NodeManager;
 use AD5jp\Vein\Node\Attributes\ListField;
 use AD5jp\Vein\Node\Contracts\Entry;
 use AD5jp\Vein\Node\Contracts\Taxonomy;
+use AD5jp\Vein\Node\NodeManager;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,7 +20,7 @@ class ListController extends Controller
 {
     public function init(string $node, Request $request): View
     {
-        $manager = new NodeManager();
+        $manager = new NodeManager;
         $model = $manager->resolve($node);
 
         if ($model === null) {
@@ -39,7 +39,7 @@ class ListController extends Controller
     }
 
     /**
-     * @param Entry&Model $entry
+     * @param  Entry&Model  $entry
      */
     private function initForEntry(Entry $model, string $node, Request $request): View
     {
@@ -49,7 +49,7 @@ class ListController extends Controller
         $search = $model->newInstance();
 
         // 検索フォーム情報取得
-        $manager = new InputManager();
+        $manager = new InputManager;
         $searchFields = $manager->parseSearchField($model->searchFields());
 
         // データ取得
@@ -73,12 +73,12 @@ class ListController extends Controller
             'search' => $search,
             'listFields' => $listFields,
             'searchFields' => $searchFields,
-            'entries' => $entries
+            'entries' => $entries,
         ]);
     }
 
     /**
-     * @param Entry&Model $entry
+     * @param  Entry&Model  $entry
      */
     private function initForTaxonomy(Taxonomy $model, string $node): View
     {
@@ -94,27 +94,27 @@ class ListController extends Controller
         $taxonomies = $builder->get();
 
         // フィールド情報取得
-        $manager = new InputManager();
+        $manager = new InputManager;
         $editFields = $manager->parseEditField($model->editFields());
 
         return view('vein::taxonomy-list', [
             'node' => $node,
             'model' => $model,
             'editFields' => $editFields,
-            'taxonomies' => $taxonomies
+            'taxonomies' => $taxonomies,
         ]);
     }
 
     public function sort(string $node, Request $request): JsonResponse
     {
-        $manager = new NodeManager();
+        $manager = new NodeManager;
         $model = $manager->resolve($node);
 
-        if (!$model instanceof Taxonomy) {
+        if (! $model instanceof Taxonomy) {
             abort(404);
         }
 
-        if (!$orderColumn = $model->orderColumn()) {
+        if (! $orderColumn = $model->orderColumn()) {
             abort(404);
         }
 

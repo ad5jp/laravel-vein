@@ -14,9 +14,7 @@ class Row implements Form
     public function __construct(
         /** @var Form[] */
         public array $children = [],
-    ) {
-
-    }
+    ) {}
 
     public function render(Model $model): string
     {

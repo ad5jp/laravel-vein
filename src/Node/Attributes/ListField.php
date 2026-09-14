@@ -22,9 +22,7 @@ class ListField
         public bool $sortable = true,
         public ?Builder $sort_asc = null,
         public ?Builder $sort_desc = null,
-    ) {
-
-    }
+    ) {}
 
     public function getValue(Model $model): ?string
     {
@@ -40,11 +38,11 @@ class ListField
             return $value->name;
         }
 
-        return (string)$value;
+        return (string) $value;
     }
 
     /**
-     * @param array<ListField|array{0:string}|array{0:string, 1:string}|array{0:string, 1:string, 2:bool}> $listFields
+     * @param  array<ListField|array{0:string}|array{0:string, 1:string}|array{0:string, 1:string, 2:bool}>  $listFields
      * @return ListField[]
      */
     public static function parse(array $listFields): array
@@ -58,12 +56,12 @@ class ListField
                 return ListField::fromArray($listField);
             }
 
-            throw new Exception('invalid element for listFields: ' . var_export($listField, true));
+            throw new Exception('invalid element for listFields: '.var_export($listField, true));
         }, $listFields);
     }
 
     /**
-     * @param array{0:string}|array{0:string, 1:string}|array{0:string, 1:string, 2:bool} $attributes
+     * @param  array{0:string}|array{0:string, 1:string}|array{0:string, 1:string, 2:bool}  $attributes
      */
     public static function fromArray(array $attributes): self
     {

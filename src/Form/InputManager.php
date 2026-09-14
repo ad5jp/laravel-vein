@@ -24,8 +24,8 @@ class InputManager
                 return $this->resolve($editField);
             }
 
-            if (!$editField instanceof Form) {
-                throw new Exception('invalid element for editFields: ' . var_export($editField, true));
+            if (! $editField instanceof Form) {
+                throw new Exception('invalid element for editFields: '.var_export($editField, true));
             }
 
             return $editField;
@@ -42,8 +42,8 @@ class InputManager
                 return $this->resolve($editField);
             }
 
-            if (!$editField instanceof SearchForm) {
-                throw new Exception('invalid element for searchFields: ' . var_export($editField, true));
+            if (! $editField instanceof SearchForm) {
+                throw new Exception('invalid element for searchFields: '.var_export($editField, true));
             }
 
             return $editField;
@@ -51,7 +51,7 @@ class InputManager
     }
 
     /**
-     * @param array{0:string}|array{0:string, 1:string}|array{0:string, 1:string, 2:string} $attributes
+     * @param  array{0:string}|array{0:string, 1:string}|array{0:string, 1:string, 2:string}  $attributes
      */
     public function resolve(array $attributes): Form
     {
@@ -64,7 +64,7 @@ class InputManager
             'date' => new InputDate(key: $key, label: $label),
             'number' => new InputNumber(key: $key, label: $label),
             'textarea' => new TextArea(key: $key, label: $label),
-            default => throw new Exception('invalid input: ' . $input),
+            default => throw new Exception('invalid input: '.$input),
         };
     }
 }
