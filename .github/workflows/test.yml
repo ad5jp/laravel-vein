@@ -1,0 +1,101 @@
+name: Test
+
+# トリガー:
+#   - 全ブランチへの push で回る（PR を積み上げて出すため、各層で緑を見えるようにする）
+#   - すべての PR で回る
+#   - 手動実行 (workflow_dispatch) も可能
+#
+# 注意: pull_request はマージコミット上のワークフローで走る。
+# 積み上げた PR で全層に緑を出すには、本ファイルが stack の下の層に入っている必要がある。
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# PR では新しい push があれば古い実行を cancel（Actions 分の節約）。
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    # GitHub の ubuntu 既定 shell は pipefail が付かない。明示して pipe の失敗を捕まえる。
+    shell: bash
+
+jobs:
+  test:
+    name: PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    strategy:
+      # 片方が落ちても、もう片方の結果を見たい。
+      fail-fast: false
+      matrix:
+        # composer.json の require は php ^8.3。下限と現行の両方を見る。
+        php: ["8.3", "8.4"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          # sqlite: testbench が :memory: でテストする
+          # fileinfo: アップロード検証の MIME 判定で要る
+          # GD は要らない（テストは fake()->image() を避けて実バイト列を渡している）
+          extensions: mbstring, xml, curl, zip, sqlite3, pdo_sqlite, fileinfo
+          coverage: none
+
+      - name: Get composer cache dir
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      # composer.lock は .gitignore している（ライブラリなのでバージョンを固定しない）。
+      # そのためキャッシュキーは composer.json の内容で引く。
+      - name: Cache composer packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-php${{ matrix.php }}-${{ hashFiles('composer.json') }}
+          restore-keys: composer-${{ runner.os }}-php${{ matrix.php }}-
+
+      # --strict は付けない。license 未指定の警告だけで exit 1 になり、
+      # テストの緑/赤と無関係なところで CI が落ちるため（license を持つかは別途決める）。
+      - name: composer validate
+        run: composer validate
+
+      # lock を持たないので install ではなく update。
+      - name: Install dependencies
+        run: composer update --prefer-dist --no-interaction --no-progress
+
+      - name: PHPUnit
+        run: vendor/bin/phpunit
+
+  # 整形は PHP のバージョンに依存しないので matrix から分けて 1 回だけ回す。
+  format:
+    name: Pint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, xml, curl, zip
+          coverage: none
+
+      - name: Install dependencies
+        run: composer update --prefer-dist --no-interaction --no-progress
+
+      - name: Pint (format check)
+        run: vendor/bin/pint --test
