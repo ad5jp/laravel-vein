@@ -22,9 +22,7 @@
             @foreach ($editFields as $editField)
             {!! $editField->render($record) !!}
             @endforeach
-            <div class="text-end">
-                <button type="submit" class="btn btn-primary">更新</button>
-            </div>
+            @include('vein::parts.save-bar', ['label' => '更新'])
         </form>
     </section>
 
