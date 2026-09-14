@@ -26,7 +26,7 @@ class SelectModel extends FormControl implements Form, SearchForm
         public ?Closure $afterSaving = null,
         public ?Closure $searching = null,
     ) {
-        if (!class_exists($model) || !is_subclass_of($model, Model::class)) {
+        if (! class_exists($model) || ! is_subclass_of($model, Model::class)) {
             throw new Exception("Model {$model} が存在しません");
         }
 

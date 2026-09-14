@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Form\Input;
 
 use AD5jp\Vein\Form\Contracts\Form;
-use BackedEnum;
 use Closure;
 use Exception;
 use Illuminate\Contracts\Support\Arrayable;
@@ -29,13 +28,13 @@ class CheckboxesModel extends FormControl implements Form
         public ?Closure $afterSaving = null,
         public ?Closure $searching = null,
     ) {
-        if (!class_exists($model) || !is_subclass_of($model, Model::class)) {
+        if (! class_exists($model) || ! is_subclass_of($model, Model::class)) {
             throw new Exception("Model {$model} が存在しません");
         }
 
         if ($default === null) {
             $default = [];
-        } elseif (!is_array($default)) {
+        } elseif (! is_array($default)) {
             $default = [$default];
         }
 
@@ -44,7 +43,7 @@ class CheckboxesModel extends FormControl implements Form
 
     public function renderInline(Model $values): string
     {
-        list($relation_name, $saving_field) = $this->parseKey($values, $this->key);
+        [$relation_name, $saving_field] = $this->parseKey($values, $this->key);
 
         $value = $values->$relation_name->map(fn (Model $related) => $related->$saving_field)->all() ?: $this->default;
         $value = old($this->key, $value);
@@ -82,7 +81,7 @@ class CheckboxesModel extends FormControl implements Form
         // リレーションを差分更新する
 
         // キーの検査
-        list($relation_name, $saving_field) = $this->parseKey($model, $this->key);
+        [$relation_name, $saving_field] = $this->parseKey($model, $this->key);
 
         // リレーションオブジェクトを取得
         /** @var HasMany $has_many */
@@ -93,8 +92,8 @@ class CheckboxesModel extends FormControl implements Form
         // リクエストの取得
         $request_values = $request[$this->key] ?? [];
 
-        if (!is_array($request_values)) {
-            throw new Exception('invalid request value for CheckboxesEnum ' . $this->key);
+        if (! is_array($request_values)) {
+            throw new Exception('invalid request value for CheckboxesEnum '.$this->key);
         }
 
         // 既存の値を取得
@@ -152,10 +151,10 @@ class CheckboxesModel extends FormControl implements Form
         $segments = explode(':', $key);
 
         if (count($segments) !== 2) {
-            throw new Exception('CheckboxesEnum の key ' . $key . ' の形式が不正です（relation_name:saving_field）');
+            throw new Exception('CheckboxesEnum の key '.$key.' の形式が不正です（relation_name:saving_field）');
         }
 
-        list($relation_name, $saving_field) = $segments;
+        [$relation_name, $saving_field] = $segments;
 
         foreach ([$relation_name, Str::camel($relation_name)] as $relation_method_name) {
             if (method_exists($model, $relation_method_name)) {
@@ -163,12 +162,12 @@ class CheckboxesModel extends FormControl implements Form
                 if ($relation instanceof HasMany) {
                     return [$relation_name, $saving_field];
                 } else {
-                    throw new Exception('Model ' . get_class($model) . ' の ' . $relation_name . '() は HasMany リレーションではありません');
+                    throw new Exception('Model '.get_class($model).' の '.$relation_name.'() は HasMany リレーションではありません');
                 }
             }
         }
 
-        throw new Exception('Model ' . get_class($model) . ' にリレーション ' . $relation_name . ' が定義されていません');
+        throw new Exception('Model '.get_class($model).' にリレーション '.$relation_name.' が定義されていません');
     }
 
     protected function regulateValue(mixed $value): mixed

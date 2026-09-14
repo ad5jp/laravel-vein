@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Http\Controllers;
 
 use AD5jp\Vein\Form\InputManager;
-use AD5jp\Vein\Node\NodeManager;
 use AD5jp\Vein\Node\Contracts\Entry;
 use AD5jp\Vein\Node\Contracts\Taxonomy;
+use AD5jp\Vein\Node\NodeManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,19 +19,19 @@ class AddController extends Controller
 {
     public function init(string $node): View
     {
-        $manager = new NodeManager();
+        $manager = new NodeManager;
         $model = $manager->resolve($node);
 
         if ($model === null) {
 
         }
 
-        if (!$model instanceof Entry) {
+        if (! $model instanceof Entry) {
             abort(404);
         }
 
         // フィールド情報取得
-        $manager = new InputManager();
+        $manager = new InputManager;
         $editFields = $manager->parseEditField($model->editFields());
 
         return view('vein::entry-add', [
@@ -44,14 +44,14 @@ class AddController extends Controller
 
     public function save(string $node, Request $request): RedirectResponse|JsonResponse
     {
-        $manager = new NodeManager();
+        $manager = new NodeManager;
         $model = $manager->resolve($node);
 
         if ($model === null) {
             abort(404);
         }
 
-        if (!$model instanceof Entry && !$model instanceof Taxonomy) {
+        if (! $model instanceof Entry && ! $model instanceof Taxonomy) {
             abort(404);
         }
 
@@ -66,7 +66,7 @@ class AddController extends Controller
         }
 
         // フィールド情報取得
-        $manager = new InputManager();
+        $manager = new InputManager;
         $editFields = $manager->parseEditField($model->editFields());
 
         // 保存

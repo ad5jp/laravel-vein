@@ -1,23 +1,35 @@
 {
     "name": "ad5jp/laravel-vein",
+    "description": "Laravel アプリケーション向けの開発者志向な CMS。Eloquent モデルに Interface を実装するだけで管理画面から編集できるようになる。",
+    "type": "library",
+    "keywords": ["laravel", "cms", "admin", "eloquent"],
+    "authors": [
+        {
+            "name": "ad5jp",
+            "homepage": "https://github.com/ad5jp"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "laravel/framework": "^12.0 || ^13.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.13",
+        "laravel/tinker": "^2.10.1 || ^3.0",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
+        "orchestra/testbench": "^10.0 || ^11.0",
+        "phpunit/phpunit": "^11.5.50 || ^12.0"
+    },
     "autoload": {
         "psr-4": {
             "AD5jp\\Vein\\": "src/"
         }
     },
-    "require": {
-        "php": "^8.4",
-        "laravel/framework": "^12.0",
-        "laravel/tinker": "^2.10.1"
-    },
-    "require-dev": {
-        "fakerphp/faker": "^1.23",
-        "laravel/pail": "^1.2.2",
-        "laravel/pint": "^1.13",
-        "laravel/sail": "^1.41",
-        "mockery/mockery": "^1.6",
-        "nunomaduro/collision": "^8.6",
-        "phpunit/phpunit": "^11.5.3"
+    "autoload-dev": {
+        "psr-4": {
+            "AD5jp\\Vein\\Tests\\": "tests/"
+        }
     },
     "extra": {
         "laravel": {
@@ -25,5 +37,10 @@
                 "AD5jp\\Vein\\ServiceProvider"
             ]
         }
-    }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }
