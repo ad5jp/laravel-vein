@@ -8,6 +8,7 @@ use AD5jp\Vein\Form\InputManager;
 use AD5jp\Vein\Node\Contracts\Entry;
 use AD5jp\Vein\Node\Contracts\Page;
 use AD5jp\Vein\Node\Contracts\Taxonomy;
+use AD5jp\Vein\Node\NodeDeleter;
 use AD5jp\Vein\Node\NodeManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -120,9 +121,8 @@ class EditController extends Controller
         // 対象データ取得
         $record = $model->findOrFail($id);
 
-        // 削除
-        // TODO リレーションやファイルの削除
-        $record->delete();
+        // 削除（子レコードとファイルも片付ける）
+        (new NodeDeleter)->delete($record);
 
         if ($model instanceof Entry) {
             return redirect()->route('vein.list', ['node' => $node]);

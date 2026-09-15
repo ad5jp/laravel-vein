@@ -8,6 +8,7 @@ use AD5jp\Vein\ServiceProvider;
 use AD5jp\Vein\Tests\Fixtures\TestEntry;
 use AD5jp\Vein\Tests\Fixtures\TestFile;
 use AD5jp\Vein\Tests\Fixtures\TestRecord;
+use AD5jp\Vein\Tests\Fixtures\TestSoftEntry;
 use AD5jp\Vein\Tests\Fixtures\TestUser;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Facades\Schema;
@@ -90,6 +91,13 @@ abstract class TestCase extends Orchestra
             $table->string('title');
             $table->text('body')->nullable();
             $table->timestamps();
+        });
+
+        Schema::create((new TestSoftEntry)->getTable(), function ($table): void {
+            $table->id();
+            $table->string('title');
+            $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create((new TestFile)->getTable(), function ($table): void {
