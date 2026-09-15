@@ -115,6 +115,7 @@ abstract class TestCase extends Orchestra
             $table->string('caption')->nullable();
             $table->foreignId('test_file_id')->nullable();
             $table->json('tags')->nullable();
+            $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
         });
     }

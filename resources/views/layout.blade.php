@@ -21,6 +21,76 @@
       }
     });
     </script>
+    <style>
+    /* 弾かれた欄を目で追えるようにする。@see src/Form/Input/FormControl.php */
+    .__has_error .form-control,
+    .__has_error .form-select,
+    .__has_error textarea,
+    .__has_error input[type="file"] { border-color: #DC3545; }
+    .__has_error .form-label { color: #DC3545; }
+    .__field_error { color: #DC3545; font-size: 0.875em; margin: 0.25rem 0 0; }
+    .__field_hint { color: #6C757D; font-size: 0.8125rem; margin: 0.25rem 0 0; }
+    /* 弾かれたときは理由のほうが具体的。同じことを 2 度言わない */
+    .__has_error .__field_hint { display: none; }
+
+    /* 見出しと「一覧に戻る」。入力欄が長い画面では、スクロールすると戻る手立てが
+       画面の外に出てしまうため貼り付ける。背景を敷かないと下の内容が透ける */
+    .__page_head {
+        position: sticky;
+        top: var(--vein-navbar-height);
+        z-index: 9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        /* .container の左右の余白を打ち消して、背景を端まで伸ばす */
+        margin: 0 calc(var(--bs-gutter-x, 1.5rem) * -0.5) 1rem;
+        padding: 0.75rem calc(var(--bs-gutter-x, 1.5rem) * 0.5);
+        background: #FFF5F3;
+        border-bottom: 1px solid #F0E3E0;
+    }
+    .__page_head h1 { margin: 0; }
+
+    /* 本体と目次を横に並べる。
+       min-width: 0 が無いと、中に幅の広いものがあるときに本体が縮まず、目次が画面の外へ出る */
+    .__edit_body { display: flex; align-items: flex-start; }
+    .__edit_body > .section { flex: 1 1 auto; min-width: 0; }
+
+    /* 入力欄の区切り（@see src/Form/Input/Section.php） */
+    .__form_section {
+        margin: 2.5rem 0 1.25rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #DEE2E6;
+        /* 目次から飛んだときに、見出しが画面の上端に貼り付かないようにする */
+        scroll-margin-top: calc(var(--vein-offset-top) + 1rem);
+    }
+    .__form_section:first-child { margin-top: 0; }
+    .__form_section--title { margin: 0; font-size: 1.05rem; font-weight: 700; color: #495057; }
+    .__form_section--note { margin: 0.25rem 0 0; font-size: 0.875rem; color: #6C757D; }
+
+    /* 上のバーは fixed-top で画面に貼り付いている。その下に潜らないよう、
+       貼り付ける位置の基準をここに置く */
+    :root {
+        --vein-navbar-height: 59px;
+        /* 見出しの行の高さ。中身で変わるので JS が実測して上書きする */
+        --vein-page-head-height: 0px;
+    }
+    /* 上のバーと見出しの行を足した、画面上部で隠れる高さ */
+    :root { --vein-offset-top: calc(var(--vein-navbar-height) + var(--vein-page-head-height)); }
+
+    /* 入力欄が長い画面では、スクロールするとメニューが画面の外へ出てしまう。
+       貼り付けておき、項目が多いときはメニュー側だけスクロールさせる */
+    @media (min-width: 768px) {
+        .sidebar {
+            position: sticky;
+            top: var(--vein-navbar-height);
+            align-self: flex-start;
+            height: calc(100vh - var(--vein-navbar-height));
+            max-height: none;
+            overflow-y: auto;
+        }
+    }
+    </style>
 </head>
 <body class="@yield('body_class')">
 
@@ -74,6 +144,34 @@
 </div>
 
 <script>
+// 弾かれたときは、最初に直すべき欄まで運ぶ。
+// 入力欄が多いと、画面の上の一覧を見ても、その欄がどこにあるか分からない
+$(function () {
+  const first = document.querySelector('.__has_error');
+
+  if (first) {
+    first.scrollIntoView({ block: 'center' });
+  }
+});
+
+// 見出しの行の高さは中身で変わる。貼り付けた目次や見出しへのジャンプが
+// その下に潜らないよう、実測して配る
+$(function () {
+  const head = document.querySelector('.__page_head');
+
+  if (!head) {
+    return;
+  }
+
+  const apply = () => document.documentElement.style.setProperty(
+    '--vein-page-head-height',
+    head.offsetHeight + 'px',
+  );
+
+  apply();
+  window.addEventListener('resize', apply);
+});
+
 function toggleSidebar() {
   $('body').toggleClass('md-sidebar-hide').toggleClass('sm-sidebar-show')
 }

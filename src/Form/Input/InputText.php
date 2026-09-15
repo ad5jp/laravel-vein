@@ -17,9 +17,10 @@ class InputText extends FormControl implements Form, SearchForm
         $value = $this->getValue($values);
 
         $html = sprintf(
-            '<input type="text" name="%s" value="%s" class="form-control">',
+            '<input type="text" name="%s" value="%s" class="form-control"%s>',
             e($this->key),
             e($value),
+            $this->placeholderAttribute(),
         );
 
         return $html;

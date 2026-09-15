@@ -57,4 +57,18 @@ trait EntryHelper
     {
         return [];
     }
+
+    /**
+     * 検証にかける前に、送られてきた値を整える。
+     *
+     * 大小の揺れのように「弾くより直したほうがよい」ものをここで揃える。
+     * 整えた値は検証にも保存にも使われる。
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    public function editValidatorPrepare(array $input): array
+    {
+        return $input;
+    }
 }

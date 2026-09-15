@@ -18,6 +18,39 @@ class Records extends FormControl implements DeletesRelated, Form
 {
     use ResolvesRelations;
 
+    /** 行の並び順を入れる列。null なら並べ替えを出さない。 */
+    private ?string $sort_column = null;
+
+    /** タイルで並べるか。画像を持つ子レコード向け。 */
+    private bool $as_tiles = false;
+
+    /**
+     * 行をドラッグで並べ替えられるようにする。
+     *
+     * 並び順は画面に並んでいる順そのままで、指定した列へ 0 から順に入れる。
+     * 番号を手で入れる欄は要らなくなるので、子の editFields からは外す。
+     */
+    public function sortable(string $column = 'sort_order'): static
+    {
+        $this->sort_column = $column;
+
+        return $this;
+    }
+
+    /**
+     * 縦に並べる代わりに、タイルで並べる。
+     *
+     * 画像を持つ行は高く、縦に積むと 1 つ入れ替えるのに画面 1 枚分を運ぶことになる。
+     * タイルを押すと、その行の入力欄がモーダルで開く。
+     * タイルの見た目（画像・見出し・印）は、モーダルの中身から画面側で組み立てる。
+     */
+    public function tiles(): static
+    {
+        $this->as_tiles = true;
+
+        return $this;
+    }
+
     private function relation(Model $model): HasMany
     {
         /** @var HasMany */
@@ -53,13 +86,40 @@ class Records extends FormControl implements DeletesRelated, Form
         $html = '';
 
         $html .= sprintf('<div class="__records mt-5 mb-5" data-nextkey="%s">', $records->count());
+
+        // 欄が 1 つしか無い子レコードは、ラベルと段組みを使わず 1 行に収める。
+        // 何の欄かは見出し（h5）で分かるので、行ごとのラベルは重複になる
+        $single = ! $this->as_tiles && count($editFields) === 1;
+
+        // 見出しの行。表示の切り替えは、行が縦に積まれて高くなるときだけ出す
+        // （タイルと 1 行の子レコードは、もともと低いので切り替える先がない）
+        $html .= '<div class="__records_head">';
         if ($this->label) {
             $html .= sprintf('<h5>%s</h5>', $this->label);
         }
-        $html .= '<div class="list-group __records_list">';
+        if (! $this->as_tiles && ! $single) {
+            $html .= '<div class="__records_view btn-group btn-group-sm" role="group" aria-label="表示の切り替え">'
+                .'<button type="button" class="btn btn-outline-secondary active" data-view="detail"'
+                .' aria-pressed="true" title="カードで表示"><i class="bi bi-card-text"></i></button>'
+                .'<button type="button" class="btn btn-outline-secondary" data-view="compact"'
+                .' aria-pressed="false" title="一覧で表示"><i class="bi bi-list-ul"></i></button>'
+                .'</div>';
+        }
+        $html .= '</div>';
+
+        if ($this->hint !== null) {
+            $html .= sprintf('<p class="__records_hint">%s</p>', e($this->hint));
+        }
+
+        $html .= sprintf(
+            '<div class="%s __records_list%s%s">',
+            $this->as_tiles ? '__records_tiles' : 'list-group',
+            $this->sort_column === null ? '' : ' __records_sortable',
+            $single ? ' is-single' : '',
+        );
         foreach ($records as $i => $record) {
             /** @var int $i */
-            $html .= $this->renderRow($record, $editFields, $i);
+            $html .= $this->renderItem($record, $editFields, $i);
         }
         $html .= '</div><!--//.__records_list-->';
         $html .= '<div class="mt-3 text-end">';
@@ -68,7 +128,7 @@ class Records extends FormControl implements DeletesRelated, Form
 
         // 「追加」で複製されるテンプレート。JS が [0] を実際の添字に置換する
         $html .= '<script type="application/xml">';
-        $html .= $this->renderRow($record_model->newInstance(), $editFields, 0);
+        $html .= $this->renderItem($record_model->newInstance(), $editFields, 0);
         $html .= '</script>';
         $html .= '</div><!--//.__records-->';
 
@@ -129,6 +189,9 @@ class Records extends FormControl implements DeletesRelated, Form
         $request_records = $request[$this->key] ?? [];
 
         // update or create records
+        // 並び順は届いた順（= 画面に並んでいた順）で振り直す
+        $position = 0;
+
         foreach ($request_records as $request_record) {
             $request_record_key = $request_record[$record_model->getKeyName()] ?? null;
             // HTTP 経由の主キーは文字列、getKey() は整数で返ることが多い
@@ -142,7 +205,14 @@ class Records extends FormControl implements DeletesRelated, Form
             foreach ($editFields as $editField) {
                 $record = $editField->beforeSave($record, $request_record);
             }
+
+            // 子の editFields より後に入れる。手入力の値があっても画面の順を正とする
+            if ($this->sort_column !== null) {
+                $record->{$this->sort_column} = $position;
+            }
+
             $record->save();
+            $position++;
         }
 
         // delete missing records
@@ -190,7 +260,19 @@ class Records extends FormControl implements DeletesRelated, Form
      *
      * @param  Form[]  $editFields
      */
-    private function renderRow(Model $record, array $editFields, int $index): string
+    private function renderItem(Model $record, array $editFields, int $index): string
+    {
+        return $this->as_tiles
+            ? $this->renderTile($record, $editFields, $index)
+            : $this->renderRow($record, $editFields, $index);
+    }
+
+    /**
+     * 1 行分の入力欄そのもの。行にもタイルのモーダルにも、これを入れる。
+     *
+     * @param  Form[]  $editFields
+     */
+    private function renderFields(Model $record, array $editFields, int $index): string
     {
         $row = sprintf(
             '<input type="hidden" name="%s" value="%s" />',
@@ -199,13 +281,70 @@ class Records extends FormControl implements DeletesRelated, Form
         );
 
         foreach ($editFields as $editField) {
+            // 検証のキーは images.0.caption の形になる。どの行が弾かれたのかを
+            // 行の中で示せるよう、親のキーと添字を渡しておく
+            if ($editField instanceof FormControl) {
+                $editField->withErrorKeyPrefix(sprintf('%s.%d', $this->key, $index));
+            }
+
             $row .= $editField->render($record);
         }
 
-        return '<div class="list-group-item __records_list_item">'
-            .$this->wrapKeys($row, $index)
+        return $this->wrapKeys($row, $index);
+    }
+
+    private function renderRow(Model $record, array $editFields, int $index): string
+    {
+        $handle = $this->sort_column === null
+            ? ''
+            : '<span class="__records_handle" title="ドラッグして並べ替え" aria-hidden="true">'
+                .'<i class="bi bi-grip-vertical"></i></span>';
+
+        return sprintf('<div class="list-group-item __records_list_item%s">', $this->sort_column === null ? '' : ' is-sortable')
+            .$handle
+            .$this->renderFields($record, $editFields, $index)
             .'<button type="button" class="btn btn-sm btn-outline-secondary __records_remove"><i class="bi bi-trash"></i></button>'
             .'</div>';
+    }
+
+    /**
+     * タイル 1 枚と、その中身を入れたモーダル。
+     *
+     * タイルの表側は空で出す。画像も見出しも、モーダルの中身から画面側で写す。
+     * 同じ画像を 2 回埋め込まずに済み、アップロードし直したときも自動でついてくる。
+     */
+    private function renderTile(Model $record, array $editFields, int $index): string
+    {
+        $modalId = sprintf(
+            '__rec_%s_%d',
+            preg_replace('/[^A-Za-z0-9_]/', '_', $this->key),
+            $index,
+        );
+        $title = $this->label ?? '行';
+
+        return sprintf(
+            '<div class="__records_tile">'
+            .'<button type="button" class="__records_tile_face" data-bs-toggle="modal" data-bs-target="#%s">'
+            .'<span class="__records_tile_image"></span>'
+            .'<span class="__records_tile_label"></span>'
+            .'<span class="__records_tile_badge"></span>'
+            .'</button>'
+            .'<div class="modal fade __records_tile_modal" id="%s" tabindex="-1" aria-hidden="true">'
+            .'<div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">'
+            .'<div class="modal-header"><h5 class="modal-title">%s</h5>'
+            .'<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button></div>'
+            .'<div class="modal-body">%s</div>'
+            .'<div class="modal-footer justify-content-between">'
+            .'<button type="button" class="btn btn-sm btn-outline-danger __records_remove">この%sを削除</button>'
+            .'<button type="button" class="btn btn-primary" data-bs-dismiss="modal">閉じる</button>'
+            .'</div></div></div></div>'
+            .'</div>',
+            e($modalId),
+            e($modalId),
+            e($title),
+            $this->renderFields($record, $editFields, $index),
+            e($title),
+        );
     }
 
     /**
