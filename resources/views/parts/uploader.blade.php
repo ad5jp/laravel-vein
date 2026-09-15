@@ -82,12 +82,21 @@ $(function () {
 .__records_head {display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem;}
 .__records_head h5 {margin: 0;}
 .__records_view {flex: none;}
-/* 一覧で表示したとき。並べ替えるときや、全体を見渡したいときに切り替える */
+/* 一覧で表示したとき。並べ替えるときや、全体を見渡したいときに切り替える。
+   入力欄は隠し、先頭の欄の中身だけを 1 行で出す（中途半端に見えていると読みづらい）。
+   display: none でも値は送信されるので、この状態で保存しても中身は失われない */
 .__records_list.is-compact .__records_list_item {
-    max-height: 2.75rem; overflow: hidden;
-    padding-top: 0.5rem; padding-bottom: 0.5rem;
+    padding-top: 0.5rem; padding-bottom: 0.5rem; min-height: 2.75rem;
 }
-.__records_list.is-compact .__records_list_item > .__records_remove {display: none;}
+.__records_list.is-compact .__records_list_item > *:not(.__records_handle):not(.__records_remove):not(.__records_row_label) {
+    display: none;
+}
+.__records_row_label {display: none;}
+.__records_list.is-compact .__records_row_label {
+    display: block; line-height: 1.75rem; color: #212529;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.__records_list.is-compact .__records_row_label:empty::before {content: '（空の行）'; color: #ADB5BD;}
 
 /* 掴んでいる行。中身は先頭の欄だけ見せる */
 .__records_drag_bar {
@@ -226,7 +235,23 @@ $(document).on('click', '.__records_view button', function () {
     const $btn = $(this);
     const $list = $btn.closest('.__records').find('.__records_list');
 
-    $list.toggleClass('is-compact', $btn.data('view') === 'compact');
+    const compact = $btn.data('view') === 'compact';
+
+    // 一覧で表示するときは、先頭の欄の中身を見出しとして出す
+    if (compact) {
+        $list.find('.__records_list_item').each(function () {
+            const $row = $(this);
+            let $label = $row.children('.__records_row_label');
+
+            if (!$label.length) {
+                $label = $('<span class="__records_row_label"></span>').appendTo($row);
+            }
+
+            $label.text(veinRowLabel($row) === '（空の行）' ? '' : veinRowLabel($row));
+        });
+    }
+
+    $list.toggleClass('is-compact', compact);
 
     $btn.addClass('active').attr('aria-pressed', 'true')
         .siblings().removeClass('active').attr('aria-pressed', 'false');
