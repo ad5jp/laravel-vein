@@ -126,10 +126,13 @@ $(function () {
 }
 
 /* 一覧で表示したとき。並べ替えるときや、全体を見渡したいときに切り替える。
-   最初の段だけを残し、あとは隠す。Row でまとめた欄は作り手が「横に並べたい」
-   と指定したものなので、その単位は崩さない。
+   先頭の欄だけを残し、あとは隠す。Row で横に並べた欄も、見渡すだけなら先頭で
+   見分けが付く（並べたまま残すと、欄どうしが継ぎ目なくくっついて読みにくい）。
    display: none でも値は送信されるので、この状態で保存しても中身は失われない */
-.__records_list.is-compact .__records_list_item > .row ~ .row {display: none;}
+.__records_list.is-compact .__records_list_item > .row ~ .row,
+.__records_list.is-compact .__records_list_item > .row > [class*="col-"] ~ [class*="col-"] {
+    display: none;
+}
 /* 先頭が複数行の欄でも、一覧では 1 行に収める */
 .__records_list.is-compact .__records_list_item textarea.form-control {
     height: calc(1.5em + 0.75rem + 2px); resize: none; overflow: hidden;
