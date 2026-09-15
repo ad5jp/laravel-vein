@@ -78,6 +78,21 @@ $(function () {
 .__records_list_item.is-sortable:hover .__records_handle {color: #6C757D;}
 /* ドラッグ中に空く場所。どこへ入るかが分かるようにする */
 .__records_placeholder {border: 2px dashed #ADB5BD; border-radius: 0.375rem; background: #F8F9FA;}
+/* 見出しの行と、畳むボタン */
+.__records_head {display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem;}
+.__records_head h5 {margin: 0;}
+.__records_toggle {
+    flex: none; background: none; border: 1px solid #DEE2E6; border-radius: 0.375rem;
+    padding: 0.125rem 0.625rem; font-size: 0.8125rem; color: #6C757D; cursor: pointer;
+}
+.__records_toggle:hover {border-color: #0D6EFD; color: #0D6EFD;}
+/* 畳んだ状態。並べ替えるときや、全体を見渡したいときに切り替える */
+.__records_list.is-compact .__records_list_item {
+    max-height: 2.75rem; overflow: hidden;
+    padding-top: 0.5rem; padding-bottom: 0.5rem;
+}
+.__records_list.is-compact .__records_list_item > .__records_remove {display: none;}
+
 /* 掴んでいる行。中身は先頭の欄だけ見せる */
 .__records_drag_bar {
     padding: 0.5rem 0.75rem 0.5rem 2.25rem; font-size: 0.9375rem; line-height: 1.75rem;
@@ -208,6 +223,20 @@ function veinRowLabel($item) {
 
     return text || '（空の行）';
 }
+
+// 畳む / 広げる。行が高いと並べ替えづらいので、手で切り替えられるようにする。
+// 掴んだ瞬間に自動で畳むと画面が飛ぶため、切り替えは明示的に行う
+$(document).on('click', '.__records_toggle', function () {
+    const $list = $(this).closest('.__records').find('.__records_list');
+    const compact = $list.toggleClass('is-compact').hasClass('is-compact');
+
+    $(this).text(compact ? '広げる' : '畳む');
+
+    // 高さが変わるので、落とす先を測り直す
+    if ($list.hasClass('ui-sortable')) {
+        $list.sortable('refreshPositions');
+    }
+});
 
 $(document).on('click', '.__records_add', function () {
     const $records = $(this).closest('.__records');

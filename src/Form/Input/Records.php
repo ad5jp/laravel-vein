@@ -86,9 +86,17 @@ class Records extends FormControl implements DeletesRelated, Form
         $html = '';
 
         $html .= sprintf('<div class="__records mt-5 mb-5" data-nextkey="%s">', $records->count());
+
+        // 見出しの行。畳むボタンは、行が縦に積まれるときだけ出す
+        // （タイルはもともと小さく、畳む意味がない）
+        $html .= '<div class="__records_head">';
         if ($this->label) {
             $html .= sprintf('<h5>%s</h5>', $this->label);
         }
+        if (! $this->as_tiles) {
+            $html .= '<button type="button" class="__records_toggle">畳む</button>';
+        }
+        $html .= '</div>';
         $html .= sprintf(
             '<div class="%s __records_list%s">',
             $this->as_tiles ? '__records_tiles' : 'list-group',
