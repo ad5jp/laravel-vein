@@ -41,20 +41,24 @@
         padding-bottom: 0.5rem;
         border-bottom: 2px solid #DEE2E6;
         /* 目次から飛んだときに、見出しが画面の上端に貼り付かないようにする */
-        scroll-margin-top: 4.5rem;
+        scroll-margin-top: calc(var(--vein-navbar-height) + 1rem);
     }
     .__form_section:first-child { margin-top: 0; }
     .__form_section--title { margin: 0; font-size: 1.05rem; font-weight: 700; color: #495057; }
     .__form_section--note { margin: 0.25rem 0 0; font-size: 0.875rem; color: #6C757D; }
+
+    /* 上のバーは fixed-top で画面に貼り付いている。その下に潜らないよう、
+       貼り付ける位置の基準をここに置く */
+    :root { --vein-navbar-height: 59px; }
 
     /* 入力欄が長い画面では、スクロールするとメニューが画面の外へ出てしまう。
        貼り付けておき、項目が多いときはメニュー側だけスクロールさせる */
     @media (min-width: 768px) {
         .sidebar {
             position: sticky;
-            top: 3em;
+            top: var(--vein-navbar-height);
             align-self: flex-start;
-            height: calc(100vh - 3em);
+            height: calc(100vh - var(--vein-navbar-height));
             max-height: none;
             overflow-y: auto;
         }
