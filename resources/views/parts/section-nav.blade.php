@@ -76,12 +76,27 @@
             return;
         }
 
+        // 画面の上端は、上のバーと見出しの行に隠れている。ここを固定値にすると、
+        // 隠れて見えない見出しが現在地のままになる
+        // （@see resources/views/layout.blade.php の高さの実測）
+        const navbar = document.querySelector('.navbar.fixed-top');
+        const pageHead = document.querySelector('.__page_head');
+        let line = 0;
+
+        function measure() {
+            // 見出しへ飛んだときの余白（scroll-margin-top の 1rem）を少し超える値にする。
+            // ちょうどにすると、飛んだ直後にその見出しが現在地から外れる
+            line = (navbar ? navbar.offsetHeight : 0)
+                + (pageHead ? pageHead.offsetHeight : 0)
+                + 20;
+        }
+
         // いま画面の上端に一番近い見出しを現在地とする
         function mark() {
             let current = 0;
 
             sections.forEach((section, i) => {
-                if (section.getBoundingClientRect().top <= 80) {
+                if (section.getBoundingClientRect().top <= line) {
                     current = i;
                 }
             });
@@ -89,8 +104,10 @@
             links.forEach((a, i) => a.classList.toggle('is-current', i === current));
         }
 
+        measure();
         mark();
         window.addEventListener('scroll', mark, { passive: true });
+        window.addEventListener('resize', () => { measure(); mark(); });
     }
 
     if (document.readyState === 'loading') {
