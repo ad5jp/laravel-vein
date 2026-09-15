@@ -8,6 +8,7 @@ use AD5jp\Vein\Http\Controllers\HomeController;
 use AD5jp\Vein\Http\Controllers\ListController;
 use AD5jp\Vein\Http\Controllers\SigninController;
 use AD5jp\Vein\Http\Controllers\UploadController;
+use AD5jp\Vein\Http\Middleware\Authenticate;
 use Illuminate\Support\Facades\Route;
 
 $admin_uri = config('vein.admin_uri');
@@ -18,7 +19,7 @@ Route::group(['middleware' => ['web'], 'prefix' => $admin_uri], static function 
 
     $guard = config('vein.admin_guard') ?? config('auth.defaults.guard');
 
-    Route::group(['middleware' => ["auth:{$guard}"]], static function (): void {
+    Route::group(['middleware' => [Authenticate::class.":{$guard}"]], static function (): void {
         Route::get('/', [HomeController::class, 'init'])->name('vein.home');
         Route::get('/{node}', [ListController::class, 'init'])->name('vein.list');
         Route::get('/page/{node}', [EditController::class, 'init'])->name('vein.page');
