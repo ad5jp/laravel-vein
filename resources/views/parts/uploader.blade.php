@@ -84,60 +84,48 @@ $(function () {
 .__records_view {flex: none;}
 /* 見出しの下の補足。追加ボタンの名前を長くしないために、説明はここへ出す */
 .__records_hint {margin: -0.25rem 0 0.5rem; color: #6C757D; font-size: 0.8125rem;}
-/* 欄が 1 つしか無い子レコード。ラベルと段組みを外して 1 行に収める。
+/* 1 行に 1 つの欄で見せるとき。欄が 1 つしか無い子レコード（is-single）と、
+   一覧で表示したとき（is-compact）は同じ形にする。
+   ラベルと段組みを外し、入力欄そのものを行として見せる。
    何の欄かは見出しで分かるので、行ごとのラベルは重複になる */
-.__records_list.is-single {border: 0;}
-.__records_list.is-single .__records_list_item {
+.__records_list:is(.is-single, .is-compact) {border: 0;}
+.__records_list:is(.is-single, .is-compact) .__records_list_item {
     display: flex; align-items: stretch;
-    /* カードの枠と入力欄の枠で二重になるため、行側の枠と背景は外す。
-       入力欄そのものを行として見せる */
+    /* カードの枠と入力欄の枠で二重になるため、行側の枠と背景は外す */
     border: 0; background: transparent;
     padding: 0.25rem 0 0.25rem 1.75rem;
 }
-.__records_list.is-single .__records_handle {left: 0;}
-.__records_list.is-single .__records_list_item > .row {
+.__records_list:is(.is-single, .is-compact) .__records_handle {left: 0;}
+.__records_list:is(.is-single, .is-compact) .__records_list_item > .row {
     flex: 1 1 auto; min-width: 0;
     /* .row が持つ mb-3 は Bootstrap のユーティリティで !important。
        残ると行の高さに 1rem 乗り、ごみ箱だけ背が高くなる */
     margin: 0 !important;
 }
-.__records_list.is-single .__records_list_item > .row > [class*="col-"] {
+.__records_list:is(.is-single, .is-compact) .__records_list_item > .row > [class*="col-"] {
     flex: 1 1 auto; max-width: none; padding: 0;
 }
-.__records_list.is-single .__records_list_item .form-label {display: none;}
+.__records_list:is(.is-single, .is-compact) .__records_list_item .form-label {display: none;}
 /* 入力とごみ箱をくっつける。枠線を 1px 重ねて 1 つの部品に見せる */
-.__records_list.is-single .__records_list_item .form-control,
-.__records_list.is-single .__records_list_item .form-select {
+.__records_list:is(.is-single, .is-compact) .__records_list_item .form-control,
+.__records_list:is(.is-single, .is-compact) .__records_list_item .form-select {
     border-top-right-radius: 0; border-bottom-right-radius: 0;
 }
-.__records_list.is-single .__records_list_item > .__records_remove {
+.__records_list:is(.is-single, .is-compact) .__records_list_item > .__records_remove {
     position: static; width: auto; height: auto; margin: 0 0 0 -1px;
     display: flex; align-items: center;
     border-top-left-radius: 0; border-bottom-left-radius: 0;
 }
 
 /* 一覧で表示したとき。並べ替えるときや、全体を見渡したいときに切り替える。
-   入力欄は隠し、先頭の欄の中身だけを 1 行で出す（中途半端に見えていると読みづらい）。
+   最初の段だけを残し、あとは隠す。Row でまとめた欄は作り手が「横に並べたい」
+   と指定したものなので、その単位は崩さない。
    display: none でも値は送信されるので、この状態で保存しても中身は失われない */
-.__records_list.is-compact {border: 0;}
-.__records_list.is-compact .__records_list_item {
-    /* 1 行の見出しをカードの枠で囲むと厚ぼったい。欄が 1 つの行と同じく、枠と背景を外す */
-    border: 0; border-radius: 0; background: transparent;
-    padding: 0.25rem 2.25rem 0.25rem 1.75rem; min-height: 2.25rem;
+.__records_list.is-compact .__records_list_item > .row ~ .row {display: none;}
+/* 先頭が複数行の欄でも、一覧では 1 行に収める */
+.__records_list.is-compact .__records_list_item textarea.form-control {
+    height: calc(1.5em + 0.75rem + 2px); resize: none; overflow: hidden;
 }
-.__records_list.is-compact .__records_handle {left: 0;}
-.__records_list.is-compact .__records_list_item > .__records_remove {right: 0;}
-/* 枠が無くなると行の切れ目が分からない。細い線だけ残す */
-.__records_list.is-compact .__records_list_item + .__records_list_item {border-top: 1px solid #F1F3F5;}
-.__records_list.is-compact .__records_list_item > *:not(.__records_handle):not(.__records_remove):not(.__records_row_label) {
-    display: none;
-}
-.__records_row_label {display: none;}
-.__records_list.is-compact .__records_row_label {
-    display: block; line-height: 1.75rem; color: #212529;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.__records_list.is-compact .__records_row_label:empty::before {content: '（空の行）'; color: #ADB5BD;}
 
 /* 掴んでいる行。姿は変えず、浮いていることだけ見せる。
    枠を外した行は背景も透けるため、掴んでいる間だけ白で塗る */
@@ -245,29 +233,6 @@ $(document).on('hidden.bs.modal input change', '.__records_tile', function () {
     veinSyncTile($(this));
 });
 
-// 掴んでいる行に出す見出し。先頭の埋まっている欄を使う
-function veinRowLabel($item) {
-    var text = '';
-
-    $item.find('input[type="text"], textarea').each(function () {
-        if (!text && $(this).val()) {
-            text = $(this).val();
-        }
-    });
-
-    if (!text) {
-        $item.find('select').each(function () {
-            var selected = $(this).find('option:selected').text();
-
-            if (!text && selected) {
-                text = selected;
-            }
-        });
-    }
-
-    return text || '（空の行）';
-}
-
 // カード表示 / 一覧表示の切り替え。行が高いと並べ替えづらく、全体も見渡せない。
 // 掴んだ瞬間に自動で畳むと画面が飛ぶため、切り替えは明示的に行う
 $(document).on('click', '.__records_view button', function () {
@@ -275,20 +240,6 @@ $(document).on('click', '.__records_view button', function () {
     const $list = $btn.closest('.__records').find('.__records_list');
 
     const compact = $btn.data('view') === 'compact';
-
-    // 一覧で表示するときは、先頭の欄の中身を見出しとして出す
-    if (compact) {
-        $list.find('.__records_list_item').each(function () {
-            const $row = $(this);
-            let $label = $row.children('.__records_row_label');
-
-            if (!$label.length) {
-                $label = $('<span class="__records_row_label"></span>').appendTo($row);
-            }
-
-            $label.text(veinRowLabel($row) === '（空の行）' ? '' : veinRowLabel($row));
-        });
-    }
 
     $list.toggleClass('is-compact', compact);
 
