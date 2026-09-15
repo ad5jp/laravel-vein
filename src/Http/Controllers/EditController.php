@@ -108,7 +108,7 @@ class EditController extends Controller
         if ($model instanceof Entry || $model instanceof Page) {
             return redirect()
                 ->route('vein.edit', ['node' => $node, 'id' => $record->getKey()])
-                ->with('message.success', '保存しました');
+                ->with('message.success', $this->savedMessage($record, '保存しました'));
         }
 
         return response()->json(['message' => '更新しました']);

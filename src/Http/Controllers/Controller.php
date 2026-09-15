@@ -26,4 +26,21 @@ abstract class Controller
 
         return $rules;
     }
+
+    /**
+     * 保存できたことを伝える文言。
+     *
+     * 何が起きたかは保存した中身で変わる（公開したのか、下書きのままなのか）。
+     * モデルが savedMessage() を持っていればそれを使う。
+     */
+    protected function savedMessage(Model $record, string $default): string
+    {
+        if (! method_exists($record, 'savedMessage')) {
+            return $default;
+        }
+
+        $message = $record->savedMessage();
+
+        return is_string($message) && $message !== '' ? $message : $default;
+    }
 }
