@@ -119,6 +119,16 @@ abstract class TestCase extends Orchestra
         });
     }
 
+    /**
+     * 1x1 の PNG。中身から形式を判定する箇所があるので、テストでも実データを使う。
+     */
+    protected function pngBytes(): string
+    {
+        return (string) base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+        );
+    }
+
     protected function getApplicationTimezone($app): string
     {
         return 'Asia/Tokyo';

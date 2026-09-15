@@ -10,12 +10,14 @@ use AD5jp\Vein\Form\UploadService;
 use AD5jp\Vein\Node\Contracts\File;
 use Closure;
 use Exception;
+use finfo;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Symfony\Component\Mime\MimeTypes;
 
 class FileUpload extends FormControl implements DeletesRelated, Form
 {
@@ -24,6 +26,8 @@ class FileUpload extends FormControl implements DeletesRelated, Form
         public string $key,
         public ?string $disk = null,
         public ?string $directory = null,
+        /** @var string[]|null 許可する拡張子。null なら config/vein.php の既定 */
+        public ?array $extensions = null,
         public ?string $label = null,
         public mixed $default = null, // ファイルアップロードにデフォルトは無効
         public int $colSize = 12,
@@ -35,6 +39,7 @@ class FileUpload extends FormControl implements DeletesRelated, Form
         $this->disk = $this->disk ?: config('vein.upload_disk');
         $this->directory = $this->directory ?: config('vein.upload_path');
         $this->directory = trim($this->directory, '/');
+        $this->extensions = $this->extensions ?: config('vein.upload_extensions');
 
         parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
@@ -136,6 +141,29 @@ class FileUpload extends FormControl implements DeletesRelated, Form
     }
 
     /**
+     * 中身から形式を判定し、許可した拡張子に対応するものだけを通す。
+     *
+     * Storage::mimeType() は拡張子から推測するため、中身がテキストでも
+     * .png という名前なら image/png を返す。ここでは使えない。
+     */
+    private function detectMimeType(string $contents): string
+    {
+        $mime_type = (new finfo(FILEINFO_MIME_TYPE))->buffer($contents);
+
+        if ($mime_type === false) {
+            throw new Exception('ファイルの形式を判定できませんでした');
+        }
+
+        $extensions = MimeTypes::getDefault()->getExtensions($mime_type);
+
+        if (array_intersect($extensions, $this->extensions) === []) {
+            throw new Exception('許可されていない形式のファイルです: '.$mime_type);
+        }
+
+        return $mime_type;
+    }
+
+    /**
      * 実体の削除をコミット後に回す。
      *
      * Storage はトランザクションの対象外なので、その場で消すとロールバックしても戻らない。
@@ -201,6 +229,11 @@ class FileUpload extends FormControl implements DeletesRelated, Form
 
             // 正規ディレクトリに移動
             $tmp_file = Storage::disk(config('vein.temporary_disk'))->get($json['tmp_path']);
+
+            // 送られてきた mime_type は hidden input 由来なので信用しない。
+            // 名前ではなく中身から判定し直す（Storage::mimeType() は拡張子を見るだけ）
+            $mime_type = $this->detectMimeType($tmp_file);
+
             $store_path = $this->directory.'/'.basename($json['tmp_path']);
             Storage::disk($this->disk)->put($store_path, $tmp_file);
             // 置いた実体はトランザクションで戻らないので、失敗したら自分で片付ける
@@ -211,7 +244,7 @@ class FileUpload extends FormControl implements DeletesRelated, Form
             $new_file = $belongsTo->getRelated()->newInstance();
             $new_file->setFileName($json['file_name']);
             $new_file->setFilePath($store_path);
-            $new_file->setMimeType($json['mime_type']);
+            $new_file->setMimeType($mime_type);
             $new_file->setFileSize($json['file_size']);
             $new_file->save();
 

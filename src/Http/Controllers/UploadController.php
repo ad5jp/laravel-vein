@@ -7,17 +7,29 @@ namespace AD5jp\Vein\Http\Controllers;
 use AD5jp\Vein\Form\UploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Throwable;
 
 class UploadController extends Controller
 {
     public function uploadSingle(Request $request): JsonResponse
     {
-        $uploaded_file = $request->file('upload');
+        $validator = Validator::make($request->all(), [
+            'upload' => [
+                'required',
+                'file',
+                'mimes:'.implode(',', config('vein.upload_extensions')),
+                'max:'.config('vein.upload_max_kilobytes'),
+            ],
+        ], [], ['upload' => 'ファイル']);
 
-        if (! $uploaded_file->isValid()) {
-            abort(400, $uploaded_file->getErrorMessage());
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => $validator->errors()->first('upload'),
+            ], 422);
         }
+
+        $uploaded_file = $request->file('upload');
 
         try {
             // TODO リサイズ処理
@@ -38,8 +50,12 @@ class UploadController extends Controller
                 'value' => json_encode($json),
             ]);
         } catch (Throwable $e) {
+            // 例外文にはサーバー内部のパスが載るため、そのままは返さない
             report($e);
-            abort(400, $e->getMessage());
+
+            return response()->json([
+                'message' => 'ファイルの保存に失敗しました。',
+            ], 500);
         }
     }
 }
