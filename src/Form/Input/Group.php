@@ -43,7 +43,20 @@ class Group extends FormControl implements Form, SearchForm
         return $html;
     }
 
-    public function beforeSave(Model $model, Arrayable|array $request): Model
+    public function validationRules(Model $model): array
+    {
+        $rules = [];
+
+        foreach ($this->children as $child) {
+            if ($child instanceof FormControl) {
+                $rules = array_merge($rules, $child->validationRules($model));
+            }
+        }
+
+        return $rules;
+    }
+
+    protected function applyBeforeSave(Model $model, array $request): Model
     {
         foreach ($this->children as $child) {
             if ($child instanceof Form) {
@@ -54,7 +67,7 @@ class Group extends FormControl implements Form, SearchForm
         return $model;
     }
 
-    public function afterSave(Model $model, Arrayable|array $request): Model
+    protected function applyAfterSave(Model $model, array $request): Model
     {
         foreach ($this->children as $child) {
             if ($child instanceof Form) {

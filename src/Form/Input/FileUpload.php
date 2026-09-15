@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Form\Input;
 
+use AD5jp\Vein\Form\Concerns\ResolvesRelations;
 use AD5jp\Vein\Form\Contracts\DeletesRelated;
 use AD5jp\Vein\Form\Contracts\Form;
 use AD5jp\Vein\Form\UploadService;
@@ -11,16 +12,22 @@ use AD5jp\Vein\Node\Contracts\File;
 use Closure;
 use Exception;
 use finfo;
-use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Symfony\Component\Mime\MimeTypes;
 
 class FileUpload extends FormControl implements DeletesRelated, Form
 {
+    use ResolvesRelations;
+
+    private function relation(Model $model): BelongsTo
+    {
+        /** @var BelongsTo */
+        return $this->resolveRelation($model, $this->key, BelongsTo::class, File::class);
+    }
+
     // TODO MimeType の指定
     public function __construct(
         public string $key,
@@ -46,7 +53,7 @@ class FileUpload extends FormControl implements DeletesRelated, Form
 
     public function renderInline(Model $values, ?string $parent_key = null): string
     {
-        $this->verifyRelation($values, $this->key);
+        $this->relation($values);
 
         $preview_html = '';
 
@@ -73,7 +80,7 @@ class FileUpload extends FormControl implements DeletesRelated, Form
                 );
             } else {
                 // アップロード済IDの old
-                $belongsTo = $this->verifyRelation($values, $this->key);
+                $belongsTo = $this->relation($values);
                 $related_model = $belongsTo->getRelated();
                 $file = $related_model->find($old);
                 if ($file instanceof File) {
@@ -129,7 +136,7 @@ class FileUpload extends FormControl implements DeletesRelated, Form
      */
     public function deleteRelated(Model $model): void
     {
-        $this->verifyRelation($model, $this->key);
+        $this->relation($model);
 
         $file = $model->{$this->key};
 
@@ -187,13 +194,9 @@ class FileUpload extends FormControl implements DeletesRelated, Form
         DB::afterRollBack(static fn () => Storage::disk($disk)->delete($path));
     }
 
-    public function beforeSave(Model $model, Arrayable|array $request): Model
+    protected function applyBeforeSave(Model $model, array $request): Model
     {
-        if ($request instanceof Arrayable) {
-            $request = $request->toArray();
-        }
-
-        $belongsTo = $this->verifyRelation($model, $this->key);
+        $belongsTo = $this->relation($model);
         /** @var Model&File $file */
         $foreign_key = $belongsTo->getForeignKeyName();
 
@@ -259,27 +262,5 @@ class FileUpload extends FormControl implements DeletesRelated, Form
         $model->$foreign_key = $value;
 
         return $model;
-    }
-
-    private function verifyRelation(Model $model, string $key): BelongsTo
-    {
-        foreach ([$key, Str::camel($key)] as $relation_method_name) {
-            if (method_exists($model, $relation_method_name)) {
-                $relation = $model->$relation_method_name();
-
-                if (! $relation instanceof BelongsTo) {
-                    throw new Exception('Model '.get_class($model).' の '.$relation_method_name.'() は BelongsTo リレーションではありません');
-                }
-
-                $file_model = $relation->getRelated();
-                if (! $file_model instanceof File) {
-                    throw new Exception('Model '.get_class($file_model).' は File インターフェイスを実装していません');
-                }
-
-                return $relation;
-            }
-        }
-
-        throw new Exception('Model '.get_class($model).' にリレーション '.$key.' が定義されていません');
     }
 }
