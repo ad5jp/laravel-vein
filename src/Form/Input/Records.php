@@ -102,10 +102,15 @@ class Records extends FormControl implements DeletesRelated, Form
                 .'</div>';
         }
         $html .= '</div>';
+        // 欄が 1 つしか無い子レコードは、ラベルと段組みを使わず 1 行に収める。
+        // 何の欄かは見出し（h5）で分かるので、行ごとのラベルは重複になる
+        $single = ! $this->as_tiles && count($editFields) === 1;
+
         $html .= sprintf(
-            '<div class="%s __records_list%s">',
+            '<div class="%s __records_list%s%s">',
             $this->as_tiles ? '__records_tiles' : 'list-group',
             $this->sort_column === null ? '' : ' __records_sortable',
+            $single ? ' is-single' : '',
         );
         foreach ($records as $i => $record) {
             /** @var int $i */

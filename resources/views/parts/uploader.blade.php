@@ -82,6 +82,18 @@ $(function () {
 .__records_head {display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem;}
 .__records_head h5 {margin: 0;}
 .__records_view {flex: none;}
+/* 欄が 1 つしか無い子レコード。ラベルと段組みを外して 1 行に収める。
+   何の欄かは見出しで分かるので、行ごとのラベルは重複になる */
+.__records_list.is-single .__records_list_item {
+    display: flex; align-items: center;
+    padding-top: 0.5rem; padding-bottom: 0.5rem;
+}
+.__records_list.is-single .__records_list_item > .row {flex: 1 1 auto; margin: 0; min-width: 0;}
+.__records_list.is-single .__records_list_item > .row > [class*="col-"] {
+    flex: 1 1 auto; max-width: none; padding: 0;
+}
+.__records_list.is-single .__records_list_item .form-label {display: none;}
+
 /* 一覧で表示したとき。並べ替えるときや、全体を見渡したいときに切り替える。
    入力欄は隠し、先頭の欄の中身だけを 1 行で出す（中途半端に見えていると読みづらい）。
    display: none でも値は送信されるので、この状態で保存しても中身は失われない */
