@@ -91,6 +91,10 @@
                 + 20;
         }
 
+        function atBottom() {
+            return window.innerHeight + window.scrollY >= document.body.scrollHeight - 2;
+        }
+
         // いま画面の上端に一番近い見出しを現在地とする
         function mark() {
             let current = 0;
@@ -100,6 +104,12 @@
                     current = i;
                 }
             });
+
+            // 最後の見出しは、これ以上スクロールできないため上端まで来ない。
+            // 末尾まで運んだら最後を現在地にする
+            if (atBottom()) {
+                current = sections.length - 1;
+            }
 
             links.forEach((a, i) => a.classList.toggle('is-current', i === current));
         }
