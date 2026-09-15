@@ -4,7 +4,16 @@
 <div class="container">
     <div class="__page_head">
         <h1 class="mb-0">{{ $model->menuName() }} 編集</h1>
-        <a href="{{ route('vein.list', ['node' => $node]) }}" class="btn btn-secondary">一覧に戻る</a>
+        <div class="d-flex gap-2">
+            {{-- 公開側の URL を持っているノードでは、そこへ出られるようにする。
+                 下書きなど、まだ見られない状態のときは null を返してもらう --}}
+            @if (method_exists($record, 'publicUrl') && $record->publicUrl())
+            <a href="{{ $record->publicUrl() }}" class="btn btn-outline-secondary" target="_blank" rel="noopener">
+                <i class="bi bi-box-arrow-up-right"></i> 公開ページ
+            </a>
+            @endif
+            <a href="{{ route('vein.list', ['node' => $node]) }}" class="btn btn-secondary">一覧に戻る</a>
+        </div>
     </div>
     <div class="__edit_body">
     <section class="section">
