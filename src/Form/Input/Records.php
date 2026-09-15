@@ -87,13 +87,17 @@ class Records extends FormControl implements DeletesRelated, Form
 
         $html .= sprintf('<div class="__records mt-5 mb-5" data-nextkey="%s">', $records->count());
 
-        // 見出しの行。畳むボタンは、行が縦に積まれるときだけ出す
-        // （タイルはもともと小さく、畳む意味がない）
+        // 欄が 1 つしか無い子レコードは、ラベルと段組みを使わず 1 行に収める。
+        // 何の欄かは見出し（h5）で分かるので、行ごとのラベルは重複になる
+        $single = ! $this->as_tiles && count($editFields) === 1;
+
+        // 見出しの行。表示の切り替えは、行が縦に積まれて高くなるときだけ出す
+        // （タイルと 1 行の子レコードは、もともと低いので切り替える先がない）
         $html .= '<div class="__records_head">';
         if ($this->label) {
             $html .= sprintf('<h5>%s</h5>', $this->label);
         }
-        if (! $this->as_tiles) {
+        if (! $this->as_tiles && ! $single) {
             $html .= '<div class="__records_view btn-group btn-group-sm" role="group" aria-label="表示の切り替え">'
                 .'<button type="button" class="btn btn-outline-secondary active" data-view="detail"'
                 .' aria-pressed="true" title="カードで表示"><i class="bi bi-card-text"></i></button>'
@@ -102,9 +106,6 @@ class Records extends FormControl implements DeletesRelated, Form
                 .'</div>';
         }
         $html .= '</div>';
-        // 欄が 1 つしか無い子レコードは、ラベルと段組みを使わず 1 行に収める。
-        // 何の欄かは見出し（h5）で分かるので、行ごとのラベルは重複になる
-        $single = ! $this->as_tiles && count($editFields) === 1;
 
         $html .= sprintf(
             '<div class="%s __records_list%s%s">',
