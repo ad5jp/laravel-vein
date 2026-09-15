@@ -78,13 +78,6 @@ $(function () {
 .__records_list_item.is-sortable:hover .__records_handle {color: #6C757D;}
 /* ドラッグ中に空く場所。どこへ入るかが分かるようにする */
 .__records_placeholder {border: 2px dashed #ADB5BD; border-radius: 0.375rem; background: #F8F9FA;}
-/* 掴んでいる間は一覧を畳む。画像を持つ行は 480px ほどあり、そのままでは
-   1 つ入れ替えるのに画面 1 枚分を運ぶことになる */
-.__records_list.is-dragging .__records_list_item {
-    max-height: 2.75rem; overflow: hidden; opacity: 0.7;
-    padding-top: 0.5rem; padding-bottom: 0.5rem;
-}
-.__records_list.is-dragging .__records_list_item > .__records_remove {display: none;}
 /* 掴んでいる行。中身は先頭の欄だけ見せる */
 .__records_drag_bar {
     padding: 0.5rem 0.75rem 0.5rem 2.25rem; font-size: 0.9375rem; line-height: 1.75rem;
@@ -258,19 +251,14 @@ $(function () {
                 .text(veinRowLabel(item));
         },
         start: function (event, ui) {
-            var $list = $(this);
-
-            // 一覧を畳んでから、どこへ落ちるかを測り直す
-            $list.addClass('is-dragging');
+            // 持ち上げた行は 1 行分の帯になる。空いた場所も同じ高さにして、
+            // 落ちる位置が指の近くに来るようにする
             ui.placeholder.height(ui.helper.outerHeight());
-            $list.sortable('refreshPositions');
+            $(this).sortable('refreshPositions');
 
             // 空いた場所の左端を控える。持ち上げた行は位置が絶対値に変わっているため、
             // 行そのものからは正しい値が取れない
             ui.item.data('veinLeft', ui.placeholder.offset().left);
-        },
-        stop: function (event, ui) {
-            $(this).removeClass('is-dragging');
         },
         sort: function (event, ui) {
             // 縦にしか動かさない作りだが、横に揺らすと左端が画面の端まで飛ぶことがある。
