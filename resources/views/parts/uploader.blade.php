@@ -82,6 +82,8 @@ $(function () {
 .__records_head {display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem;}
 .__records_head h5 {margin: 0;}
 .__records_view {flex: none;}
+/* 見出しの下の補足。追加ボタンの名前を長くしないために、説明はここへ出す */
+.__records_hint {margin: -0.25rem 0 0.5rem; color: #6C757D; font-size: 0.8125rem;}
 /* 欄が 1 つしか無い子レコード。ラベルと段組みを外して 1 行に収める。
    何の欄かは見出しで分かるので、行ごとのラベルは重複になる */
 .__records_list.is-single {border: 0;}

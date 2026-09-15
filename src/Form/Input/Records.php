@@ -24,6 +24,9 @@ class Records extends FormControl implements DeletesRelated, Form
     /** タイルで並べるか。画像を持つ子レコード向け。 */
     private bool $as_tiles = false;
 
+    /** 見出しの下に置く補足。追加ボタンの名前に混ぜたくない説明はここへ。 */
+    private ?string $hint = null;
+
     /**
      * 行をドラッグで並べ替えられるようにする。
      *
@@ -47,6 +50,19 @@ class Records extends FormControl implements DeletesRelated, Form
     public function tiles(): static
     {
         $this->as_tiles = true;
+
+        return $this;
+    }
+
+    /**
+     * 見出しの下に補足を出す。
+     *
+     * 「選ばなければ自動で出る」のような説明を見出しに入れると、追加ボタンの名前
+     * （「{見出し}を追加」）まで長くなる。説明はこちらへ寄せる。
+     */
+    public function hint(string $text): static
+    {
+        $this->hint = $text;
 
         return $this;
     }
@@ -106,6 +122,10 @@ class Records extends FormControl implements DeletesRelated, Form
                 .'</div>';
         }
         $html .= '</div>';
+
+        if ($this->hint !== null) {
+            $html .= sprintf('<p class="__records_hint">%s</p>', $this->hint);
+        }
 
         $html .= sprintf(
             '<div class="%s __records_list%s%s">',
