@@ -84,10 +84,15 @@ $(function () {
 .__records_view {flex: none;}
 /* 欄が 1 つしか無い子レコード。ラベルと段組みを外して 1 行に収める。
    何の欄かは見出しで分かるので、行ごとのラベルは重複になる */
+.__records_list.is-single {border: 0;}
 .__records_list.is-single .__records_list_item {
     display: flex; align-items: stretch;
-    padding: 0.5rem 1rem 0.5rem 2.25rem;
+    /* カードの枠と入力欄の枠で二重になるため、行側の枠と背景は外す。
+       入力欄そのものを行として見せる */
+    border: 0; background: transparent;
+    padding: 0.25rem 0 0.25rem 1.75rem;
 }
+.__records_list.is-single .__records_handle {left: 0;}
 .__records_list.is-single .__records_list_item > .row {
     flex: 1 1 auto; min-width: 0;
     /* .row が持つ mb-3 は Bootstrap のユーティリティで !important。
