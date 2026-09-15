@@ -139,8 +139,9 @@ $(function () {
         forcePlaceholderSize: true,
         helper: function (event, item) {
             // 高い行をそのまま持ち上げると画面を覆う。掴んでいる間は 1 行分の帯にする
+            // 高さも指定しておく。指定が無いと、掴んだ行の高さがそのまま写される
             return $('<div class="list-group-item __records_drag_bar"></div>')
-                .css('width', item.outerWidth())
+                .css({ width: item.outerWidth(), height: 'auto' })
                 .text(veinRowLabel(item));
         },
         start: function (event, ui) {
