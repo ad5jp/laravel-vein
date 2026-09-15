@@ -18,6 +18,22 @@ class Records extends FormControl implements DeletesRelated, Form
 {
     use ResolvesRelations;
 
+    /** 行の並び順を入れる列。null なら並べ替えを出さない。 */
+    private ?string $sort_column = null;
+
+    /**
+     * 行をドラッグで並べ替えられるようにする。
+     *
+     * 並び順は画面に並んでいる順そのままで、指定した列へ 0 から順に入れる。
+     * 番号を手で入れる欄は要らなくなるので、子の editFields からは外す。
+     */
+    public function sortable(string $column = 'sort_order'): static
+    {
+        $this->sort_column = $column;
+
+        return $this;
+    }
+
     private function relation(Model $model): HasMany
     {
         /** @var HasMany */
@@ -56,7 +72,10 @@ class Records extends FormControl implements DeletesRelated, Form
         if ($this->label) {
             $html .= sprintf('<h5>%s</h5>', $this->label);
         }
-        $html .= '<div class="list-group __records_list">';
+        $html .= sprintf(
+            '<div class="list-group __records_list%s">',
+            $this->sort_column === null ? '' : ' __records_sortable',
+        );
         foreach ($records as $i => $record) {
             /** @var int $i */
             $html .= $this->renderRow($record, $editFields, $i);
@@ -129,6 +148,9 @@ class Records extends FormControl implements DeletesRelated, Form
         $request_records = $request[$this->key] ?? [];
 
         // update or create records
+        // 並び順は届いた順（= 画面に並んでいた順）で振り直す
+        $position = 0;
+
         foreach ($request_records as $request_record) {
             $request_record_key = $request_record[$record_model->getKeyName()] ?? null;
             // HTTP 経由の主キーは文字列、getKey() は整数で返ることが多い
@@ -142,7 +164,14 @@ class Records extends FormControl implements DeletesRelated, Form
             foreach ($editFields as $editField) {
                 $record = $editField->beforeSave($record, $request_record);
             }
+
+            // 子の editFields より後に入れる。手入力の値があっても画面の順を正とする
+            if ($this->sort_column !== null) {
+                $record->{$this->sort_column} = $position;
+            }
+
             $record->save();
+            $position++;
         }
 
         // delete missing records
@@ -208,7 +237,13 @@ class Records extends FormControl implements DeletesRelated, Form
             $row .= $editField->render($record);
         }
 
-        return '<div class="list-group-item __records_list_item">'
+        $handle = $this->sort_column === null
+            ? ''
+            : '<span class="__records_handle" title="ドラッグして並べ替え" aria-hidden="true">'
+                .'<i class="bi bi-grip-vertical"></i></span>';
+
+        return sprintf('<div class="list-group-item __records_list_item%s">', $this->sort_column === null ? '' : ' is-sortable')
+            .$handle
             .$this->wrapKeys($row, $index)
             .'<button type="button" class="btn btn-sm btn-outline-secondary __records_remove"><i class="bi bi-trash"></i></button>'
             .'</div>';

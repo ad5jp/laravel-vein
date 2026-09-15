@@ -18,7 +18,7 @@ class TestRecord extends Model implements Record
 {
     protected $table = 'test_records';
 
-    protected $fillable = ['test_entry_id', 'caption', 'test_file_id', 'tags'];
+    protected $fillable = ['test_entry_id', 'caption', 'test_file_id', 'tags', 'sort_order'];
 
     protected $casts = ['tags' => 'array'];
 

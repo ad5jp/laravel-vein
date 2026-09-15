@@ -70,6 +70,14 @@ $(function () {
 <style>
 .__records_list_item {position: relative; padding-right: 3rem;}
 .__records_remove {position: absolute; right: 0.5rem; top: 0; bottom: 0; width: 2rem; height: 2rem; margin: auto;}
+/* 並べ替えるもの。つまむところを左に置き、その分だけ中身を右へ寄せる */
+.__records_list_item.is-sortable {padding-left: 2.25rem;}
+.__records_handle {position: absolute; left: 0.5rem; top: 0; bottom: 0; height: 2rem; margin: auto;
+    display: flex; align-items: center; color: #ADB5BD; cursor: grab; font-size: 1.25rem;}
+.__records_handle:active {cursor: grabbing;}
+.__records_list_item.is-sortable:hover .__records_handle {color: #6C757D;}
+/* ドラッグ中に空く場所。どこへ入るかが分かるようにする */
+.__records_placeholder {border: 2px dashed #ADB5BD; border-radius: 0.375rem; background: #F8F9FA;}
 </style>
 <script>
 $(document).on('click', '.__records_add', function () {
@@ -79,6 +87,17 @@ $(document).on('click', '.__records_add', function () {
     $records.data('nextkey', index + 1)
     const template_html = $records.find('script').html().replaceAll('[0]', '[' + index + ']');
     $records.find('.__records_list').append($(template_html));
+});
+// 行の並びをそのまま並び順として保存するため、画面で入れ替えられるようにする。
+// つまむところを限ると、入力欄をなぞったときに行が動かない
+$(function () {
+    $('.__records_sortable').sortable({
+        handle: '.__records_handle',
+        axis: 'y',
+        tolerance: 'pointer',
+        placeholder: '__records_placeholder',
+        forcePlaceholderSize: true,
+    });
 });
 $(document).on('click', '.__records_remove', function () {
     if (!confirm('この行を削除しますか？')) {
