@@ -85,14 +85,24 @@ $(function () {
 /* 欄が 1 つしか無い子レコード。ラベルと段組みを外して 1 行に収める。
    何の欄かは見出しで分かるので、行ごとのラベルは重複になる */
 .__records_list.is-single .__records_list_item {
-    display: flex; align-items: center;
-    padding-top: 0.5rem; padding-bottom: 0.5rem;
+    display: flex; align-items: stretch;
+    padding: 0.5rem 1rem 0.5rem 2.25rem;
 }
 .__records_list.is-single .__records_list_item > .row {flex: 1 1 auto; margin: 0; min-width: 0;}
 .__records_list.is-single .__records_list_item > .row > [class*="col-"] {
     flex: 1 1 auto; max-width: none; padding: 0;
 }
 .__records_list.is-single .__records_list_item .form-label {display: none;}
+/* 入力とごみ箱をくっつける。枠線を 1px 重ねて 1 つの部品に見せる */
+.__records_list.is-single .__records_list_item .form-control,
+.__records_list.is-single .__records_list_item .form-select {
+    border-top-right-radius: 0; border-bottom-right-radius: 0;
+}
+.__records_list.is-single .__records_list_item > .__records_remove {
+    position: static; width: auto; height: auto; margin: 0 0 0 -1px;
+    display: flex; align-items: center;
+    border-top-left-radius: 0; border-bottom-left-radius: 0;
+}
 
 /* 一覧で表示したとき。並べ替えるときや、全体を見渡したいときに切り替える。
    入力欄は隠し、先頭の欄の中身だけを 1 行で出す（中途半端に見えていると読みづらい）。
