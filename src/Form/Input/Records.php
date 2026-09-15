@@ -108,7 +108,7 @@ class Records extends FormControl implements DeletesRelated, Form
         $html .= '</div>';
 
         if ($this->hint !== null) {
-            $html .= sprintf('<p class="__records_hint">%s</p>', $this->hint);
+            $html .= sprintf('<p class="__records_hint">%s</p>', e($this->hint));
         }
 
         $html .= sprintf(
