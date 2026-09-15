@@ -199,6 +199,12 @@ class Records extends FormControl implements DeletesRelated, Form
         );
 
         foreach ($editFields as $editField) {
+            // 検証のキーは images.0.caption の形になる。どの行が弾かれたのかを
+            // 行の中で示せるよう、親のキーと添字を渡しておく
+            if ($editField instanceof FormControl) {
+                $editField->withErrorKeyPrefix(sprintf('%s.%d', $this->key, $index));
+            }
+
             $row .= $editField->render($record);
         }
 

@@ -11,6 +11,14 @@ use Illuminate\Database\Eloquent\Model;
 
 abstract class FormControl
 {
+    /**
+     * エラーを引くときのキーの接頭辞。
+     *
+     * 子レコードの中では、検証のキーが `images.0.caption` のように親と添字を含む。
+     * 描画の時点では自分が何行目かを知らないため、Records が行ごとに教える。
+     */
+    protected ?string $error_key_prefix = null;
+
     public function __construct(
         public string $key,
         public ?string $label = null,
@@ -183,9 +191,25 @@ abstract class FormControl
             return null;
         }
 
+        $key = $this->error_key_prefix === null
+            ? $this->key
+            : $this->error_key_prefix.'.'.$this->key;
+
         $bag = $errors->getBag('default');
 
-        return $bag->has($this->key) ? $bag->first($this->key) : null;
+        return $bag->has($key) ? $bag->first($key) : null;
+    }
+
+    /**
+     * 子レコードの中で描かれるとき、親のキーと添字を受け取る。
+     *
+     * @see Records::renderRow()
+     */
+    public function withErrorKeyPrefix(?string $prefix): static
+    {
+        $this->error_key_prefix = $prefix;
+
+        return $this;
     }
 
     abstract public function renderInline(Model $values): string;
