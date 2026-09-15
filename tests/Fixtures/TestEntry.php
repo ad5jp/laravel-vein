@@ -24,6 +24,24 @@ class TestEntry extends Model implements Entry
 
     protected $fillable = ['title', 'body'];
 
+    /**
+     * editValidatorRules() が呼ばれたときの主キーを控える。
+     *
+     * 編集では「いま編集しているレコード」で呼ばれてほしい。空のモデルで呼ばれると、
+     * 自分自身を除外する unique ルール（Rule::unique()->ignore($this->getKey())）が
+     * 成立しない。
+     *
+     * @var list<int|string|null>
+     */
+    public static array $validatorKeys = [];
+
+    public function editValidatorRules(): array
+    {
+        self::$validatorKeys[] = $this->getKey();
+
+        return [];
+    }
+
     public function records(): HasMany
     {
         return $this->hasMany(TestRecord::class, 'test_entry_id');

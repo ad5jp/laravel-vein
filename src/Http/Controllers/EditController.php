@@ -70,18 +70,23 @@ class EditController extends Controller
         }
 
         // フィールド情報取得
+        //
+        // ここから先は $model（空のインスタンス）ではなく $record を使う。
+        // $model は「どのモデルクラスか」を解決するためのもので値を持たないため、
+        // Rule::unique()->ignore($this->getKey()) のようにレコードの値に依存する
+        // 規則が成立しない（何も変えずに保存しても重複エラーで弾かれる）。
         $manager = new InputManager;
-        $editFields = $manager->parseEditField($model->editFields());
+        $editFields = $manager->parseEditField($record->editFields());
 
         // バリデーション（required を指定した要素の規則と、モデル側の規則を併せる）
-        $rules = array_merge($this->rulesFromFields($editFields, $model), $model->editValidatorRules());
+        $rules = array_merge($this->rulesFromFields($editFields, $record), $record->editValidatorRules());
 
         if ($rules) {
             Validator::make(
                 $request->all(),
                 $rules,
-                $model->editValidatorMessages(),
-                $model->editValidatorAttributes(),
+                $record->editValidatorMessages(),
+                $record->editValidatorAttributes(),
             )->validate();
         }
 
