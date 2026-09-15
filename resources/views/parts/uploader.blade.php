@@ -116,6 +116,14 @@ $(function () {
     display: flex; align-items: center;
     border-top-left-radius: 0; border-bottom-left-radius: 0;
 }
+/* 弾かれた欄は、その下に理由が出て行が高くなる。ごみ箱まで一緒に伸びると、
+   入力とくっついて見えなくなる。入力欄の高さに留める */
+.__records_list:is(.is-single, .is-compact) .__records_list_item:has(.__field_error) > .__records_remove {
+    align-self: flex-start;
+    /* 入力欄の高さ。Bootstrap の .form-control と同じ式だが、ごみ箱は btn-sm で
+       文字が小さいため em ではなく rem で置く */
+    height: calc(1.5rem + 0.75rem + 2px);
+}
 
 /* 一覧で表示したとき。並べ替えるときや、全体を見渡したいときに切り替える。
    最初の段だけを残し、あとは隠す。Row でまとめた欄は作り手が「横に並べたい」
