@@ -94,7 +94,12 @@ class Records extends FormControl implements DeletesRelated, Form
             $html .= sprintf('<h5>%s</h5>', $this->label);
         }
         if (! $this->as_tiles) {
-            $html .= '<button type="button" class="__records_toggle">畳む</button>';
+            $html .= '<div class="__records_view btn-group btn-group-sm" role="group" aria-label="表示の切り替え">'
+                .'<button type="button" class="btn btn-outline-secondary active" data-view="detail"'
+                .' aria-pressed="true" title="カードで表示"><i class="bi bi-card-text"></i></button>'
+                .'<button type="button" class="btn btn-outline-secondary" data-view="compact"'
+                .' aria-pressed="false" title="一覧で表示"><i class="bi bi-list-ul"></i></button>'
+                .'</div>';
         }
         $html .= '</div>';
         $html .= sprintf(
