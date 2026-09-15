@@ -30,6 +30,8 @@
     .__has_error .form-label { color: #DC3545; }
     .__field_error { color: #DC3545; font-size: 0.875em; margin: 0.25rem 0 0; }
     .__field_hint { color: #6C757D; font-size: 0.8125rem; margin: 0.25rem 0 0; }
+    /* 弾かれたときは理由のほうが具体的。同じことを 2 度言わない */
+    .__has_error .__field_hint { display: none; }
 
     /* 見出しと「一覧に戻る」。入力欄が長い画面では、スクロールすると戻る手立てが
        画面の外に出てしまうため貼り付ける。背景を敷かないと下の内容が透ける */
