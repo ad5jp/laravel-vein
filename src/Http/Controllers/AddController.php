@@ -59,6 +59,12 @@ class AddController extends Controller
         $manager = new InputManager;
         $editFields = $manager->parseEditField($model->editFields());
 
+        // 検証の前に値を整える。大小の揺れのように、弾くより直したほうがよいものを
+        // ここで揃えておく（整えた値は検証にも保存にも使われる）
+        if (method_exists($model, 'editValidatorPrepare')) {
+            $request->merge($model->editValidatorPrepare($request->all()));
+        }
+
         // バリデーション（required を指定した要素の規則と、モデル側の規則を併せる）
         $rules = array_merge($this->rulesFromFields($editFields, $model), $model->editValidatorRules());
 
