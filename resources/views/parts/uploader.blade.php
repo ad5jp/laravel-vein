@@ -97,6 +97,26 @@ $(function () {
         tolerance: 'pointer',
         placeholder: '__records_placeholder',
         forcePlaceholderSize: true,
+        start: function (event, ui) {
+            // 空いた場所の左端を控える。持ち上げた行は位置が絶対値に変わっているため、
+            // 行そのものからは正しい値が取れない
+            ui.item.data('veinLeft', ui.placeholder.offset().left);
+        },
+        sort: function (event, ui) {
+            // 縦にしか動かさない作りだが、横に揺らすと左端が画面の端まで飛ぶことがある。
+            // 掴んだときの左端に貼り付けて、横へは動かないようにする
+            var left = ui.item.data('veinLeft');
+
+            if (left === undefined) {
+                return;
+            }
+
+            var current = ui.helper.offset();
+
+            if (Math.round(current.left) !== Math.round(left)) {
+                ui.helper.offset({ top: current.top, left: left });
+            }
+        },
     });
 });
 $(document).on('click', '.__records_remove', function () {
