@@ -18,9 +18,9 @@
 <style>
 .__section_nav {
     position: sticky;
-    /* 上のバーは fixed-top。その下に潜らせない */
-    top: calc(var(--vein-navbar-height, 59px) + 1rem);
-    max-height: calc(100vh - var(--vein-navbar-height, 59px) - 2rem);
+    /* 上のバーと見出しの行の下に潜らせない */
+    top: calc(var(--vein-offset-top, 59px) + 1rem);
+    max-height: calc(100vh - var(--vein-offset-top, 59px) - 2rem);
     overflow-y: auto;
     align-self: flex-start;
     width: 13rem;
