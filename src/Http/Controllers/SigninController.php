@@ -33,7 +33,11 @@ class SigninController extends Controller
             return redirect()->intended(route('vein.home'));
         }
 
-        return back()->withInput()->with('message.error', 'メールアドレスかパスワードが間違っています。');
+        // withInput() は ValidationException 経由でないと password をフィルタしないため、
+        // 戻す項目を明示する
+        return back()
+            ->withInput($request->only('email'))
+            ->with('message.error', 'メールアドレスかパスワードが間違っています。');
     }
 
     public function signout(Request $request): RedirectResponse
@@ -41,6 +45,9 @@ class SigninController extends Controller
         $guard = config('vein.admin_guard') ?? config('auth.defaults.guard');
 
         Auth::guard($guard)->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect()->to(route('vein.signin'))->with('message.success', 'ログアウトしました');
     }
