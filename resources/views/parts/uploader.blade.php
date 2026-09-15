@@ -88,7 +88,12 @@ $(function () {
     display: flex; align-items: stretch;
     padding: 0.5rem 1rem 0.5rem 2.25rem;
 }
-.__records_list.is-single .__records_list_item > .row {flex: 1 1 auto; margin: 0; min-width: 0;}
+.__records_list.is-single .__records_list_item > .row {
+    flex: 1 1 auto; min-width: 0;
+    /* .row が持つ mb-3 は Bootstrap のユーティリティで !important。
+       残ると行の高さに 1rem 乗り、ごみ箱だけ背が高くなる */
+    margin: 0 !important;
+}
 .__records_list.is-single .__records_list_item > .row > [class*="col-"] {
     flex: 1 1 auto; max-width: none; padding: 0;
 }
