@@ -21,6 +21,9 @@ class Records extends FormControl implements DeletesRelated, Form
     /** 行の並び順を入れる列。null なら並べ替えを出さない。 */
     private ?string $sort_column = null;
 
+    /** タイルで並べるか。画像を持つ子レコード向け。 */
+    private bool $as_tiles = false;
+
     /**
      * 行をドラッグで並べ替えられるようにする。
      *
@@ -30,6 +33,20 @@ class Records extends FormControl implements DeletesRelated, Form
     public function sortable(string $column = 'sort_order'): static
     {
         $this->sort_column = $column;
+
+        return $this;
+    }
+
+    /**
+     * 縦に並べる代わりに、タイルで並べる。
+     *
+     * 画像を持つ行は高く、縦に積むと 1 つ入れ替えるのに画面 1 枚分を運ぶことになる。
+     * タイルを押すと、その行の入力欄がモーダルで開く。
+     * タイルの見た目（画像・見出し・印）は、モーダルの中身から画面側で組み立てる。
+     */
+    public function tiles(): static
+    {
+        $this->as_tiles = true;
 
         return $this;
     }
@@ -73,12 +90,13 @@ class Records extends FormControl implements DeletesRelated, Form
             $html .= sprintf('<h5>%s</h5>', $this->label);
         }
         $html .= sprintf(
-            '<div class="list-group __records_list%s">',
+            '<div class="%s __records_list%s">',
+            $this->as_tiles ? '__records_tiles' : 'list-group',
             $this->sort_column === null ? '' : ' __records_sortable',
         );
         foreach ($records as $i => $record) {
             /** @var int $i */
-            $html .= $this->renderRow($record, $editFields, $i);
+            $html .= $this->renderItem($record, $editFields, $i);
         }
         $html .= '</div><!--//.__records_list-->';
         $html .= '<div class="mt-3 text-end">';
@@ -87,7 +105,7 @@ class Records extends FormControl implements DeletesRelated, Form
 
         // 「追加」で複製されるテンプレート。JS が [0] を実際の添字に置換する
         $html .= '<script type="application/xml">';
-        $html .= $this->renderRow($record_model->newInstance(), $editFields, 0);
+        $html .= $this->renderItem($record_model->newInstance(), $editFields, 0);
         $html .= '</script>';
         $html .= '</div><!--//.__records-->';
 
@@ -219,7 +237,19 @@ class Records extends FormControl implements DeletesRelated, Form
      *
      * @param  Form[]  $editFields
      */
-    private function renderRow(Model $record, array $editFields, int $index): string
+    private function renderItem(Model $record, array $editFields, int $index): string
+    {
+        return $this->as_tiles
+            ? $this->renderTile($record, $editFields, $index)
+            : $this->renderRow($record, $editFields, $index);
+    }
+
+    /**
+     * 1 行分の入力欄そのもの。行にもタイルのモーダルにも、これを入れる。
+     *
+     * @param  Form[]  $editFields
+     */
+    private function renderFields(Model $record, array $editFields, int $index): string
     {
         $row = sprintf(
             '<input type="hidden" name="%s" value="%s" />',
@@ -237,6 +267,11 @@ class Records extends FormControl implements DeletesRelated, Form
             $row .= $editField->render($record);
         }
 
+        return $this->wrapKeys($row, $index);
+    }
+
+    private function renderRow(Model $record, array $editFields, int $index): string
+    {
         $handle = $this->sort_column === null
             ? ''
             : '<span class="__records_handle" title="ドラッグして並べ替え" aria-hidden="true">'
@@ -244,9 +279,49 @@ class Records extends FormControl implements DeletesRelated, Form
 
         return sprintf('<div class="list-group-item __records_list_item%s">', $this->sort_column === null ? '' : ' is-sortable')
             .$handle
-            .$this->wrapKeys($row, $index)
+            .$this->renderFields($record, $editFields, $index)
             .'<button type="button" class="btn btn-sm btn-outline-secondary __records_remove"><i class="bi bi-trash"></i></button>'
             .'</div>';
+    }
+
+    /**
+     * タイル 1 枚と、その中身を入れたモーダル。
+     *
+     * タイルの表側は空で出す。画像も見出しも、モーダルの中身から画面側で写す。
+     * 同じ画像を 2 回埋め込まずに済み、アップロードし直したときも自動でついてくる。
+     */
+    private function renderTile(Model $record, array $editFields, int $index): string
+    {
+        $modalId = sprintf(
+            '__rec_%s_%d',
+            preg_replace('/[^A-Za-z0-9_]/', '_', $this->key),
+            $index,
+        );
+        $title = $this->label ?? '行';
+
+        return sprintf(
+            '<div class="__records_tile">'
+            .'<button type="button" class="__records_tile_face" data-bs-toggle="modal" data-bs-target="#%s">'
+            .'<span class="__records_tile_image"></span>'
+            .'<span class="__records_tile_label"></span>'
+            .'<span class="__records_tile_badge"></span>'
+            .'</button>'
+            .'<div class="modal fade __records_tile_modal" id="%s" tabindex="-1" aria-hidden="true">'
+            .'<div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">'
+            .'<div class="modal-header"><h5 class="modal-title">%s</h5>'
+            .'<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button></div>'
+            .'<div class="modal-body">%s</div>'
+            .'<div class="modal-footer justify-content-between">'
+            .'<button type="button" class="btn btn-sm btn-outline-danger __records_remove">この%sを削除</button>'
+            .'<button type="button" class="btn btn-primary" data-bs-dismiss="modal">閉じる</button>'
+            .'</div></div></div></div>'
+            .'</div>',
+            e($modalId),
+            e($modalId),
+            e($title),
+            $this->renderFields($record, $editFields, $index),
+            e($title),
+        );
     }
 
     /**

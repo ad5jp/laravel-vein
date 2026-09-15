@@ -91,12 +91,84 @@ $(function () {
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15); cursor: grabbing;
 }
+/* タイル。画像を持つ行はこちらで並べる */
+.__records_tiles {display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.75rem;}
+.__records_tile_face {
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    background: #FFF; border: 1px solid #DEE2E6; border-radius: 0.5rem; padding: 0.5rem;
+}
+.__records_tile_face:hover {border-color: #0D6EFD;}
+.__records_tile_image {
+    display: flex; align-items: center; justify-content: center;
+    height: 7rem; margin-bottom: 0.5rem; overflow: hidden;
+    background: #F8F9FA; border-radius: 0.375rem;
+}
+.__records_tile_image img {max-width: 100%; max-height: 100%; object-fit: contain;}
+.__records_tile_blank {color: #ADB5BD; font-size: 0.8125rem;}
+.__records_tile_label {
+    display: block; font-size: 0.8125rem; line-height: 1.4; min-height: 2.8em;
+    max-height: 2.8em; overflow: hidden; color: #212529;
+}
+.__records_tile_badge:not(:empty) {
+    display: inline-block; margin-top: 0.25rem; padding: 0 0.375rem;
+    font-size: 0.6875rem; color: #495057; background: #E9ECEF; border-radius: 0.25rem;
+}
+/* 弾かれた行 */
+.__records_tile.is-error .__records_tile_face {
+    border-color: #DC3545; box-shadow: 0 0 0 0.125rem rgba(220, 53, 69, 0.25);
+}
+.__records_tile_placeholder {border: 2px dashed #ADB5BD; border-radius: 0.5rem; background: #F8F9FA;}
 .__records_drag_bar::before {
     content: "\f4c2"; font-family: bootstrap-icons; position: absolute; left: 0.5rem;
     color: #6C757D; font-size: 1.25rem; line-height: 1.75rem;
 }
 </style>
 <script>
+// タイルの表側を、モーダルの中身から組み立てる。
+// 画像を 2 回埋め込まずに済み、アップロードし直したときもついてくる
+function veinSyncTile($tile) {
+    var $modal = $tile.find('.__records_tile_modal');
+    var $img = $modal.find('.__uploader_preview_item img').first();
+    var $slot = $tile.find('.__records_tile_image').empty();
+
+    if ($img.length) {
+        $slot.append($('<img>').attr('src', $img.attr('src')));
+    } else {
+        $slot.append($('<span class="__records_tile_blank">画像なし</span>'));
+    }
+
+    $tile.find('.__records_tile_label').text(veinRowLabel($modal));
+    $tile.find('.__records_tile_badge').text($modal.find('select').first().find('option:selected').text() || '');
+    $tile.toggleClass('is-error', $modal.find('.__has_error, .__field_error').length > 0);
+}
+
+$(function () {
+    $('.__records_tile').each(function () {
+        veinSyncTile($(this));
+    });
+
+    // 弾かれた行は開いて見せる。閉じたままだと、どこが悪いのか分からない
+    var $first = $('.__records_tile.is-error').first();
+
+    if ($first.length && window.bootstrap) {
+        window.bootstrap.Modal.getOrCreateInstance($first.find('.__records_tile_modal')[0]).show();
+    }
+
+    // タイルは 1 枚が小さいので、掴むところを分けず、少し動かしたら並べ替えにする。
+    // そのままだと押して開けなくなる
+    $('.__records_tiles.__records_sortable').sortable({
+        items: '> .__records_tile',
+        distance: 6,
+        tolerance: 'pointer',
+        placeholder: '__records_tile_placeholder',
+        forcePlaceholderSize: true,
+    });
+});
+
+$(document).on('hidden.bs.modal input change', '.__records_tile', function () {
+    veinSyncTile($(this));
+});
+
 // 掴んでいる行に出す見出し。先頭の埋まっている欄を使う
 function veinRowLabel($item) {
     var text = '';
@@ -126,7 +198,23 @@ $(document).on('click', '.__records_add', function () {
     const index = $records.data('nextkey');
     $records.data('nextkey', index + 1)
     const template_html = $records.find('script').html().replaceAll('[0]', '[' + index + ']');
-    $records.find('.__records_list').append($(template_html));
+    const $added = $(template_html);
+
+    // タイルはモーダルを持つ。id が重なると、いつも先頭の行が開いてしまう
+    const $modal = $added.find('.__records_tile_modal');
+
+    if ($modal.length) {
+        const id = $modal.attr('id').replace(/_0$/, '_' + index);
+        $modal.attr('id', id);
+        $added.find('.__records_tile_face').attr('data-bs-target', '#' + id);
+    }
+
+    $records.find('.__records_list').append($added);
+
+    if ($added.hasClass('__records_tile')) {
+        veinSyncTile($added);
+        window.bootstrap.Modal.getOrCreateInstance($modal[0]).show();
+    }
 });
 // 行の並びをそのまま並び順として保存するため、画面で入れ替えられるようにする。
 // つまむところを限ると、入力欄をなぞったときに行が動かない
@@ -178,6 +266,16 @@ $(function () {
 });
 $(document).on('click', '.__records_remove', function () {
     if (!confirm('この行を削除しますか？')) {
+        return;
+    }
+
+    const $tile = $(this).closest('.__records_tile');
+
+    if ($tile.length) {
+        // モーダルを閉じてから消す。開いたまま消すと、背景の覆いが残る
+        window.bootstrap.Modal.getOrCreateInstance($tile.find('.__records_tile_modal')[0]).hide();
+        $tile.remove();
+
         return;
     }
 
