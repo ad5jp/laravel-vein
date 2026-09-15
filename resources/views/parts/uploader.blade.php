@@ -78,8 +78,48 @@ $(function () {
 .__records_list_item.is-sortable:hover .__records_handle {color: #6C757D;}
 /* ドラッグ中に空く場所。どこへ入るかが分かるようにする */
 .__records_placeholder {border: 2px dashed #ADB5BD; border-radius: 0.375rem; background: #F8F9FA;}
+/* 掴んでいる間は一覧を畳む。画像を持つ行は 480px ほどあり、そのままでは
+   1 つ入れ替えるのに画面 1 枚分を運ぶことになる */
+.__records_list.is-dragging .__records_list_item {
+    max-height: 2.75rem; overflow: hidden; opacity: 0.7;
+    padding-top: 0.5rem; padding-bottom: 0.5rem;
+}
+.__records_list.is-dragging .__records_remove {display: none;}
+/* 掴んでいる行。中身は先頭の欄だけ見せる */
+.__records_drag_bar {
+    padding: 0.5rem 0.75rem 0.5rem 2.25rem; font-size: 0.9375rem; line-height: 1.75rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15); cursor: grabbing;
+}
+.__records_drag_bar::before {
+    content: "\f4c2"; font-family: bootstrap-icons; position: absolute; left: 0.5rem;
+    color: #6C757D; font-size: 1.25rem; line-height: 1.75rem;
+}
 </style>
 <script>
+// 掴んでいる行に出す見出し。先頭の埋まっている欄を使う
+function veinRowLabel($item) {
+    var text = '';
+
+    $item.find('input[type="text"], textarea').each(function () {
+        if (!text && $(this).val()) {
+            text = $(this).val();
+        }
+    });
+
+    if (!text) {
+        $item.find('select').each(function () {
+            var selected = $(this).find('option:selected').text();
+
+            if (!text && selected) {
+                text = selected;
+            }
+        });
+    }
+
+    return text || '（空の行）';
+}
+
 $(document).on('click', '.__records_add', function () {
     const $records = $(this).closest('.__records');
 
@@ -97,10 +137,26 @@ $(function () {
         tolerance: 'pointer',
         placeholder: '__records_placeholder',
         forcePlaceholderSize: true,
+        helper: function (event, item) {
+            // 高い行をそのまま持ち上げると画面を覆う。掴んでいる間は 1 行分の帯にする
+            return $('<div class="list-group-item __records_drag_bar"></div>')
+                .css('width', item.outerWidth())
+                .text(veinRowLabel(item));
+        },
         start: function (event, ui) {
+            var $list = $(this);
+
+            // 一覧を畳んでから、どこへ落ちるかを測り直す
+            $list.addClass('is-dragging');
+            ui.placeholder.height(ui.helper.outerHeight());
+            $list.sortable('refreshPositions');
+
             // 空いた場所の左端を控える。持ち上げた行は位置が絶対値に変わっているため、
             // 行そのものからは正しい値が取れない
             ui.item.data('veinLeft', ui.placeholder.offset().left);
+        },
+        stop: function (event, ui) {
+            $(this).removeClass('is-dragging');
         },
         sort: function (event, ui) {
             // 縦にしか動かさない作りだが、横に揺らすと左端が画面の端まで飛ぶことがある。
