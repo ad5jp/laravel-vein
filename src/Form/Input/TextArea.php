@@ -19,9 +19,10 @@ class TextArea extends FormControl implements Form
         public ?Closure $beforeSaving = null,
         public ?Closure $afterSaving = null,
         public ?Closure $searching = null,
+        public ?string $placeholder = null,
         public int $rows = 5,
     ) {
-        parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
+        parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching, $placeholder);
     }
 
     public function renderInline(Model $values): string
@@ -29,9 +30,10 @@ class TextArea extends FormControl implements Form
         $value = $this->getValue($values);
 
         $html = sprintf(
-            '<textarea name="%s" class="form-control" rows="%s">%s</textarea>',
+            '<textarea name="%s" class="form-control" rows="%s"%s>%s</textarea>',
             e($this->key),
             e($this->rows),
+            $this->placeholderAttribute(),
             e($value),
         );
 
