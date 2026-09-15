@@ -21,6 +21,15 @@
       }
     });
     </script>
+    <style>
+    /* 弾かれた欄を目で追えるようにする。@see src/Form/Input/FormControl.php */
+    .__has_error .form-control,
+    .__has_error .form-select,
+    .__has_error textarea,
+    .__has_error input[type="file"] { border-color: #DC3545; }
+    .__has_error .form-label { color: #DC3545; }
+    .__field_error { color: #DC3545; font-size: 0.875em; margin: 0.25rem 0 0; }
+    </style>
 </head>
 <body class="@yield('body_class')">
 
@@ -74,6 +83,16 @@
 </div>
 
 <script>
+// 弾かれたときは、最初に直すべき欄まで運ぶ。
+// 入力欄が多いと、画面の上の一覧を見ても、その欄がどこにあるか分からない
+$(function () {
+  const first = document.querySelector('.__has_error');
+
+  if (first) {
+    first.scrollIntoView({ block: 'center' });
+  }
+});
+
 function toggleSidebar() {
   $('body').toggleClass('md-sidebar-hide').toggleClass('sm-sidebar-show')
 }

@@ -147,6 +147,14 @@ abstract class FormControl
             $html = sprintf('<label class="form-label">%s</label>%s', e($this->label), $html);
         }
 
+        // 弾かれた理由は、画面の上にまとめるだけでなく、その欄のそばにも出す。
+        // 入力欄が多いと、上の一覧だけではどこを直せばよいか分からない
+        $error = $this->errorMessage();
+
+        if ($error !== null) {
+            $html .= sprintf('<p class="__field_error">%s</p>', e($error));
+        }
+
         $medium = $this->colSize;
         $medium = $medium > 12 ? 12 : $medium;
 
@@ -154,13 +162,30 @@ abstract class FormControl
         $small = $small > 12 ? 12 : $small;
 
         $html = sprintf(
-            '<div class="col-md-%s col-sm-%s col-12">%s</div>',
+            '<div class="col-md-%s col-sm-%s col-12%s">%s</div>',
             $medium,
             $small,
+            $error !== null ? ' __has_error' : '',
             $html,
         );
 
         return $html;
+    }
+
+    /**
+     * この欄のエラー文言。無ければ null。
+     */
+    protected function errorMessage(): ?string
+    {
+        $errors = session()->get('errors');
+
+        if ($errors === null) {
+            return null;
+        }
+
+        $bag = $errors->getBag('default');
+
+        return $bag->has($this->key) ? $bag->first($this->key) : null;
     }
 
     abstract public function renderInline(Model $values): string;
