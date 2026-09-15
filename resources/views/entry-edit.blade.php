@@ -32,20 +32,19 @@
             @foreach ($editFields as $editField)
             {!! $editField->render($record) !!}
             @endforeach
-            @include('vein::parts.save-bar', ['label' => '更新'])
+            @include('vein::parts.save-bar', [
+                'label' => '更新',
+                'deleteLabel' => 'この'.$model->menuName().'を削除',
+            ])
         </form>
     </section>
     @include('vein::parts.section-nav', ['editFields' => $editFields])
     </div>
 
-    {{-- 更新から離して置く。並ぶと、更新のつもりで削除を押す距離になる --}}
-    <section class="section mt-5 pt-4 border-top">
-        <form action="{{ route('vein.delete', ['node' => $node, 'id' => $record->getKey()]) }}" method="post" id="delete">
-            @csrf
-            <button type="submit" class="btn btn-sm btn-outline-danger __confirm_delete">この{{ $model->menuName() }}を削除</button>
-            <p class="form-text mb-0">削除すると元に戻せません。</p>
-        </form>
-    </section>
+    {{-- 送り先だけ置く。ボタンは保存バーの中にあり、form 属性でここへ送る
+         （フォームは入れ子にできないため）。戻せないことは押した後の確認で伝える --}}
+    <form action="{{ route('vein.delete', ['node' => $node, 'id' => $record->getKey()]) }}"
+        method="post" id="delete" hidden>@csrf</form>
 </div>
 
 @include('vein::parts.uploader')
