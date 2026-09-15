@@ -19,6 +19,9 @@ abstract class FormControl
      */
     protected ?string $error_key_prefix = null;
 
+    /** ラベルの近くに置く補足。ラベルに詰め込むと長くなる説明はここへ。 */
+    protected ?string $hint = null;
+
     public function __construct(
         public string $key,
         public ?string $label = null,
@@ -28,7 +31,35 @@ abstract class FormControl
         public ?Closure $beforeSaving = null,
         public ?Closure $afterSaving = null,
         public ?Closure $searching = null,
+        public ?string $placeholder = null,
     ) {}
+
+    /**
+     * 補足を出す。欄なら入力の下、子レコードなら見出しの下。
+     *
+     * 「どこに出るか」「何字が目安か」のような説明をラベルに入れると、ラベルが
+     * 読みづらくなる。子レコードではラベルが追加ボタンの名前にもなるため、
+     * 説明を混ぜるとボタンまで長くなる。名前はラベル、説明はこちらへ分ける。
+     */
+    public function hint(string $text): static
+    {
+        $this->hint = $text;
+
+        return $this;
+    }
+
+    /**
+     * placeholder 属性。指定が無ければ空文字。
+     *
+     * 入力例はラベルに書かず、こちらへ入れる。ラベルは子レコードの追加ボタンの
+     * 名前にもなるため、例を混ぜると長くなる。
+     */
+    protected function placeholderAttribute(): string
+    {
+        return $this->placeholder === null
+            ? ''
+            : sprintf(' placeholder="%s"', e($this->placeholder));
+    }
 
     /**
      * 保存の前処理。
@@ -150,6 +181,10 @@ abstract class FormControl
     public function renderColumn(Model $values): string
     {
         $html = $this->renderInline($values);
+
+        if ($this->hint !== null) {
+            $html .= sprintf('<p class="__field_hint">%s</p>', e($this->hint));
+        }
 
         if ($this->label) {
             $html = sprintf('<label class="form-label">%s</label>%s', e($this->label), $html);
