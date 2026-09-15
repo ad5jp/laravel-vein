@@ -6,6 +6,7 @@
         <h1 class="mb-0">{{ $model->menuName() }} 編集</h1>
         <a href="{{ route('vein.list', ['node' => $node]) }}" class="btn btn-secondary">一覧に戻る</a>
     </div>
+    <div class="__edit_body">
     <section class="section">
         @if ($errors->any())
         <div class="alert alert-danger">
@@ -25,6 +26,8 @@
             @include('vein::parts.save-bar', ['label' => '更新'])
         </form>
     </section>
+    @include('vein::parts.section-nav', ['editFields' => $editFields])
+    </div>
 
     {{-- 更新から離して置く。並ぶと、更新のつもりで削除を押す距離になる --}}
     <section class="section mt-5 pt-4 border-top">

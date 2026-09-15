@@ -29,6 +29,36 @@
     .__has_error input[type="file"] { border-color: #DC3545; }
     .__has_error .form-label { color: #DC3545; }
     .__field_error { color: #DC3545; font-size: 0.875em; margin: 0.25rem 0 0; }
+
+    /* 本体と目次を横に並べる。
+       min-width: 0 が無いと、中に幅の広いものがあるときに本体が縮まず、目次が画面の外へ出る */
+    .__edit_body { display: flex; align-items: flex-start; }
+    .__edit_body > .section { flex: 1 1 auto; min-width: 0; }
+
+    /* 入力欄の区切り（@see src/Form/Input/Section.php） */
+    .__form_section {
+        margin: 2.5rem 0 1.25rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #DEE2E6;
+        /* 目次から飛んだときに、見出しが画面の上端に貼り付かないようにする */
+        scroll-margin-top: 4.5rem;
+    }
+    .__form_section:first-child { margin-top: 0; }
+    .__form_section--title { margin: 0; font-size: 1.05rem; font-weight: 700; color: #495057; }
+    .__form_section--note { margin: 0.25rem 0 0; font-size: 0.875rem; color: #6C757D; }
+
+    /* 入力欄が長い画面では、スクロールするとメニューが画面の外へ出てしまう。
+       貼り付けておき、項目が多いときはメニュー側だけスクロールさせる */
+    @media (min-width: 768px) {
+        .sidebar {
+            position: sticky;
+            top: 3em;
+            align-self: flex-start;
+            height: calc(100vh - 3em);
+            max-height: none;
+            overflow-y: auto;
+        }
+    }
     </style>
 </head>
 <body class="@yield('body_class')">
