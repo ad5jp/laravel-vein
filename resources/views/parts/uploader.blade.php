@@ -81,12 +81,8 @@ $(function () {
 /* 見出しの行と、畳むボタン */
 .__records_head {display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem;}
 .__records_head h5 {margin: 0;}
-.__records_toggle {
-    flex: none; background: none; border: 1px solid #DEE2E6; border-radius: 0.375rem;
-    padding: 0.125rem 0.625rem; font-size: 0.8125rem; color: #6C757D; cursor: pointer;
-}
-.__records_toggle:hover {border-color: #0D6EFD; color: #0D6EFD;}
-/* 畳んだ状態。並べ替えるときや、全体を見渡したいときに切り替える */
+.__records_view {flex: none;}
+/* 一覧で表示したとき。並べ替えるときや、全体を見渡したいときに切り替える */
 .__records_list.is-compact .__records_list_item {
     max-height: 2.75rem; overflow: hidden;
     padding-top: 0.5rem; padding-bottom: 0.5rem;
@@ -224,13 +220,16 @@ function veinRowLabel($item) {
     return text || '（空の行）';
 }
 
-// 畳む / 広げる。行が高いと並べ替えづらいので、手で切り替えられるようにする。
+// カード表示 / 一覧表示の切り替え。行が高いと並べ替えづらく、全体も見渡せない。
 // 掴んだ瞬間に自動で畳むと画面が飛ぶため、切り替えは明示的に行う
-$(document).on('click', '.__records_toggle', function () {
-    const $list = $(this).closest('.__records').find('.__records_list');
-    const compact = $list.toggleClass('is-compact').hasClass('is-compact');
+$(document).on('click', '.__records_view button', function () {
+    const $btn = $(this);
+    const $list = $btn.closest('.__records').find('.__records_list');
 
-    $(this).text(compact ? '広げる' : '畳む');
+    $list.toggleClass('is-compact', $btn.data('view') === 'compact');
+
+    $btn.addClass('active').attr('aria-pressed', 'true')
+        .siblings().removeClass('active').attr('aria-pressed', 'false');
 
     // 高さが変わるので、落とす先を測り直す
     if ($list.hasClass('ui-sortable')) {
