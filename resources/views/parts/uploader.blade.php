@@ -130,12 +130,13 @@ $(function () {
 }
 .__records_list.is-compact .__records_row_label:empty::before {content: '（空の行）'; color: #ADB5BD;}
 
-/* 掴んでいる行。中身は先頭の欄だけ見せる */
-.__records_drag_bar {
-    padding: 0.5rem 0.75rem 0.5rem 2.25rem; font-size: 0.9375rem; line-height: 1.75rem;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+/* 掴んでいる行。姿は変えず、浮いていることだけ見せる */
+.__records_dragging {
     box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15); cursor: grabbing;
+    pointer-events: none;
 }
+/* 複製には指が乗らないので、hover の色が付かない。掴んでいる間は濃いままにする */
+.__records_dragging .__records_handle {color: #6C757D;}
 /* タイル。画像を持つ行はこちらで並べる */
 /* grid や flex で並べると、jQuery UI が「縦一列」と見なして横の入れ替えができない。
    inline-block なら横並びと判定される */
@@ -176,10 +177,6 @@ $(function () {
 }
 /* モーダルは 1 行分の幅しかないので、欄を横に並べず縦に積む */
 .__records_tile_modal .modal-body > .row > [class*="col-"] {flex: 0 0 100%; max-width: 100%;}
-.__records_drag_bar::before {
-    content: "\f4c2"; font-family: bootstrap-icons; position: absolute; left: 0.5rem;
-    color: #6C757D; font-size: 1.25rem; line-height: 1.75rem;
-}
 </style>
 <script>
 // タイルの表側を、モーダルの中身から組み立てる。
@@ -329,15 +326,34 @@ $(function () {
         placeholder: '__records_placeholder',
         forcePlaceholderSize: true,
         helper: function (event, item) {
-            // 高い行をそのまま持ち上げると画面を覆う。掴んでいる間は 1 行分の帯にする
-            // 高さも指定しておく。指定が無いと、掴んだ行の高さがそのまま写される
-            return $('<div class="list-group-item __records_drag_bar"></div>')
-                .css({ width: item.outerWidth(), height: 'auto' })
-                .text(veinRowLabel(item));
+            // 掴んだ行の姿のまま持ち上げる。帯に潰すと、何を動かしているのか分からない。
+            // 行が高くて扱いづらいときは、一覧表示に切り替えてから並べ替える
+            const $helper = item.clone();
+            const $from = item.find('input, textarea, select');
+
+            // 複製には打ち込み中の値が乗らない。元の欄から写す
+            $helper.find('input, textarea, select').each(function (i) {
+                const from = $from.get(i);
+
+                if (!from) {
+                    return;
+                }
+
+                if (this.type === 'checkbox' || this.type === 'radio') {
+                    this.checked = from.checked;
+                } else {
+                    $(this).val($(from).val());
+                }
+            });
+
+            // id が二重になると、見出しを押したときに複製側が反応することがある
+            $helper.find('[id]').removeAttr('id');
+
+            return $helper.addClass('__records_dragging')
+                .css({ width: item.outerWidth(), height: item.outerHeight() });
         },
         start: function (event, ui) {
-            // 持ち上げた行は 1 行分の帯になる。空いた場所も同じ高さにして、
-            // 落ちる位置が指の近くに来るようにする
+            // 空いた場所を掴んだ行と同じ高さにして、落ちる位置を指の近くに保つ
             ui.placeholder.height(ui.helper.outerHeight());
             $(this).sortable('refreshPositions');
 
