@@ -81,6 +81,10 @@ $(document).on('click', '.__records_add', function () {
     $records.find('.__records_list').append($(template_html));
 });
 $(document).on('click', '.__records_remove', function () {
+    if (!confirm('この行を削除しますか？')) {
+        return;
+    }
+
     $(this).closest('.__records_list_item').remove();
 });
 </script>

@@ -10,6 +10,17 @@
     <script src="{{ asset('vein-assets/jquery.js') }}"></script>
     <script src="{{ asset('vein-assets/jquery-ui.js') }}"></script>
     <meta name="csrf" content="{{ csrf_token() }}">
+    <script>
+    // 削除は 1 クリックで効いてしまうので、必ず一度止める。
+    // 各画面のハンドラより先に束縛する必要があるため head に置いている
+    $(document).on('click', '.__confirm_delete', function (event) {
+      if (!confirm('削除すると元に戻せません。削除しますか？')) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return false;
+      }
+    });
+    </script>
 </head>
 <body class="@yield('body_class')">
 
