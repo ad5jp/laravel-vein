@@ -69,7 +69,7 @@ $(function () {
 <!-- TODO 別ファイルに切り出し -->
 <style>
 .__records_list_item {position: relative; padding-right: 3rem;}
-.__records_remove {position: absolute; right: 0.5rem; top: 0; bottom: 0; width: 2rem; height: 2rem; margin: auto;}
+.__records_list_item > .__records_remove {position: absolute; right: 0.5rem; top: 0; bottom: 0; width: 2rem; height: 2rem; margin: auto;}
 /* 並べ替えるもの。つまむところを左に置き、その分だけ中身を右へ寄せる */
 .__records_list_item.is-sortable {padding-left: 2.25rem;}
 .__records_handle {position: absolute; left: 0.5rem; top: 0; bottom: 0; height: 2rem; margin: auto;
@@ -84,7 +84,7 @@ $(function () {
     max-height: 2.75rem; overflow: hidden; opacity: 0.7;
     padding-top: 0.5rem; padding-bottom: 0.5rem;
 }
-.__records_list.is-dragging .__records_remove {display: none;}
+.__records_list.is-dragging .__records_list_item > .__records_remove {display: none;}
 /* 掴んでいる行。中身は先頭の欄だけ見せる */
 .__records_drag_bar {
     padding: 0.5rem 0.75rem 0.5rem 2.25rem; font-size: 0.9375rem; line-height: 1.75rem;
@@ -92,7 +92,13 @@ $(function () {
     box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15); cursor: grabbing;
 }
 /* タイル。画像を持つ行はこちらで並べる */
-.__records_tiles {display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.75rem;}
+/* grid や flex で並べると、jQuery UI が「縦一列」と見なして横の入れ替えができない。
+   inline-block なら横並びと判定される */
+.__records_tiles {font-size: 0;}
+.__records_tile {
+    display: inline-block; vertical-align: top; width: 11.5rem;
+    margin: 0 0.75rem 0.75rem 0; font-size: 1rem;
+}
 .__records_tile_face {
     display: block; width: 100%; text-align: left; cursor: pointer;
     background: #FFF; border: 1px solid #DEE2E6; border-radius: 0.5rem; padding: 0.5rem;
@@ -117,7 +123,14 @@ $(function () {
 .__records_tile.is-error .__records_tile_face {
     border-color: #DC3545; box-shadow: 0 0 0 0.125rem rgba(220, 53, 69, 0.25);
 }
-.__records_tile_placeholder {border: 2px dashed #ADB5BD; border-radius: 0.5rem; background: #F8F9FA;}
+/* 落とす先の枠。タイルと同じ形にしないと、全幅の帯になる */
+.__records_tile_placeholder {
+    display: inline-block; vertical-align: top; width: 11.5rem;
+    margin: 0 0.75rem 0.75rem 0;
+    border: 2px dashed #ADB5BD; border-radius: 0.5rem; background: #F8F9FA;
+}
+/* モーダルは 1 行分の幅しかないので、欄を横に並べず縦に積む */
+.__records_tile_modal .modal-body > .row > [class*="col-"] {flex: 0 0 100%; max-width: 100%;}
 .__records_drag_bar::before {
     content: "\f4c2"; font-family: bootstrap-icons; position: absolute; left: 0.5rem;
     color: #6C757D; font-size: 1.25rem; line-height: 1.75rem;
@@ -137,7 +150,16 @@ function veinSyncTile($tile) {
         $slot.append($('<span class="__records_tile_blank">画像なし</span>'));
     }
 
-    $tile.find('.__records_tile_label').text(veinRowLabel($modal));
+    // 見出しは文字の欄だけから取る。選択肢は下の印に出るので、二重に出さない
+    var label = '';
+
+    $modal.find('input[type="text"], textarea').each(function () {
+        if (!label && $(this).val()) {
+            label = $(this).val();
+        }
+    });
+
+    $tile.find('.__records_tile_label').text(label || '（未入力）');
     $tile.find('.__records_tile_badge').text($modal.find('select').first().find('option:selected').text() || '');
     $tile.toggleClass('is-error', $modal.find('.__has_error, .__field_error').length > 0);
 }
@@ -158,6 +180,8 @@ $(function () {
     // そのままだと押して開けなくなる
     $('.__records_tiles.__records_sortable').sortable({
         items: '> .__records_tile',
+        // タイルの表側はボタン。既定のままだと jQuery UI が掴むのを打ち消す
+        cancel: 'input, textarea, select, option',
         distance: 6,
         tolerance: 'pointer',
         placeholder: '__records_tile_placeholder',
@@ -219,7 +243,8 @@ $(document).on('click', '.__records_add', function () {
 // 行の並びをそのまま並び順として保存するため、画面で入れ替えられるようにする。
 // つまむところを限ると、入力欄をなぞったときに行が動かない
 $(function () {
-    $('.__records_sortable').sortable({
+    // タイルは別に組み立てる（つまむところを持たない）
+    $('.__records_sortable').not('.__records_tiles').sortable({
         handle: '.__records_handle',
         axis: 'y',
         tolerance: 'pointer',
