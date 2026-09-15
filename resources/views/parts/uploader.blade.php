@@ -117,9 +117,16 @@ $(function () {
 /* 一覧で表示したとき。並べ替えるときや、全体を見渡したいときに切り替える。
    入力欄は隠し、先頭の欄の中身だけを 1 行で出す（中途半端に見えていると読みづらい）。
    display: none でも値は送信されるので、この状態で保存しても中身は失われない */
+.__records_list.is-compact {border: 0;}
 .__records_list.is-compact .__records_list_item {
-    padding-top: 0.5rem; padding-bottom: 0.5rem; min-height: 2.75rem;
+    /* 1 行の見出しをカードの枠で囲むと厚ぼったい。欄が 1 つの行と同じく、枠と背景を外す */
+    border: 0; border-radius: 0; background: transparent;
+    padding: 0.25rem 2.25rem 0.25rem 1.75rem; min-height: 2.25rem;
 }
+.__records_list.is-compact .__records_handle {left: 0;}
+.__records_list.is-compact .__records_list_item > .__records_remove {right: 0;}
+/* 枠が無くなると行の切れ目が分からない。細い線だけ残す */
+.__records_list.is-compact .__records_list_item + .__records_list_item {border-top: 1px solid #F1F3F5;}
 .__records_list.is-compact .__records_list_item > *:not(.__records_handle):not(.__records_remove):not(.__records_row_label) {
     display: none;
 }
@@ -130,10 +137,11 @@ $(function () {
 }
 .__records_list.is-compact .__records_row_label:empty::before {content: '（空の行）'; color: #ADB5BD;}
 
-/* 掴んでいる行。姿は変えず、浮いていることだけ見せる */
-.__records_dragging {
-    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15); cursor: grabbing;
-    pointer-events: none;
+/* 掴んでいる行。姿は変えず、浮いていることだけ見せる。
+   枠を外した行は背景も透けるため、掴んでいる間だけ白で塗る */
+.__records_list .__records_list_item.__records_dragging {
+    background: #FFF; box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.18);
+    cursor: grabbing; pointer-events: none;
 }
 /* 複製には指が乗らないので、hover の色が付かない。掴んでいる間は濃いままにする */
 .__records_dragging .__records_handle {color: #6C757D;}
