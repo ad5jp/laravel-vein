@@ -2,9 +2,12 @@
 
 @section('content')
 <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="__page_head">
         <h1 class="mb-0">{{ $model->menuName() }}</h1>
-        <a href="{{ route('vein.add', ['node' => $node]) }}" class="btn btn-primary">新規</a>
+        {{-- 「新規」だけでは何が増えるのか読み取れないため、名前を入れる --}}
+        <a href="{{ route('vein.add', ['node' => $node]) }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> {{ $model->menuName() }}を追加
+        </a>
     </div>
     <section class="section">
         @if (count($searchFields) > 0)

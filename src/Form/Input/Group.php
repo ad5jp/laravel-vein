@@ -43,6 +43,29 @@ class Group extends FormControl implements Form, SearchForm
         return $html;
     }
 
+    /**
+     * 束ねた欄のエラー。
+     *
+     * Group そのものは値を持たない（key は '__'）ため、そのままだと理由が
+     * 画面の上のまとめにしか出ない。子のうち最初に弾かれたものを出す。
+     */
+    protected function errorMessage(): ?string
+    {
+        foreach ($this->children as $child) {
+            if (! $child instanceof FormControl) {
+                continue;
+            }
+
+            $message = $child->errorMessage();
+
+            if ($message !== null) {
+                return $message;
+            }
+        }
+
+        return null;
+    }
+
     public function validationRules(Model $model): array
     {
         $rules = [];
