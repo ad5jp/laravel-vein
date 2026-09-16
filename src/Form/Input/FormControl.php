@@ -140,6 +140,12 @@ abstract class FormControl implements ScopesErrorKeys
         return $this;
     }
 
+    /** 配られた規則を外す。使い回す欄で、前の行の規則が残らないようにする。 */
+    public function withoutScopedRules(): static
+    {
+        return $this->withScopedRules(null);
+    }
+
     /**
      * 保存の前処理。
      *
@@ -317,10 +323,18 @@ abstract class FormControl implements ScopesErrorKeys
             return false;
         }
 
+        // 欄の数だけ規則を組み立て直すことになるが、実測で体感できる差は無い。
+        // オブジェクトの id で控える形は、解放された id が使い回されるため
+        // 別のモデルの規則を引く事故になる（試験で検出済み）
         return self::ruleRequires($values->editValidatorRules()[$this->key] ?? null);
     }
 
-    /** 規則 1 つ分が required を含むか。'required|max:10' の書き方にも合わせる。 */
+    /**
+     * 規則 1 つ分が、いつでも必須か。'required|max:10' の書き方にも合わせる。
+     *
+     * required_if などの条件付きは含めない。「公開するときだけ要る」欄に
+     * いつでも必須の印を出すと、下書きのまま保存できることが伝わらない。
+     */
     public static function ruleRequires(mixed $rule): bool
     {
         if ($rule === null) {
@@ -330,7 +344,7 @@ abstract class FormControl implements ScopesErrorKeys
         $rules = is_array($rule) ? $rule : explode('|', (string) $rule);
 
         foreach ($rules as $one) {
-            if (is_string($one) && ($one === 'required' || str_starts_with($one, 'required_'))) {
+            if ($one === 'required') {
                 return true;
             }
         }

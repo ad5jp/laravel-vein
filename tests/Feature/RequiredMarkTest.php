@@ -6,9 +6,11 @@ namespace AD5jp\Vein\Tests\Feature;
 
 use AD5jp\Vein\Form\Input\Group;
 use AD5jp\Vein\Form\Input\InputText;
+use AD5jp\Vein\Form\Input\RadioEnum;
 use AD5jp\Vein\Form\Input\Records;
 use AD5jp\Vein\Form\Input\Row;
 use AD5jp\Vein\Tests\Fixtures\TestEntry;
+use AD5jp\Vein\Tests\Fixtures\TestStatus;
 use AD5jp\Vein\Tests\TestCase;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -128,6 +130,26 @@ class RequiredMarkTest extends TestCase
 
         $this->assertStringContainsString('URL に使う識別子<span class="text-danger', $html);
         $this->assertStringNotContainsString('/works/<span class="text-danger', $html);
+    }
+
+    /** 条件付きの必須は、いつでも必須として出さない。 */
+    public function test_公開するときだけ必須の欄には印を出さない(): void
+    {
+        $entry = $this->entry(['title' => ['required_if:is_published,1', 'max:10']]);
+        $html = (new InputText(key: 'title', label: 'タイトル'))->render($entry);
+
+        $this->assertStringNotContainsString('text-danger', $html, '下書きのまま保存できる欄に印が出ている');
+        $this->assertStringNotContainsString('aria-required', $html);
+    }
+
+    /** 選ぶ欄は入力が複数あるので、囲みのほうに伝える。 */
+    public function test_選ぶ欄は囲みに必須を伝える(): void
+    {
+        $entry = $this->entry(['status' => ['required']]);
+        $html = (new RadioEnum(key: 'status', label: '公開状態', enum: TestStatus::class))->render($entry);
+
+        $this->assertStringContainsString('role="group" aria-required="true"', $html);
+        $this->assertStringContainsString('text-danger', $html);
     }
 
     public function test_子レコードの規則が無ければ印は出ない(): void

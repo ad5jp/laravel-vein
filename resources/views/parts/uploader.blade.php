@@ -84,7 +84,6 @@ $(function () {
     display: flex; align-items: center; justify-content: center;
     color: #6C757D; cursor: grab; font-size: 1.25rem;}
 .__records_handle:active {cursor: grabbing;}
-.__records_list_item.is-sortable:hover .__records_handle {color: #6C757D;}
 /* ドラッグ中に空く場所。どこへ入るかが分かるようにする。
    点線は outline で描く。border だと、その 2px 分だけ後ろの要素が下へずれる */
 .__records_placeholder,
@@ -163,8 +162,6 @@ $(function () {
     background: #FFF; box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.18);
     cursor: grabbing; pointer-events: none;
 }
-/* 複製には指が乗らないので、hover の色が付かない。掴んでいる間は濃いままにする */
-.__records_dragging .__records_handle {color: #6C757D;}
 /* タイル。画像を持つ行はこちらで並べる */
 /* grid や flex で並べると、jQuery UI が「縦一列」と見なして横の入れ替えができない。
    inline-block なら横並びと判定される */

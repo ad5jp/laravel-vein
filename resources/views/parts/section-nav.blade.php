@@ -109,10 +109,15 @@
                 }
             });
 
-            // 最後の見出しは、これ以上スクロールできないため上端まで来ない。
-            // 末尾まで運んだら最後を現在地にする
+            // 最後のいくつかは、これ以上スクロールできないため上端まで来ない。
+            // 末尾まで運んだら、画面に入っているうちで最も下を現在地にする
+            // （一律に最後を指すと、下から 2 番目を押したときに食い違う）
             if (atBottom()) {
-                current = sections.length - 1;
+                sections.forEach((section, i) => {
+                    if (section.getBoundingClientRect().top < window.innerHeight) {
+                        current = Math.max(current, i);
+                    }
+                });
             }
 
             links.forEach((a, i) => a.classList.toggle('is-current', i === current));

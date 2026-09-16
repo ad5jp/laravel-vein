@@ -114,9 +114,14 @@ class Records extends FormControl implements DeletesRelated, Form
         if ($this->label) {
             // 1 行に収める形ではラベルを隠すため、必須の印もそこでは見えない。
             // 中に必須の欄があるときは、見出しの側に出す
+            // 印は規則が正。手で立てた required だけを見ると、規則から拾った分を
+            // 取りこぼす（1 行に収める形ではラベルが隠れるので、ここが唯一の出し先）
             $required = $single && array_reduce(
                 $editFields,
-                fn (bool $carry, $editField) => $carry || ($editField instanceof FormControl && $editField->required),
+                fn (bool $carry, $editField) => $carry
+                    || ($editField instanceof FormControl
+                        && FormControl::ruleRequires($this->child_rules[$editField->key] ?? null))
+                    || ($editField instanceof FormControl && $editField->required),
                 false,
             );
 

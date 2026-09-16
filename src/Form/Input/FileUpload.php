@@ -75,7 +75,7 @@ class FileUpload extends FormControl implements DeletesRelated, Form
 
     protected bool $labelled_input = true;
 
-    public function renderInline(Model $values, ?string $parent_key = null): string
+    public function renderInline(Model $values): string
     {
         $this->relation($values);
 

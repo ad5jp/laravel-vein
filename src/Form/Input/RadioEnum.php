@@ -17,7 +17,11 @@ class RadioEnum extends SelectEnum implements Form, SearchForm
 
         $html = '';
 
-        $html .= '<div>';
+        // 選ぶ欄は入力が複数あるので、一つひとつではなく囲みに必須を伝える
+        $html .= sprintf(
+            '<div role="group"%s>',
+            $this->isRequired($values) ? ' aria-required="true"' : '',
+        );
         foreach ($this->parseOptions() as $enum_value => $enum_label) {
             $html .= sprintf(
                 '<label class="form-check form-check-inline"><input class="form-check-input" type="radio" name="%s" value="%s"%s><span class="form-check-label" >%s</span></label>',
