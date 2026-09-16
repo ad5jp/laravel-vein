@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Http\Controllers;
 
+use AD5jp\Vein\Form\Input\FormControl;
 use AD5jp\Vein\Form\InputManager;
 use AD5jp\Vein\Node\Attributes\ListField;
 use AD5jp\Vein\Node\Contracts\Entry;
@@ -51,6 +52,13 @@ class ListController extends Controller
         // 検索フォーム情報取得
         $manager = new InputManager;
         $searchFields = $manager->parseSearchField($model->searchFields());
+
+        // 絞り込みは空で当たり前。編集の検証規則を見て「必須」を出さないようにする
+        foreach ($searchFields as $searchField) {
+            if ($searchField instanceof FormControl) {
+                $searchField->withScopedRules([]);
+            }
+        }
 
         // データ取得
         $builder = $model->newQuery();

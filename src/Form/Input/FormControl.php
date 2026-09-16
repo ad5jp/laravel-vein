@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Form\Input;
 
+use AD5jp\Vein\Form\Contracts\ScopesErrorKeys;
 use Closure;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
-abstract class FormControl
+abstract class FormControl implements ScopesErrorKeys
 {
     /**
      * エラーを引くときのキーの接頭辞。
@@ -21,6 +22,22 @@ abstract class FormControl
 
     /** ラベルの近くに置く補足。ラベルに詰め込むと長くなる説明はここへ。 */
     protected ?string $hint = null;
+
+    /**
+     * ラベルを入力に結びつけるか。
+     *
+     * 入力を 1 つだけ持つ欄は true にする。ラベルを押して欄に入れるようになり、
+     * 読み上げにも欄の名前が伝わる。束ねた欄や、ラベルが入力を包む作り
+     * （チェックボックス・ラジオ）は結びつける先が定まらないので false のまま。
+     */
+    protected bool $labelled_input = false;
+
+    /**
+     * 子レコードの中で親から配られた検証規則。外（Records の外）では null。
+     *
+     * @var array<string, mixed>|null
+     */
+    protected ?array $scoped_rules = null;
 
     public function __construct(
         public string $key,
@@ -59,6 +76,90 @@ abstract class FormControl
         return $this->placeholder === null
             ? ''
             : sprintf(' placeholder="%s"', e($this->placeholder));
+    }
+
+    /**
+     * ラベルと結びつけるための id。結びつけない欄では null。
+     *
+     * 子レコードの中では名前が officers[0][name] の形に書き換わる。id も同じ
+     * 規則で書き換えられるよう、決まった接頭辞を付けておく。
+     *
+     * @see Records::wrapKeys()
+     */
+    protected function inputId(): ?string
+    {
+        return $this->labelled_input ? '__f_'.$this->key : null;
+    }
+
+    /**
+     * 入力に付ける属性。ラベルと結ぶ id と、必須であること。
+     *
+     * HTML の required は付けない。一覧で畳んだ欄が必須だと、ブラウザが
+     * 「見えない欄が空だ」と言って送信を止め、しかも何も示せなくなる。
+     */
+    protected function inputAttributes(Model $values): string
+    {
+        $id = $this->inputId();
+
+        return ($id === null ? '' : sprintf(' id="%s"', e($id)))
+            .($this->isRequired($values) ? ' aria-required="true"' : '');
+    }
+
+    /**
+     * 囲みから見えているラベルを指すか。
+     *
+     * 入力が複数ある欄（選ぶ欄）だけが使う。指す先が無いのに id だけ配ると、
+     * 同じ名前の欄が並んだときに重なる。
+     */
+    protected bool $labels_group = false;
+
+    /** 選ぶ欄の囲みから、見えているラベルを指すための属性。 */
+    protected function labelledByAttribute(): string
+    {
+        return $this->labelId() === null
+            ? ''
+            : sprintf(' aria-labelledby="%s"', e($this->labelId()));
+    }
+
+    /** ラベルに振る id。指す相手がいる欄だけが持つ。 */
+    protected function labelId(): ?string
+    {
+        return $this->labels_group && $this->label !== null ? '__l_'.$this->key : null;
+    }
+
+    /**
+     * この欄が必須か。
+     *
+     * 弾くのは検証の規則なので、印もそちらを正とする。欄の側の指定（required）は
+     * 規則を持たない画面のために残してある。
+     */
+    public function isRequired(Model $values): bool
+    {
+        if ($this->required) {
+            return true;
+        }
+
+        // 子レコードの中では、親から自分の分だけ配られている
+        if ($this->scoped_rules !== null) {
+            return self::ruleRequires($this->scoped_rules[$this->key] ?? null);
+        }
+
+        return $this->requiredByRules($values);
+    }
+
+    /**
+     * 子レコードの中で、親が持つ規則のうち自分たちの分を受け取る。
+     *
+     * 子の検証規則は親に images.*.caption の形で集まっているため、子は自分の
+     * モデルからは引けない。
+     *
+     * @see Records::renderFields()
+     */
+    public function withScopedRules(?array $rules): static
+    {
+        $this->scoped_rules = $rules;
+
+        return $this;
     }
 
     /**
@@ -187,7 +288,19 @@ abstract class FormControl
         }
 
         if ($this->label) {
-            $html = sprintf('<label class="form-label">%s</label>%s', e($this->label), $html);
+            $id = $this->inputId();
+
+            $labelId = $this->labelId();
+
+            $html = sprintf(
+                '<label class="form-label"%s%s>%s%s</label>%s',
+                $labelId === null ? '' : sprintf(' id="%s"', e($labelId)),
+                $id === null ? '' : sprintf(' for="%s"', e($id)),
+                e($this->label),
+                // 必須は目で分かるようにする。読み上げには入力側の aria-required が伝える
+                $this->isRequired($values) ? '<span class="text-danger ms-1" aria-hidden="true">*</span>' : '',
+                $html,
+            );
         }
 
         // 弾かれた理由は、画面の上にまとめるだけでなく、その欄のそばにも出す。
@@ -213,6 +326,46 @@ abstract class FormControl
         );
 
         return $html;
+    }
+
+    /**
+     * 検証の規則で必須になっているか。
+     *
+     * 子レコードの中では規則が親に集まっているため引けない。そちらは
+     * Records が行ごとに立てる。
+     *
+     * @see Records::renderFields()
+     */
+    protected function requiredByRules(Model $values): bool
+    {
+        if (! method_exists($values, 'editValidatorRules')) {
+            return false;
+        }
+
+        return self::ruleRequires($values->editValidatorRules()[$this->key] ?? null);
+    }
+
+    /**
+     * 規則 1 つ分が、いつでも必須か。'required|max:10' の書き方にも合わせる。
+     *
+     * required_if などの条件付きは含めない。「公開するときだけ要る」欄に
+     * いつでも必須の印を出すと、下書きのまま保存できることが伝わらない。
+     */
+    public static function ruleRequires(mixed $rule): bool
+    {
+        if ($rule === null) {
+            return false;
+        }
+
+        $rules = is_array($rule) ? $rule : explode('|', (string) $rule);
+
+        foreach ($rules as $one) {
+            if ($one === 'required') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

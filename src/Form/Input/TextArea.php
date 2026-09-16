@@ -25,15 +25,18 @@ class TextArea extends FormControl implements Form
         parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching, $placeholder);
     }
 
+    protected bool $labelled_input = true;
+
     public function renderInline(Model $values): string
     {
         $value = $this->getValue($values);
 
         $html = sprintf(
-            '<textarea name="%s" class="form-control" rows="%s"%s>%s</textarea>',
+            '<textarea name="%s" class="form-control" rows="%s"%s%s>%s</textarea>',
             e($this->key),
             e($this->rows),
             $this->placeholderAttribute(),
+            $this->inputAttributes($values),
             e($value),
         );
 

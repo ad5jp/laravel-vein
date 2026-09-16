@@ -44,6 +44,8 @@ class CheckboxesEnum extends FormControl implements Form
         parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
 
+    protected bool $labels_group = true;
+
     public function renderInline(Model $values): string
     {
         [$relation_name, $saving_field] = $this->parseRelationKey($values, $this->key);
@@ -54,7 +56,9 @@ class CheckboxesEnum extends FormControl implements Form
 
         $html = '';
 
-        $html .= '<div>';
+        // 選ぶ欄は入力が複数あるので、囲みに名前を付けて 1 つのまとまりにする。
+        // aria-required は group では効かないため付けない（印はラベルに出る）
+        $html .= sprintf('<div role="group"%s>', $this->labelledByAttribute());
         foreach ($this->parseOptions() as $enum_value => $enum_label) {
             $html .= sprintf(
                 '<label class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="%s[]" value="%s"%s><span class="form-check-label" >%s</span></label>',

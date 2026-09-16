@@ -51,7 +51,31 @@ class FileUpload extends FormControl implements DeletesRelated, Form
         parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
 
-    public function renderInline(Model $values, ?string $parent_key = null): string
+    /**
+     * 選んだ画像 1 枚分。
+     *
+     * 代替テキストにはこの欄の名前を入れる。中身までは分からないが、
+     * 「何の画像か」は伝わる。名前が無ければ飾り扱いで空にする。
+     */
+    private function previewHtml(string $preview, string $value): string
+    {
+        return sprintf(
+            '<div class="__uploader_preview_item col-6 col-md-3">'
+            .'<img src="%s" alt="%s">'
+            .'<input type="hidden" name="%s" value="%s">'
+            .'<button class="__uploader_preview_remove" type="button" aria-label="%s"></button>'
+            .'</div>',
+            e($preview),
+            e($this->label ?? ''),
+            e($this->key),
+            e($value),
+            e($this->label === null ? '画像を外す' : $this->label.'を外す'),
+        );
+    }
+
+    protected bool $labelled_input = true;
+
+    public function renderInline(Model $values): string
     {
         $this->relation($values);
 
@@ -68,16 +92,7 @@ class FileUpload extends FormControl implements DeletesRelated, Form
                 $service = new UploadService;
                 $preview = $service->forPreview($tmp_file, $json['mime_type'], $json['file_name']);
 
-                $preview_html = sprintf(
-                    '<div class="__uploader_preview_item col-6 col-md-3">'
-                    .'<img src="%s">'
-                    .'<input type="hidden" name="%s" value="%s">'
-                    .'<button class="__uploader_preview_remove" type="button"></button>'
-                    .'</div>',
-                    e($preview),
-                    e($this->key),
-                    e($old),
-                );
+                $preview_html = $this->previewHtml($preview, $old);
             } else {
                 // アップロード済IDの old
                 $belongsTo = $this->relation($values);
@@ -88,16 +103,7 @@ class FileUpload extends FormControl implements DeletesRelated, Form
                     $service = new UploadService;
                     $preview = $service->forPreview($stored_file, $file->getMimeType(), $file->getFileName());
 
-                    $preview_html = sprintf(
-                        '<div class="__uploader_preview_item col-6 col-md-3">'
-                        .'<img src="%s">'
-                        .'<input type="hidden" name="%s" value="%s">'
-                        .'<button class="__uploader_preview_remove" type="button"></button>'
-                        .'</div>',
-                        e($preview),
-                        e($this->key),
-                        e($old),
-                    );
+                    $preview_html = $this->previewHtml($preview, $old);
                 }
             }
         } elseif ($file instanceof Model && $file instanceof File) {
@@ -106,26 +112,18 @@ class FileUpload extends FormControl implements DeletesRelated, Form
             $service = new UploadService;
             $preview = $service->forPreview($stored_file, $file->getMimeType(), $file->getFileName());
 
-            $preview_html = sprintf(
-                '<div class="__uploader_preview_item col-6 col-md-3">'
-                .'<img src="%s">'
-                .'<input type="hidden" name="%s" value="%s">'
-                .'<button class="__uploader_preview_remove" type="button"></button>'
-                .'</div>',
-                e($preview),
-                e($this->key),
-                e($file->getKey()),
-            );
+            $preview_html = $this->previewHtml($preview, (string) $file->getKey());
         }
 
         $html = sprintf(
             '<div class="__uploader" data-key="%s">'
             .'<div class="__uploader_preview row mb-2">%s</div>'
-            .'<input type="file" class="__uploader_input">'
+            .'<input type="file" class="__uploader_input"%s>'
             .'<p class="__uploader_status form-text mb-0"></p>'
             .'</div>',
             e($this->key),
             $preview_html,
+            $this->inputAttributes($values),
         );
 
         return $html;

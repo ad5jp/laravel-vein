@@ -7,6 +7,7 @@ namespace AD5jp\Vein\Form\Input;
 use AD5jp\Vein\Form\Concerns\ResolvesRelations;
 use AD5jp\Vein\Form\Contracts\DeletesRelated;
 use AD5jp\Vein\Form\Contracts\Form;
+use AD5jp\Vein\Form\Contracts\ScopesErrorKeys;
 use AD5jp\Vein\Form\InputManager;
 use AD5jp\Vein\Node\Contracts\Record;
 use Exception;
@@ -67,6 +68,18 @@ class Records extends FormControl implements DeletesRelated, Form
         $manager = new InputManager;
         $editFields = $manager->parseEditField($record_model->editFields());
 
+        // 子レコードの検証規則は親に集まっている。自分たちの分だけ切り出す
+        $this->child_rules = [];
+        $prefix = $this->key.'.*.';
+
+        if (method_exists($values, 'editValidatorRules')) {
+            foreach ($values->editValidatorRules() as $key => $rule) {
+                if (str_starts_with($key, $prefix)) {
+                    $this->child_rules[substr($key, strlen($prefix))] = $rule;
+                }
+            }
+        }
+
         // リレーションデータ取得
         $records = $values->{$this->key};
         // old の対応
@@ -85,7 +98,11 @@ class Records extends FormControl implements DeletesRelated, Form
         // 入力欄構築
         $html = '';
 
-        $html .= sprintf('<div class="__records mt-5 mb-5" data-nextkey="%s">', $records->count());
+        $html .= sprintf(
+            '<div class="__records mt-5 mb-5" data-records="%s" data-nextkey="%s">',
+            e($this->key),
+            $records->count(),
+        );
 
         // 欄が 1 つしか無い子レコードは、ラベルと段組みを使わず 1 行に収める。
         // 何の欄かは見出し（h5）で分かるので、行ごとのラベルは重複になる
@@ -95,7 +112,9 @@ class Records extends FormControl implements DeletesRelated, Form
         // （タイルと 1 行の子レコードは、もともと低いので切り替える先がない）
         $html .= '<div class="__records_head">';
         if ($this->label) {
-            $html .= sprintf('<h5>%s</h5>', $this->label);
+            // 見出しに必須の印は出さない。子レコードは 0 件でも保存できるため、
+            // 「1 行以上要る」と読めてしまう。必須なのは行の中の欄で、そちらに出る
+            $html .= sprintf('<h5>%s</h5>', e($this->label));
         }
         if (! $this->as_tiles && ! $single) {
             $html .= '<div class="__records_view btn-group btn-group-sm" role="group" aria-label="表示の切り替え">'
@@ -128,7 +147,7 @@ class Records extends FormControl implements DeletesRelated, Form
 
         // 「追加」で複製されるテンプレート。JS が [0] を実際の添字に置換する
         $html .= '<script type="application/xml">';
-        $html .= $this->renderItem($record_model->newInstance(), $editFields, 0);
+        $html .= $this->renderItem($record_model->newInstance(), $editFields, 0, true);
         $html .= '</script>';
         $html .= '</div><!--//.__records-->';
 
@@ -260,11 +279,11 @@ class Records extends FormControl implements DeletesRelated, Form
      *
      * @param  Form[]  $editFields
      */
-    private function renderItem(Model $record, array $editFields, int $index): string
+    private function renderItem(Model $record, array $editFields, int $index, bool $as_template = false): string
     {
         return $this->as_tiles
-            ? $this->renderTile($record, $editFields, $index)
-            : $this->renderRow($record, $editFields, $index);
+            ? $this->renderTile($record, $editFields, $index, $as_template)
+            : $this->renderRow($record, $editFields, $index, $as_template);
     }
 
     /**
@@ -272,7 +291,7 @@ class Records extends FormControl implements DeletesRelated, Form
      *
      * @param  Form[]  $editFields
      */
-    private function renderFields(Model $record, array $editFields, int $index): string
+    private function renderFields(Model $record, array $editFields, int $index, bool $as_template = false): string
     {
         $row = sprintf(
             '<input type="hidden" name="%s" value="%s" />',
@@ -281,10 +300,29 @@ class Records extends FormControl implements DeletesRelated, Form
         );
 
         foreach ($editFields as $editField) {
-            // 検証のキーは images.0.caption の形になる。どの行が弾かれたのかを
-            // 行の中で示せるよう、親のキーと添字を渡しておく
+            // 必須の印は検証の規則を正とする。子レコードの規則は親に
+            // images.*.caption の形で集まっているため、子は自分では引けない
             if ($editField instanceof FormControl) {
-                $editField->withErrorKeyPrefix(sprintf('%s.%d', $this->key, $index));
+                $editField->withScopedRules($this->child_rules);
+            } elseif ($editField instanceof Row) {
+                foreach ($editField->children as $child) {
+                    if ($child instanceof FormControl) {
+                        $child->withScopedRules($this->child_rules);
+                    }
+                }
+            }
+
+            // 検証のキーは images.0.caption の形になる。どの行が弾かれたのかを
+            // 行の中で示せるよう、親のキーと添字を渡しておく。Row / Group で
+            // 束ねた欄にも届くよう、受け口は ScopesErrorKeys で判定する。
+            // 「追加」の雛形は添字 0 で描くが、まだ入力されていない行なので、
+            // 0 行目のエラーを引き継がないよう、どれにも当たらないキーを渡す
+            if ($editField instanceof ScopesErrorKeys) {
+                $editField->withErrorKeyPrefix(sprintf(
+                    '%s.%s',
+                    $this->key,
+                    $as_template ? '__template' : $index,
+                ));
             }
 
             $row .= $editField->render($record);
@@ -293,7 +331,16 @@ class Records extends FormControl implements DeletesRelated, Form
         return $this->wrapKeys($row, $index);
     }
 
-    private function renderRow(Model $record, array $editFields, int $index): string
+    /**
+     * 子の欄に配る検証規則。
+     *
+     * 親の images.*.caption を caption に読み替えたもの。行を描くときに子へ渡す。
+     *
+     * @var array<string, mixed>
+     */
+    private array $child_rules = [];
+
+    private function renderRow(Model $record, array $editFields, int $index, bool $as_template = false): string
     {
         $handle = $this->sort_column === null
             ? ''
@@ -302,8 +349,14 @@ class Records extends FormControl implements DeletesRelated, Form
 
         return sprintf('<div class="list-group-item __records_list_item%s">', $this->sort_column === null ? '' : ' is-sortable')
             .$handle
-            .$this->renderFields($record, $editFields, $index)
-            .'<button type="button" class="btn btn-sm btn-outline-secondary __records_remove"><i class="bi bi-trash"></i></button>'
+            .$this->renderFields($record, $editFields, $index, $as_template)
+            .sprintf(
+                '<button type="button" class="btn btn-sm btn-outline-secondary __records_remove"'
+                .' aria-label="%s"><i class="bi bi-trash" aria-hidden="true"></i></button>',
+                // 何行目かは入れない。「追加」で増えた行は雛形の複製で、
+                // 番号が振り直されないため嘘になる
+                e(sprintf('この%sを削除', $this->label ?? '行')),
+            )
             .'</div>';
     }
 
@@ -313,7 +366,7 @@ class Records extends FormControl implements DeletesRelated, Form
      * タイルの表側は空で出す。画像も見出しも、モーダルの中身から画面側で写す。
      * 同じ画像を 2 回埋め込まずに済み、アップロードし直したときも自動でついてくる。
      */
-    private function renderTile(Model $record, array $editFields, int $index): string
+    private function renderTile(Model $record, array $editFields, int $index, bool $as_template = false): string
     {
         $modalId = sprintf(
             '__rec_%s_%d',
@@ -342,7 +395,7 @@ class Records extends FormControl implements DeletesRelated, Form
             e($modalId),
             e($modalId),
             e($title),
-            $this->renderFields($record, $editFields, $index),
+            $this->renderFields($record, $editFields, $index, $as_template),
             e($title),
         );
     }
@@ -361,9 +414,22 @@ class Records extends FormControl implements DeletesRelated, Form
             $html,
         );
 
-        return preg_replace_callback(
+        $html = preg_replace_callback(
             '/data-key="(.*?)"/',
             fn (array $matches) => sprintf('data-key="%s"', $this->wrapKey($matches[1], $index)),
+            $html,
+        );
+
+        // ラベルと入力を結ぶ id も、名前と同じ規則で行ごとに分ける。
+        // 分けないと、どの行のラベルを押しても 1 行目の欄に入ってしまう
+        return preg_replace_callback(
+            '/\b(id|for|aria-labelledby)="__([fl])_(.*?)"/',
+            fn (array $matches) => sprintf(
+                '%s="__%s_%s"',
+                $matches[1],
+                $matches[2],
+                $this->wrapKey($matches[3], $index),
+            ),
             $html,
         );
     }
