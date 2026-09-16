@@ -15,7 +15,7 @@
             </div>
             <div class="mb-3">
                 <label class="form-label">パスワード</label>
-                <input type="password" name="password" class="form-control" value="{{ old('password') }}">
+                <input type="password" name="password" class="form-control">
             </div>
             <div class="text-end">
                 <button class="btn btn-primary">ログイン</button>
