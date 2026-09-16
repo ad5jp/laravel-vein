@@ -22,7 +22,7 @@ class InputText extends FormControl implements Form, SearchForm
             '<input type="text" name="%s" value="%s" class="form-control"%s>',
             e($this->key),
             e($value),
-            $this->placeholderAttribute().$this->inputAttributes(),
+            $this->placeholderAttribute().$this->inputAttributes($values),
         );
 
         return $html;

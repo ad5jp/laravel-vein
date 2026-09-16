@@ -33,21 +33,6 @@ class Group extends FormControl implements Form, SearchForm
 
         foreach ($children as $i => $child) {
             if ($child instanceof Form) {
-                // 束ねた欄は renderColumn を通らないので、必須の印は
-                // ここで規則から引く（子レコードの中では Records が先に立てる）
-                if ($child instanceof FormControl && ! $child->required && method_exists($model, 'editValidatorRules')) {
-                    $child->required = FormControl::ruleRequires(
-                        $model->editValidatorRules()[$child->key] ?? null,
-                    );
-                }
-
-                // 中の欄が必須なら、束ねた欄そのものにも印を出す。入力側に
-                // ラベルが無い組み合わせ（接頭辞だけを置く形）では、ここが
-                // 唯一の出し先になる。ラベルは renderInline の後に描かれる
-                if ($child instanceof FormControl && $child->required) {
-                    $this->required = true;
-                }
-
                 $html .= $child->renderInline($model);
 
                 continue;
@@ -61,6 +46,11 @@ class Group extends FormControl implements Form, SearchForm
             // 結びつけておくと、押してその欄に入れる
             $next = $children[$i + 1] ?? null;
             $for = $next instanceof FormControl ? $next->inputId() : null;
+            // 帯の中の文字に印を出すのは、束ねた欄そのものに名前が無いときだけ。
+            // 名前があるときはそちらに出るので、接頭辞（/works/ など）には要らない
+            $next_required = $this->label === null
+                && $next instanceof FormControl
+                && $next->isRequired($model);
 
             $html .= $for === null
                 ? sprintf('<span class="input-group-text">%s</span>', e($child))
@@ -69,13 +59,48 @@ class Group extends FormControl implements Form, SearchForm
                     e($for),
                     e($child),
                     // 必須の印は、欄の上に出すラベルと揃える
-                    $next->required ? '<span class="text-danger ms-1" aria-hidden="true">*</span>' : '',
+                    $next_required ? '<span class="text-danger ms-1" aria-hidden="true">*</span>' : '',
                 );
         }
 
         $html .= '</div>';
 
         return $html;
+    }
+
+    /**
+     * 束ねた欄そのものは値を持たない。中の欄が必須なら、こちらにも印を出す。
+     *
+     * 接頭辞だけを置く形（/works/ + 入力）では入力側にラベルが無いため、
+     * ここが唯一の出し先になる。
+     */
+    public function isRequired(Model $values): bool
+    {
+        if (parent::isRequired($values)) {
+            return true;
+        }
+
+        foreach ($this->children as $child) {
+            if ($child instanceof FormControl && $child->isRequired($values)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** 子レコードの中では、配られた規則をそのまま子へ渡す。 */
+    public function withScopedRules(?array $rules): static
+    {
+        parent::withScopedRules($rules);
+
+        foreach ($this->children as $child) {
+            if ($child instanceof FormControl) {
+                $child->withScopedRules($rules);
+            }
+        }
+
+        return $this;
     }
 
     /**

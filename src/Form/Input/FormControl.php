@@ -32,6 +32,13 @@ abstract class FormControl implements ScopesErrorKeys
      */
     protected bool $labelled_input = false;
 
+    /**
+     * 子レコードの中で親から配られた検証規則。外（Records の外）では null。
+     *
+     * @var array<string, mixed>|null
+     */
+    protected ?array $scoped_rules = null;
+
     public function __construct(
         public string $key,
         public ?string $label = null,
@@ -90,12 +97,47 @@ abstract class FormControl implements ScopesErrorKeys
      * HTML の required は付けない。一覧で畳んだ欄が必須だと、ブラウザが
      * 「見えない欄が空だ」と言って送信を止め、しかも何も示せなくなる。
      */
-    protected function inputAttributes(): string
+    protected function inputAttributes(Model $values): string
     {
         $id = $this->inputId();
 
         return ($id === null ? '' : sprintf(' id="%s"', e($id)))
-            .($this->required ? ' aria-required="true"' : '');
+            .($this->isRequired($values) ? ' aria-required="true"' : '');
+    }
+
+    /**
+     * この欄が必須か。
+     *
+     * 弾くのは検証の規則なので、印もそちらを正とする。欄の側の指定（required）は
+     * 規則を持たない画面のために残してある。
+     */
+    public function isRequired(Model $values): bool
+    {
+        if ($this->required) {
+            return true;
+        }
+
+        // 子レコードの中では、親から自分の分だけ配られている
+        if ($this->scoped_rules !== null) {
+            return self::ruleRequires($this->scoped_rules[$this->key] ?? null);
+        }
+
+        return $this->requiredByRules($values);
+    }
+
+    /**
+     * 子レコードの中で、親が持つ規則のうち自分たちの分を受け取る。
+     *
+     * 子の検証規則は親に images.*.caption の形で集まっているため、子は自分の
+     * モデルからは引けない。
+     *
+     * @see Records::renderFields()
+     */
+    public function withScopedRules(?array $rules): static
+    {
+        $this->scoped_rules = $rules;
+
+        return $this;
     }
 
     /**
@@ -217,9 +259,6 @@ abstract class FormControl implements ScopesErrorKeys
 
     public function renderColumn(Model $values): string
     {
-        // 印は検証の規則を正とする。欄と規則の二重管理になると必ずずれる
-        $this->required = $this->required || $this->requiredByRules($values);
-
         $html = $this->renderInline($values);
 
         if ($this->hint !== null) {
@@ -234,7 +273,7 @@ abstract class FormControl implements ScopesErrorKeys
                 $id === null ? '' : sprintf(' for="%s"', e($id)),
                 e($this->label),
                 // 必須は目で分かるようにする。読み上げには入力側の aria-required が伝える
-                $this->required ? '<span class="text-danger ms-1" aria-hidden="true">*</span>' : '',
+                $this->isRequired($values) ? '<span class="text-danger ms-1" aria-hidden="true">*</span>' : '',
                 $html,
             );
         }

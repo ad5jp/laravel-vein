@@ -68,10 +68,17 @@ class Records extends FormControl implements DeletesRelated, Form
         $manager = new InputManager;
         $editFields = $manager->parseEditField($record_model->editFields());
 
-        // 子レコードの検証規則は親に集まっている。必須の印を配るために控える
-        $this->parent_rules = method_exists($values, 'editValidatorRules')
-            ? $values->editValidatorRules()
-            : [];
+        // 子レコードの検証規則は親に集まっている。自分たちの分だけ切り出す
+        $this->child_rules = [];
+        $prefix = $this->key.'.*.';
+
+        if (method_exists($values, 'editValidatorRules')) {
+            foreach ($values->editValidatorRules() as $key => $rule) {
+                if (str_starts_with($key, $prefix)) {
+                    $this->child_rules[substr($key, strlen($prefix))] = $rule;
+                }
+            }
+        }
 
         // リレーションデータ取得
         $records = $values->{$this->key};
@@ -305,7 +312,15 @@ class Records extends FormControl implements DeletesRelated, Form
         foreach ($editFields as $editField) {
             // 必須の印は検証の規則を正とする。子レコードの規則は親に
             // images.*.caption の形で集まっているため、子は自分では引けない
-            $this->markRequired($editField);
+            if ($editField instanceof FormControl) {
+                $editField->withScopedRules($this->child_rules);
+            } elseif ($editField instanceof Row) {
+                foreach ($editField->children as $child) {
+                    if ($child instanceof FormControl) {
+                        $child->withScopedRules($this->child_rules);
+                    }
+                }
+            }
 
             // 検証のキーは images.0.caption の形になる。どの行が弾かれたのかを
             // 行の中で示せるよう、親のキーと添字を渡しておく。Row / Group で
@@ -326,34 +341,14 @@ class Records extends FormControl implements DeletesRelated, Form
         return $this->wrapKeys($row, $index);
     }
 
-    /** 親の検証規則。行を描くときに、子の欄へ必須の印を配るのに使う。 */
-    private array $parent_rules = [];
-
     /**
-     * 束ねた欄の中まで下りて、規則で必須になっている欄に印を立てる。
+     * 子の欄に配る検証規則。
+     *
+     * 親の images.*.caption を caption に読み替えたもの。行を描くときに子へ渡す。
+     *
+     * @var array<string, mixed>
      */
-    private function markRequired(Form $editField): void
-    {
-        if ($editField instanceof Row || $editField instanceof Group) {
-            foreach ($editField->children as $child) {
-                if ($child instanceof Form) {
-                    $this->markRequired($child);
-                }
-            }
-
-            return;
-        }
-
-        if (! $editField instanceof FormControl || $editField->required) {
-            return;
-        }
-
-        $rule = $this->parent_rules[sprintf('%s.*.%s', $this->key, $editField->key)] ?? null;
-
-        if (FormControl::ruleRequires($rule)) {
-            $editField->required = true;
-        }
-    }
+    private array $child_rules = [];
 
     private function renderRow(Model $record, array $editFields, int $index, bool $as_template = false): string
     {

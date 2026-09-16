@@ -36,7 +36,7 @@ class TextArea extends FormControl implements Form
             e($this->key),
             e($this->rows),
             $this->placeholderAttribute(),
-            $this->inputAttributes(),
+            $this->inputAttributes($values),
             e($value),
         );
 

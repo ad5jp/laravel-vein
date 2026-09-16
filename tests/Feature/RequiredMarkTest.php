@@ -105,6 +105,31 @@ class RequiredMarkTest extends TestCase
         $this->assertStringContainsString('aria-required="true"', $html, '子の欄に伝わっていない');
     }
 
+    /** 描くたびに状態を書き換えると、次に別のモデルで描いたときに印が残る。 */
+    public function test_同じ欄を使い回しても印は持ち越さない(): void
+    {
+        $field = new InputText(key: 'title', label: 'タイトル');
+
+        $required = $field->render($this->entry(['title' => ['required']]));
+        $optional = $field->render($this->entry(['title' => ['nullable']]));
+
+        $this->assertStringContainsString('aria-required="true"', $required);
+        $this->assertStringNotContainsString('aria-required', $optional, '前に描いた印が残っている');
+    }
+
+    /** 接頭辞だけを置く形では、束ねた欄の名前に印を出す。接頭辞には出さない。 */
+    public function test_束ねた欄に名前があれば接頭辞には印を出さない(): void
+    {
+        $entry = $this->entry(['title' => ['required']]);
+        $html = (new Group(label: 'URL に使う識別子', children: [
+            '/works/',
+            new InputText(key: 'title'),
+        ]))->render($entry);
+
+        $this->assertStringContainsString('URL に使う識別子<span class="text-danger', $html);
+        $this->assertStringNotContainsString('/works/<span class="text-danger', $html);
+    }
+
     public function test_子レコードの規則が無ければ印は出ない(): void
     {
         $entry = $this->entry(['records.*.caption' => ['nullable']]);

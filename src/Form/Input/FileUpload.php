@@ -123,7 +123,7 @@ class FileUpload extends FormControl implements DeletesRelated, Form
             .'</div>',
             e($this->key),
             $preview_html,
-            $this->inputAttributes(),
+            $this->inputAttributes($values),
         );
 
         return $html;
