@@ -118,6 +118,9 @@
         mark();
         window.addEventListener('scroll', mark, { passive: true });
         window.addEventListener('resize', () => { measure(); mark(); });
+        // メニューを開け閉めすると本文の幅が変わり、見出しの行数も変わる。
+        // 幅の変化は resize では拾えないので、動きが終わってから測り直す
+        document.addEventListener('vein:sidebar-toggled', () => setTimeout(() => { measure(); mark(); }, 600));
     }
 
     if (document.readyState === 'loading') {

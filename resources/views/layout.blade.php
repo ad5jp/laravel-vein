@@ -89,6 +89,13 @@
         border-color: var(--bs-primary);
         box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.45);
     }
+    /* 弾かれた欄は、直しに行っても赤のままにする。触った瞬間に
+       「ここが間違っている」印が消えると、どこを直すのか分からなくなる */
+    .__has_error .form-control:focus,
+    .__has_error .form-select:focus {
+        border-color: #DC3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.4);
+    }
 
     /* 画面の中へ運ばれるとき（目次からのジャンプ、Tab での移動、ページ内検索）に、
        上で隠れている分だけ手前で止める。1rem は、貼り付いた見出しにぴったり
@@ -212,13 +219,21 @@ $(function () {
 // 見た目が変わらないと二度押しになる
 $(function () {
   $(document).on('submit', 'form', function () {
-    const $pressed = $(document.activeElement).closest('button[type="submit"]');
+    // type を書いていないボタンも既定は送信。属性ではなく解決後の型で見る
+    const $pressed = $(document.activeElement).closest('button')
+      .filter(function () { return this.type === 'submit'; });
     const $button = $pressed.length
       ? $pressed
-      : $(this).find('button[type="submit"]').first();
+      : $(this).find('.__save_bar button').filter(function () { return this.type === 'submit'; }).last();
 
-    if ($button.hasClass('btn-primary')) {
-      $button.text('保存しています…');
+    if (!$button.length) {
+      return;
+    }
+
+    // 文言は元のまま活かす（「更新」→「更新しています…」「登録」→「登録しています…」）。
+    // 保存バーの外のボタン（検索など）は文言を変えず、二度押しだけ止める
+    if ($button.closest('.__save_bar').length && $button.hasClass('btn-primary')) {
+      $button.text($button.text().trim() + 'しています…');
     }
 
     // 送信が始まってから無効にする。同じ処理の中で無効にすると、
@@ -230,21 +245,30 @@ $(function () {
 // 打ちかけのまま画面を離れると、入力が黙って消える。
 // 削除には確認があるのに、こちらには無かった
 $(function () {
-  const form = document.querySelector('.__edit_body form');
+  // 保存バーを持つものが編集のフォーム。新規登録の画面も同じ作りなので拾える
+  const bar = document.querySelector('.__save_bar');
+  const form = bar ? bar.closest('form') : null;
 
   if (!form) {
     return;
   }
 
   let dirty = false;
-  let saving = false;
+  let leaving = false;
 
-  form.addEventListener('input', () => { dirty = true; });
-  form.addEventListener('change', () => { dirty = true; });
-  form.addEventListener('submit', () => { saving = true; });
+  const touched = () => { dirty = true; };
+
+  form.addEventListener('input', touched);
+  form.addEventListener('change', touched);
+  // 打ち込む以外でも中身は変わる。行の増減・並べ替え・画像を外す、など
+  document.addEventListener('vein:changed', touched);
+
+  // 送信したなら、その先で保存されるか、確認を出したうえで消える。
+  // 削除やログアウトも同じなので、どのフォームの送信でも黙って通す
+  document.addEventListener('submit', () => { leaving = true; });
 
   window.addEventListener('beforeunload', (event) => {
-    if (!dirty || saving) {
+    if (!dirty || leaving) {
       return;
     }
 

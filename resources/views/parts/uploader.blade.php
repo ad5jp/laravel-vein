@@ -66,6 +66,7 @@ $(function () {
     });
 
     $(document).on('click', '.__uploader_preview_remove', function () {
+        document.dispatchEvent(new CustomEvent('vein:changed'));
         const $item = $(this).closest('.__uploader_preview_item');
         $item.remove();
     });
@@ -254,6 +255,8 @@ $(function () {
         tolerance: 'pointer',
         placeholder: '__records_tile_placeholder',
         forcePlaceholderSize: true,
+        // 並び順はそのまま保存される。打ち込んだのと同じく「変えた」こと
+        update: () => document.dispatchEvent(new CustomEvent('vein:changed')),
     });
 });
 
@@ -281,6 +284,7 @@ $(document).on('click', '.__records_view button', function () {
 });
 
 $(document).on('click', '.__records_add', function () {
+    document.dispatchEvent(new CustomEvent('vein:changed'));
     const $records = $(this).closest('.__records');
 
     const index = $records.data('nextkey');
@@ -367,12 +371,16 @@ $(function () {
                 ui.helper.offset({ top: current.top, left: left });
             }
         },
+        // 並び順はそのまま保存される。打ち込んだのと同じく「変えた」こと
+        update: () => document.dispatchEvent(new CustomEvent('vein:changed')),
     });
 });
 $(document).on('click', '.__records_remove', function () {
     if (!confirm('この行を削除しますか？')) {
         return;
     }
+
+    document.dispatchEvent(new CustomEvent('vein:changed'));
 
     const $tile = $(this).closest('.__records_tile');
 

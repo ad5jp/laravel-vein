@@ -96,7 +96,19 @@ class Records extends FormControl implements DeletesRelated, Form
         // （タイルと 1 行の子レコードは、もともと低いので切り替える先がない）
         $html .= '<div class="__records_head">';
         if ($this->label) {
-            $html .= sprintf('<h5>%s</h5>', $this->label);
+            // 1 行に収める形ではラベルを隠すため、必須の印もそこでは見えない。
+            // 中に必須の欄があるときは、見出しの側に出す
+            $required = $single && array_reduce(
+                $editFields,
+                fn (bool $carry, $editField) => $carry || ($editField instanceof FormControl && $editField->required),
+                false,
+            );
+
+            $html .= sprintf(
+                '<h5>%s%s</h5>',
+                e($this->label),
+                $required ? '<span class="text-danger ms-1" aria-hidden="true">*</span>' : '',
+            );
         }
         if (! $this->as_tiles && ! $single) {
             $html .= '<div class="__records_view btn-group btn-group-sm" role="group" aria-label="表示の切り替え">'
