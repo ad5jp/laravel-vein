@@ -13,6 +13,7 @@ use Exception;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -130,8 +131,31 @@ class FileUpload extends FormControl implements DeletesRelated, Form
             return;
         }
 
-        Storage::disk($this->disk)->delete($file->getFilePath());
+        $this->deleteAfterCommit($file->getFilePath());
         $file->delete();
+    }
+
+    /**
+     * 実体の削除をコミット後に回す。
+     *
+     * Storage はトランザクションの対象外なので、その場で消すとロールバックしても戻らない。
+     * トランザクションの外で呼ばれた場合は、その場で実行される。
+     */
+    private function deleteAfterCommit(string $path): void
+    {
+        $disk = $this->disk;
+
+        DB::afterCommit(static fn () => Storage::disk($disk)->delete($path));
+    }
+
+    /**
+     * 置いた実体を、ロールバックしたときに片付ける。
+     */
+    private function deleteAfterRollback(string $path): void
+    {
+        $disk = $this->disk;
+
+        DB::afterRollBack(static fn () => Storage::disk($disk)->delete($path));
     }
 
     public function beforeSave(Model $model, Arrayable|array $request): Model
@@ -158,7 +182,9 @@ class FileUpload extends FormControl implements DeletesRelated, Form
         if ($model->{$this->key}) {
             /** @var Model&File $old_file */
             $old_file = $model->{$this->key};
-            Storage::disk($this->disk)->delete($old_file->getFilePath());
+            // 実体の削除はコミット後。ここで消すと、後続が失敗したときに
+            // DB にはレコードがあるのに実体だけ無い状態になる
+            $this->deleteAfterCommit($old_file->getFilePath());
             $old_file->delete();
         }
 
@@ -177,6 +203,8 @@ class FileUpload extends FormControl implements DeletesRelated, Form
             $tmp_file = Storage::disk(config('vein.temporary_disk'))->get($json['tmp_path']);
             $store_path = $this->directory.'/'.basename($json['tmp_path']);
             Storage::disk($this->disk)->put($store_path, $tmp_file);
+            // 置いた実体はトランザクションで戻らないので、失敗したら自分で片付ける
+            $this->deleteAfterRollback($store_path);
 
             // FILEモデルを保存
             /** @var Model&File $new_file */
