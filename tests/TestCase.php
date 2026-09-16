@@ -6,6 +6,7 @@ namespace AD5jp\Vein\Tests;
 
 use AD5jp\Vein\ServiceProvider;
 use AD5jp\Vein\Tests\Fixtures\TestEntry;
+use AD5jp\Vein\Tests\Fixtures\TestFile;
 use AD5jp\Vein\Tests\Fixtures\TestRecord;
 use AD5jp\Vein\Tests\Fixtures\TestUser;
 use Illuminate\Contracts\Config\Repository;
@@ -91,10 +92,21 @@ abstract class TestCase extends Orchestra
             $table->timestamps();
         });
 
+        Schema::create((new TestFile)->getTable(), function ($table): void {
+            $table->id();
+            $table->string('file_name');
+            $table->string('file_path');
+            $table->string('mime_type');
+            $table->unsignedBigInteger('file_size');
+            $table->timestamps();
+        });
+
         Schema::create((new TestRecord)->getTable(), function ($table): void {
             $table->id();
             $table->foreignId('test_entry_id');
             $table->string('caption')->nullable();
+            $table->foreignId('test_file_id')->nullable();
+            $table->json('tags')->nullable();
             $table->timestamps();
         });
     }
