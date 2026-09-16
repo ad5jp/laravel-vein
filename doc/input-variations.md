@@ -34,6 +34,39 @@ $beforeSaving / $afterSaving は Model を返してください。返さなか�
 applyBeforeSave() / applyAfterSave() を実装してください。上記の Closure の呼び出しは
 FormControl 側でまとめて行っています。
 
+# InputNumber
+
+数値入力欄 (`<input type="number">`) を表示させます。
+
+## 追加プロパティ
+
+| プロパティ | 必須 | 型                    | 概要             |
+| -------- | --- | -------------------- | --------------- |
+| $step    |     | int\|float\|string   | 入力できる刻み幅   |
+
+**step** を省略すると、ブラウザ既定の `step="1"` が効き、**小数が入力できません**。
+小数を扱う項目では明示してください。
+
+```php
+new InputNumber(
+    key: 'development_months',
+    label: '開発工数（人月）',
+    step: 0.1,
+),
+```
+
+刻み幅を問わない場合は `any` を指定します。
+
+```php
+new InputNumber(
+    key: 'weight',
+    label: '重量',
+    step: 'any',
+),
+```
+
+正の数でも `any` でもない値を渡すと、例外になります。
+
 # SelectEnum
 
 セレクトボックスにより、Enum の値を選択させます。
