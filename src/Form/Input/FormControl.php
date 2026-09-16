@@ -217,6 +217,9 @@ abstract class FormControl implements ScopesErrorKeys
 
     public function renderColumn(Model $values): string
     {
+        // 印は検証の規則を正とする。欄と規則の二重管理になると必ずずれる
+        $this->required = $this->required || $this->requiredByRules($values);
+
         $html = $this->renderInline($values);
 
         if ($this->hint !== null) {
@@ -259,6 +262,41 @@ abstract class FormControl implements ScopesErrorKeys
         );
 
         return $html;
+    }
+
+    /**
+     * 検証の規則で必須になっているか。
+     *
+     * 子レコードの中では規則が親に集まっているため引けない。そちらは
+     * Records が行ごとに立てる。
+     *
+     * @see Records::renderFields()
+     */
+    protected function requiredByRules(Model $values): bool
+    {
+        if (! method_exists($values, 'editValidatorRules')) {
+            return false;
+        }
+
+        return self::ruleRequires($values->editValidatorRules()[$this->key] ?? null);
+    }
+
+    /** 規則 1 つ分が required を含むか。'required|max:10' の書き方にも合わせる。 */
+    public static function ruleRequires(mixed $rule): bool
+    {
+        if ($rule === null) {
+            return false;
+        }
+
+        $rules = is_array($rule) ? $rule : explode('|', (string) $rule);
+
+        foreach ($rules as $one) {
+            if (is_string($one) && ($one === 'required' || str_starts_with($one, 'required_'))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

@@ -33,6 +33,21 @@ class Group extends FormControl implements Form, SearchForm
 
         foreach ($children as $i => $child) {
             if ($child instanceof Form) {
+                // 束ねた欄は renderColumn を通らないので、必須の印は
+                // ここで規則から引く（子レコードの中では Records が先に立てる）
+                if ($child instanceof FormControl && ! $child->required && method_exists($model, 'editValidatorRules')) {
+                    $child->required = FormControl::ruleRequires(
+                        $model->editValidatorRules()[$child->key] ?? null,
+                    );
+                }
+
+                // 中の欄が必須なら、束ねた欄そのものにも印を出す。入力側に
+                // ラベルが無い組み合わせ（接頭辞だけを置く形）では、ここが
+                // 唯一の出し先になる。ラベルは renderInline の後に描かれる
+                if ($child instanceof FormControl && $child->required) {
+                    $this->required = true;
+                }
+
                 $html .= $child->renderInline($model);
 
                 continue;

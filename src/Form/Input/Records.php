@@ -68,6 +68,11 @@ class Records extends FormControl implements DeletesRelated, Form
         $manager = new InputManager;
         $editFields = $manager->parseEditField($record_model->editFields());
 
+        // 子レコードの検証規則は親に集まっている。必須の印を配るために控える
+        $this->parent_rules = method_exists($values, 'editValidatorRules')
+            ? $values->editValidatorRules()
+            : [];
+
         // リレーションデータ取得
         $records = $values->{$this->key};
         // old の対応
@@ -294,6 +299,10 @@ class Records extends FormControl implements DeletesRelated, Form
         );
 
         foreach ($editFields as $editField) {
+            // 必須の印は検証の規則を正とする。子レコードの規則は親に
+            // images.*.caption の形で集まっているため、子は自分では引けない
+            $this->markRequired($editField);
+
             // 検証のキーは images.0.caption の形になる。どの行が弾かれたのかを
             // 行の中で示せるよう、親のキーと添字を渡しておく。Row / Group で
             // 束ねた欄にも届くよう、受け口は ScopesErrorKeys で判定する。
@@ -311,6 +320,35 @@ class Records extends FormControl implements DeletesRelated, Form
         }
 
         return $this->wrapKeys($row, $index);
+    }
+
+    /** 親の検証規則。行を描くときに、子の欄へ必須の印を配るのに使う。 */
+    private array $parent_rules = [];
+
+    /**
+     * 束ねた欄の中まで下りて、規則で必須になっている欄に印を立てる。
+     */
+    private function markRequired(Form $editField): void
+    {
+        if ($editField instanceof Row || $editField instanceof Group) {
+            foreach ($editField->children as $child) {
+                if ($child instanceof Form) {
+                    $this->markRequired($child);
+                }
+            }
+
+            return;
+        }
+
+        if (! $editField instanceof FormControl || $editField->required) {
+            return;
+        }
+
+        $rule = $this->parent_rules[sprintf('%s.*.%s', $this->key, $editField->key)] ?? null;
+
+        if (FormControl::ruleRequires($rule)) {
+            $editField->required = true;
+        }
     }
 
     private function renderRow(Model $record, array $editFields, int $index, bool $as_template = false): string
