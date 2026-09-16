@@ -369,9 +369,21 @@ class Records extends FormControl implements DeletesRelated, Form
             $html,
         );
 
-        return preg_replace_callback(
+        $html = preg_replace_callback(
             '/data-key="(.*?)"/',
             fn (array $matches) => sprintf('data-key="%s"', $this->wrapKey($matches[1], $index)),
+            $html,
+        );
+
+        // ラベルと入力を結ぶ id も、名前と同じ規則で行ごとに分ける。
+        // 分けないと、どの行のラベルを押しても 1 行目の欄に入ってしまう
+        return preg_replace_callback(
+            '/\b(id|for)="__f_(.*?)"/',
+            fn (array $matches) => sprintf(
+                '%s="__f_%s"',
+                $matches[1],
+                $this->wrapKey($matches[2], $index),
+            ),
             $html,
         );
     }

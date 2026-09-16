@@ -37,15 +37,18 @@ class InputNumber extends FormControl implements Form, SearchForm
         parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
 
+    protected bool $labelled_input = true;
+
     public function renderInline(Model $values): string
     {
         $value = $this->getValue($values);
 
         $html = sprintf(
-            '<input type="number"%s name="%s" value="%s" class="form-control">',
+            '<input type="number"%s name="%s" value="%s" class="form-control"%s>',
             $this->renderStep(),
             e($this->key),
             e($value),
+            $this->idAttribute(),
         );
 
         return $html;

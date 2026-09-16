@@ -23,6 +23,15 @@ abstract class FormControl implements ScopesErrorKeys
     /** ラベルの近くに置く補足。ラベルに詰め込むと長くなる説明はここへ。 */
     protected ?string $hint = null;
 
+    /**
+     * ラベルを入力に結びつけるか。
+     *
+     * 入力を 1 つだけ持つ欄は true にする。ラベルを押して欄に入れるようになり、
+     * 読み上げにも欄の名前が伝わる。束ねた欄や、ラベルが入力を包む作り
+     * （チェックボックス・ラジオ）は結びつける先が定まらないので false のまま。
+     */
+    protected bool $labelled_input = false;
+
     public function __construct(
         public string $key,
         public ?string $label = null,
@@ -60,6 +69,27 @@ abstract class FormControl implements ScopesErrorKeys
         return $this->placeholder === null
             ? ''
             : sprintf(' placeholder="%s"', e($this->placeholder));
+    }
+
+    /**
+     * ラベルと結びつけるための id。結びつけない欄では null。
+     *
+     * 子レコードの中では名前が officers[0][name] の形に書き換わる。id も同じ
+     * 規則で書き換えられるよう、決まった接頭辞を付けておく。
+     *
+     * @see Records::wrapKeys()
+     */
+    protected function inputId(): ?string
+    {
+        return $this->labelled_input ? '__f_'.$this->key : null;
+    }
+
+    /** 入力に付ける id 属性。結びつけない欄では空文字。 */
+    protected function idAttribute(): string
+    {
+        $id = $this->inputId();
+
+        return $id === null ? '' : sprintf(' id="%s"', e($id));
     }
 
     /**
@@ -188,7 +218,14 @@ abstract class FormControl implements ScopesErrorKeys
         }
 
         if ($this->label) {
-            $html = sprintf('<label class="form-label">%s</label>%s', e($this->label), $html);
+            $id = $this->inputId();
+
+            $html = sprintf(
+                '<label class="form-label"%s>%s</label>%s',
+                $id === null ? '' : sprintf(' for="%s"', e($id)),
+                e($this->label),
+                $html,
+            );
         }
 
         // 弾かれた理由は、画面の上にまとめるだけでなく、その欄のそばにも出す。

@@ -131,9 +131,11 @@ $(function () {
 /* 一覧で表示したとき。並べ替えるときや、全体を見渡したいときに切り替える。
    先頭の欄だけを残し、あとは隠す。Row で横に並べた欄も、見渡すだけなら先頭で
    見分けが付く（並べたまま残すと、欄どうしが継ぎ目なくくっついて読みにくい）。
-   display: none でも値は送信されるので、この状態で保存しても中身は失われない */
-.__records_list.is-compact .__records_list_item > .row ~ .row,
-.__records_list.is-compact .__records_list_item > .row > [class*="col-"] ~ [class*="col-"] {
+   display: none でも値は送信されるので、この状態で保存しても中身は失われない。
+   ただし弾かれた欄は隠さない。理由はその欄のそばに出しているため、一緒に
+   隠れると「どこが悪いのか」が行のどこにも残らなくなる */
+.__records_list.is-compact .__records_list_item > .row ~ .row:not(:has(.__field_error)),
+.__records_list.is-compact .__records_list_item > .row > [class*="col-"] ~ [class*="col-"]:not(:has(.__field_error)) {
     display: none;
 }
 /* 先頭が複数行の欄でも、一覧では 1 行に収める */

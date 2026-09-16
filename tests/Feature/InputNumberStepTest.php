@@ -21,7 +21,7 @@ class InputNumberStepTest extends TestCase
         $html = (new InputNumber(key: 'title'))->renderInline($entry);
 
         $this->assertStringNotContainsString('step=', $html);
-        $this->assertSame('<input type="number" name="title" value="15" class="form-control">', $html);
+        $this->assertSame('<input type="number" name="title" value="15" class="form-control" id="__f_title">', $html);
     }
 
     public function test_小数の_step_が描画される(): void
@@ -30,7 +30,7 @@ class InputNumberStepTest extends TestCase
         $html = (new InputNumber(key: 'title', step: 0.1))->renderInline($entry);
 
         $this->assertStringContainsString('step="0.1"', $html);
-        $this->assertSame('<input type="number" step="0.1" name="title" value="15.5" class="form-control">', $html);
+        $this->assertSame('<input type="number" step="0.1" name="title" value="15.5" class="form-control" id="__f_title">', $html);
     }
 
     public function test_any_を指定できる(): void

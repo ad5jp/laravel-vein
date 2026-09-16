@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class InputText extends FormControl implements Form, SearchForm
 {
+    protected bool $labelled_input = true;
+
     public function renderInline(Model $values): string
     {
         $value = $this->getValue($values);
@@ -20,7 +22,7 @@ class InputText extends FormControl implements Form, SearchForm
             '<input type="text" name="%s" value="%s" class="form-control"%s>',
             e($this->key),
             e($value),
-            $this->placeholderAttribute(),
+            $this->placeholderAttribute().$this->idAttribute(),
         );
 
         return $html;

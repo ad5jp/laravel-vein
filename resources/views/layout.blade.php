@@ -70,10 +70,15 @@
     /* 上のバーは fixed-top で画面に貼り付いている。その下に潜らないよう、
        貼り付ける位置の基準をここに置く */
     :root {
+        /* 上のバーの高さ。中身で変わるので JS が実測して上書きする。
+           ここの値は、実測が届くまでの初期値 */
         --vein-navbar-height: 59px;
-        /* 見出しの行の高さ。中身で変わるので JS が実測して上書きする */
+        /* 見出しの行の高さ。同じく JS が実測して上書きする */
         --vein-page-head-height: 0px;
     }
+    /* 上のバーは画面に貼り付いているので、本文をその分だけ下げる。
+       別ファイルにも同じ意味の指定があるが、あちらは固定値で実測に追従しない */
+    body { padding-top: var(--vein-navbar-height); }
     /* 上のバーと見出しの行を足した、画面上部で隠れる高さ */
     :root { --vein-offset-top: calc(var(--vein-navbar-height) + var(--vein-page-head-height)); }
 
@@ -167,26 +172,35 @@ $(function () {
   }
 });
 
-// 見出しの行の高さは中身で変わる。貼り付けた目次や見出しへのジャンプが
-// その下に潜らないよう、実測して配る
+// 上のバーと見出しの行の高さは、中身でも画面の幅でも変わる。貼り付けた目次や
+// 見出しへのジャンプがその下に潜らないよう、実測して配る
 $(function () {
+  const navbar = document.querySelector('.navbar.fixed-top');
   const head = document.querySelector('.__page_head');
 
-  if (!head) {
-    return;
-  }
+  const apply = () => {
+    const style = document.documentElement.style;
 
-  const apply = () => document.documentElement.style.setProperty(
-    '--vein-page-head-height',
-    head.offsetHeight + 'px',
-  );
+    if (navbar) {
+      style.setProperty('--vein-navbar-height', navbar.offsetHeight + 'px');
+    }
+
+    if (head) {
+      style.setProperty('--vein-page-head-height', head.offsetHeight + 'px');
+    }
+  };
 
   apply();
   window.addEventListener('resize', apply);
+
+  // メニューの開け閉めでも本文の幅が変わり、見出しが折り返す行数が変わる。
+  // 幅の変化は resize では拾えないので、動きが終わってから測り直す
+  document.addEventListener('vein:sidebar-toggled', () => setTimeout(apply, 600));
 });
 
 function toggleSidebar() {
   $('body').toggleClass('md-sidebar-hide').toggleClass('sm-sidebar-show')
+  document.dispatchEvent(new CustomEvent('vein:sidebar-toggled'))
 }
 
 // 通信が失敗しているのに成功したように見えるのを防ぐ。

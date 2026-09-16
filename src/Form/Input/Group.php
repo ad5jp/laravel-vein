@@ -29,14 +29,27 @@ class Group extends FormControl implements Form, SearchForm
 
         $html .= '<div class="input-group">';
 
-        foreach ($this->children as $child) {
+        $children = array_values($this->children);
+
+        foreach ($children as $i => $child) {
             if ($child instanceof Form) {
                 $html .= $child->renderInline($model);
-            } elseif (is_string($child)) {
-                $html .= sprintf('<span class="input-group-text">%s</span>', e($child));
-            } else {
+
+                continue;
+            }
+
+            if (! is_string($child)) {
                 throw new Exception('Invalid children of Group');
             }
+
+            // 帯の中の文字は、すぐ後ろの欄の名前として置くことが多い。
+            // 結びつけておくと、押してその欄に入れる
+            $next = $children[$i + 1] ?? null;
+            $for = $next instanceof FormControl ? $next->inputId() : null;
+
+            $html .= $for === null
+                ? sprintf('<span class="input-group-text">%s</span>', e($child))
+                : sprintf('<label class="input-group-text" for="%s">%s</label>', e($for), e($child));
         }
 
         $html .= '</div>';
