@@ -33,7 +33,7 @@ class Group extends FormControl implements Form, SearchForm
             if ($child instanceof Form) {
                 $html .= $child->renderInline($model);
             } elseif (is_string($child)) {
-                $html .= sprintf('<span class="input-group-text">%s</span>', $child);
+                $html .= sprintf('<span class="input-group-text">%s</span>', e($child));
             } else {
                 throw new Exception('Invalid children of Group');
             }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,7 +25,6 @@
     /* 弾かれた欄を目で追えるようにする。@see src/Form/Input/FormControl.php */
     .__has_error .form-control,
     .__has_error .form-select,
-    .__has_error textarea,
     .__has_error input[type="file"] { border-color: #DC3545; }
     .__has_error .form-label { color: #DC3545; }
     .__field_error { color: #DC3545; font-size: 0.875em; margin: 0.25rem 0 0; }
@@ -78,6 +77,16 @@
     /* 上のバーと見出しの行を足した、画面上部で隠れる高さ */
     :root { --vein-offset-top: calc(var(--vein-navbar-height) + var(--vein-page-head-height)); }
 
+    /* 画面の中へ運ばれるとき（Tab での移動、ページ内検索、アンカー）に、
+       上で隠れている分だけ手前で止める。要素ごとの scroll-margin-top では
+       新しく増えた移動手段を取りこぼす */
+    html { scroll-padding-top: var(--vein-offset-top); }
+
+    /* メニューは見出しの行より手前に置く。見出しの行を貼り付けた際に重なり順を
+       与えたため、番号を持たないメニューが下になり、狭い画面では開いても
+       見出しの行に覆われて 1 つも押せなくなっていた */
+    .sidebar { z-index: 11; }
+
     /* 入力欄が長い画面では、スクロールするとメニューが画面の外へ出てしまう。
        貼り付けておき、項目が多いときはメニュー側だけスクロールさせる */
     @media (min-width: 768px) {
@@ -89,6 +98,10 @@
             max-height: none;
             overflow-y: auto;
         }
+        /* 貼り付けた要素の left は移動量ではなく、貼り付く位置の制約になる。
+           admin.scss の left: -200px はここでは動かす力を持たず、左端に引き戻す
+           働きしかしない。打ち消したうえで、畳むのは余白で行う */
+        .md-sidebar-hide .sidebar { left: auto; margin-left: -200px; margin-right: 0; }
     }
     </style>
 </head>

@@ -19,8 +19,8 @@
 .__section_nav {
     position: sticky;
     /* 上のバーと見出しの行の下に潜らせない */
-    top: calc(var(--vein-offset-top, 59px) + 1rem);
-    max-height: calc(100vh - var(--vein-offset-top, 59px) - 2rem);
+    top: calc(var(--vein-offset-top) + 1rem);
+    max-height: calc(100vh - var(--vein-offset-top) - 2rem);
     overflow-y: auto;
     align-self: flex-start;
     width: 13rem;
@@ -45,10 +45,10 @@
     text-decoration: none;
     line-height: 1.4;
 }
-.__section_nav--list a:hover { color: #0D6EFD; }
+.__section_nav--list a:hover { color: var(--bs-primary); }
 .__section_nav--list a.is-current {
-    border-left-color: #0D6EFD;
-    color: #0D6EFD;
+    border-left-color: var(--bs-primary);
+    color: var(--bs-primary);
     font-weight: 700;
 }
 /* 画面が狭いときは横に置く余地がない */

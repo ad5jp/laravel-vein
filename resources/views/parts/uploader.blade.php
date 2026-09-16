@@ -92,7 +92,6 @@ $(function () {
    一覧で表示したとき（is-compact）は同じ形にする。
    ラベルと段組みを外し、入力欄そのものを行として見せる。
    何の欄かは見出しで分かるので、行ごとのラベルは重複になる */
-.__records_list:is(.is-single, .is-compact) {border: 0;}
 .__records_list:is(.is-single, .is-compact) .__records_list_item {
     display: flex; align-items: stretch;
     /* カードの枠と入力欄の枠で二重になるため、行側の枠と背景は外す */
@@ -162,7 +161,7 @@ $(function () {
     display: block; width: 100%; text-align: left; cursor: pointer;
     background: #FFF; border: 1px solid #DEE2E6; border-radius: 0.5rem; padding: 0.5rem;
 }
-.__records_tile_face:hover {border-color: #0D6EFD;}
+.__records_tile_face:hover {border-color: var(--bs-primary);}
 .__records_tile_image {
     display: flex; align-items: center; justify-content: center;
     height: 7rem; margin-bottom: 0.5rem; overflow: hidden;
