@@ -99,8 +99,30 @@
             return window.innerHeight + window.scrollY >= document.body.scrollHeight - 2;
         }
 
+        // 押した項目。末尾に近い見出しへ飛ぶと、それ以上スクロールできないぶん
+        // 判定が最後の見出しを指してしまい、押したものと食い違う。
+        // 飛んだ直後だけは、押したものを現在地として扱う
+        let picked = null;
+        let pickedUntil = 0;
+
+        links.forEach((link, i) => link.addEventListener('click', () => {
+            picked = i;
+            pickedUntil = Date.now() + 1500;
+            // 末尾まで来ていると、押しても画面が動かず scroll が飛ばない。
+            // その場で塗り直す
+            mark();
+        }));
+
         // いま画面の上端に一番近い見出しを現在地とする
         function mark() {
+            if (picked !== null && Date.now() < pickedUntil) {
+                links.forEach((a, i) => a.classList.toggle('is-current', i === picked));
+
+                return;
+            }
+
+            picked = null;
+
             let current = 0;
 
             sections.forEach((section, i) => {
@@ -109,15 +131,10 @@
                 }
             });
 
-            // 最後のいくつかは、これ以上スクロールできないため上端まで来ない。
-            // 末尾まで運んだら、画面に入っているうちで最も下を現在地にする
-            // （一律に最後を指すと、下から 2 番目を押したときに食い違う）
+            // 最後の見出しは、これ以上スクロールできないため上端まで来ない。
+            // 末尾まで運んだら最後を現在地にする
             if (atBottom()) {
-                sections.forEach((section, i) => {
-                    if (section.getBoundingClientRect().top < window.innerHeight) {
-                        current = Math.max(current, i);
-                    }
-                });
+                current = sections.length - 1;
             }
 
             links.forEach((a, i) => a.classList.toggle('is-current', i === current));

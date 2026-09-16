@@ -89,6 +89,23 @@ class Group extends FormControl implements Form, SearchForm
         return false;
     }
 
+    /**
+     * ラベルは中の最初の欄に結ぶ。
+     *
+     * 束ねた欄そのものは値を持たないが、接頭辞だけを置く形（/works/ + 入力）では
+     * 入力側にラベルが無い。結ばないと、読み上げでは欄の名前が「/works/」になる。
+     */
+    protected function inputId(): ?string
+    {
+        foreach ($this->children as $child) {
+            if ($child instanceof FormControl && ($id = $child->inputId()) !== null) {
+                return $id;
+            }
+        }
+
+        return null;
+    }
+
     /** 子レコードの中では、配られた規則をそのまま子へ渡す。 */
     public function withScopedRules(?array $rules): static
     {

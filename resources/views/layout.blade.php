@@ -137,15 +137,16 @@
 
 <nav class="navbar bg-dark border-bottom border-bottom-dark navbar-expand-md fixed-top" data-bs-theme="dark">
   <div class="container-fluid">
-    <button class="navbar-brand btn" onclick="toggleSidebar()"><i class="bi bi-list"></i> Vein</button>
+    <button class="navbar-brand btn __sidebar_toggle" onclick="toggleSidebar()"
+      aria-expanded="true" aria-controls="__sidebar"><i class="bi bi-list" aria-hidden="true"></i> Vein</button>
     @auth
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item ms-auto">
-          <button class="nav-link" form="signout">ログアウト</button>
-        </li>
-      </ul>
-    </div>
+    {{-- 折りたたまない。畳むと、それを開くボタンがどこにも無く、
+         狭い画面からログアウトできなくなる --}}
+    <ul class="navbar-nav ms-auto">
+      <li class="nav-item">
+        <button class="nav-link" form="signout">ログアウト</button>
+      </li>
+    </ul>
     @endauth
   </div>
 </nav>
@@ -154,7 +155,7 @@
 
 <div class="wrap">
   @auth
-  <div class="sidebar">
+  <div class="sidebar" id="__sidebar">
     <nav class="sidenav">
       <ul class="sidenav-list">
         <li class="sidenav-item">
@@ -225,6 +226,12 @@ $(function () {
 // 見た目が変わらないと二度押しになる
 $(function () {
   $(document).on('submit', 'form', function () {
+    // 保存バーを持つフォームだけを対象にする。送信を JS で止める画面
+    // （分類の一覧など）まで巻き込むと、押したきり戻せなくなる
+    if (! $(this).find('.__save_bar').length) {
+      return;
+    }
+
     // type を書いていないボタンも既定は送信。属性ではなく解決後の型で見る
     const $pressed = $(document.activeElement).closest('button')
       .filter(function () { return this.type === 'submit'; });
@@ -284,7 +291,15 @@ $(function () {
 });
 
 function toggleSidebar() {
-  $('body').toggleClass('md-sidebar-hide').toggleClass('sm-sidebar-show')
+  // 広い画面と狭い画面で、隠す側と出す側が逆になる。両方を一度に切り替えると、
+  // 幅をまたいだときに勝手に開いたり閉じたりする
+  const wide = window.matchMedia('(min-width: 768px)').matches;
+  const $body = $('body').toggleClass(wide ? 'md-sidebar-hide' : 'sm-sidebar-show');
+
+  $('.__sidebar_toggle').attr('aria-expanded', String(
+    wide ? ! $body.hasClass('md-sidebar-hide') : $body.hasClass('sm-sidebar-show'),
+  ));
+
   document.dispatchEvent(new CustomEvent('vein:sidebar-toggled'))
 }
 

@@ -115,8 +115,9 @@ class Records extends FormControl implements DeletesRelated, Form
             // 1 行に収める形ではラベルを隠すため、必須の印もそこでは見えない。
             // 中に必須の欄があるときは、見出しの側に出す
             // 印は規則が正。手で立てた required だけを見ると、規則から拾った分を
-            // 取りこぼす（1 行に収める形ではラベルが隠れるので、ここが唯一の出し先）
-            $required = $single && array_reduce(
+            // 取りこぼす。畳んだときは行のラベルごと隠れるので、見出しが唯一の
+            // 出し先になる（畳むかどうかは画面側で決まるため、常に出す）
+            $required = array_reduce(
                 $editFields,
                 fn (bool $carry, $editField) => $carry
                     || ($editField instanceof FormControl
@@ -368,7 +369,7 @@ class Records extends FormControl implements DeletesRelated, Form
             .sprintf(
                 '<button type="button" class="btn btn-sm btn-outline-secondary __records_remove"'
                 .' aria-label="%s"><i class="bi bi-trash" aria-hidden="true"></i></button>',
-                e(sprintf('この%sを削除', $this->label ?? '行')),
+                e(sprintf('%d 行目の%sを削除', $index + 1, $this->label ?? '行')),
             )
             .'</div>';
     }

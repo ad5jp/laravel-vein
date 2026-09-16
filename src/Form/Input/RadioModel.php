@@ -17,9 +17,11 @@ class RadioModel extends SelectModel implements Form, SearchForm
 
         $html = '';
 
-        // 選ぶ欄は入力が複数あるので、一つひとつではなく囲みに必須を伝える
+        // 選ぶ欄は入力が複数あるので、一つひとつではなく囲みに伝える。
+        // aria-required が効くのは radiogroup で、group では読み飛ばされる
         $html .= sprintf(
-            '<div role="group"%s>',
+            '<div role="radiogroup"%s%s>',
+            $this->labelledByAttribute(),
             $this->isRequired($values) ? ' aria-required="true"' : '',
         );
         foreach ($this->parseOptions() as $model_value => $model_label) {

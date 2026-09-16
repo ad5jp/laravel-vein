@@ -105,6 +105,12 @@ abstract class FormControl implements ScopesErrorKeys
             .($this->isRequired($values) ? ' aria-required="true"' : '');
     }
 
+    /** 選ぶ欄の囲みから、見えているラベルを指すための属性。 */
+    protected function labelledByAttribute(): string
+    {
+        return $this->label === null ? '' : sprintf(' aria-labelledby="__l_%s"', e($this->key));
+    }
+
     /**
      * この欄が必須か。
      *
@@ -138,12 +144,6 @@ abstract class FormControl implements ScopesErrorKeys
         $this->scoped_rules = $rules;
 
         return $this;
-    }
-
-    /** 配られた規則を外す。使い回す欄で、前の行の規則が残らないようにする。 */
-    public function withoutScopedRules(): static
-    {
-        return $this->withScopedRules(null);
     }
 
     /**
@@ -275,7 +275,8 @@ abstract class FormControl implements ScopesErrorKeys
             $id = $this->inputId();
 
             $html = sprintf(
-                '<label class="form-label"%s>%s%s</label>%s',
+                '<label class="form-label" id="__l_%s"%s>%s%s</label>%s',
+                e($this->key),
                 $id === null ? '' : sprintf(' for="%s"', e($id)),
                 e($this->label),
                 // 必須は目で分かるようにする。読み上げには入力側の aria-required が伝える
@@ -323,9 +324,6 @@ abstract class FormControl implements ScopesErrorKeys
             return false;
         }
 
-        // 欄の数だけ規則を組み立て直すことになるが、実測で体感できる差は無い。
-        // オブジェクトの id で控える形は、解放された id が使い回されるため
-        // 別のモデルの規則を引く事故になる（試験で検出済み）
         return self::ruleRequires($values->editValidatorRules()[$this->key] ?? null);
     }
 

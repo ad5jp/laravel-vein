@@ -142,13 +142,20 @@ class RequiredMarkTest extends TestCase
         $this->assertStringNotContainsString('aria-required', $html);
     }
 
-    /** 選ぶ欄は入力が複数あるので、囲みのほうに伝える。 */
+    /**
+     * 選ぶ欄は入力が複数あるので、囲みのほうに伝える。
+     *
+     * aria-required が効くのは radiogroup で、group では読み飛ばされる。
+     */
     public function test_選ぶ欄は囲みに必須を伝える(): void
     {
         $entry = $this->entry(['status' => ['required']]);
         $html = (new RadioEnum(key: 'status', label: '公開状態', enum: TestStatus::class))->render($entry);
 
-        $this->assertStringContainsString('role="group" aria-required="true"', $html);
+        $this->assertStringContainsString('role="radiogroup"', $html);
+        $this->assertStringContainsString('aria-required="true"', $html);
+        $this->assertStringContainsString('aria-labelledby="__l_status"', $html, '囲みに名前が付いていない');
+        $this->assertStringContainsString('id="__l_status"', $html, 'ラベルに指す先が無い');
         $this->assertStringContainsString('text-danger', $html);
     }
 

@@ -54,11 +54,9 @@ class CheckboxesEnum extends FormControl implements Form
 
         $html = '';
 
-        // 選ぶ欄は入力が複数あるので、一つひとつではなく囲みに必須を伝える
-        $html .= sprintf(
-            '<div role="group"%s>',
-            $this->isRequired($values) ? ' aria-required="true"' : '',
-        );
+        // 選ぶ欄は入力が複数あるので、囲みに名前を付けて 1 つのまとまりにする。
+        // aria-required は group では効かないため付けない（印はラベルに出る）
+        $html .= sprintf('<div role="group"%s>', $this->labelledByAttribute());
         foreach ($this->parseOptions() as $enum_value => $enum_label) {
             $html .= sprintf(
                 '<label class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="%s[]" value="%s"%s><span class="form-check-label" >%s</span></label>',

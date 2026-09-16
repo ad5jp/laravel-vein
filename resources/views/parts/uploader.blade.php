@@ -269,7 +269,11 @@ $(document).on('hidden.bs.modal input change', '.__records_tile', function () {
 // 畳んだ状態は覚えておく。並べ替えのために畳む → 弾かれて描き直される、の
 // たびに開き直すのは手間になる
 function veinViewKey($records) {
-    return 'vein:view:' + location.pathname + ':' + ($records.data('records') || '');
+    // 同じ種類の画面では同じ覚え方にする。パスの末尾はレコードの id なので落とす
+    // （/admin/work/12 と /admin/work/add を分けない）
+    const node = location.pathname.replace(/\/[^\/]+$/, '');
+
+    return 'vein:view:' + node + ':' + ($records.data('records') || '');
 }
 
 $(function () {
