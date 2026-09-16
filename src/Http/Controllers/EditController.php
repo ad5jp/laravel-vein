@@ -111,7 +111,15 @@ class EditController extends Controller
             return $record;
         });
 
-        if ($model instanceof Entry || $model instanceof Page) {
+        // 1 行しか持たない画面は、元の URL（/page/{node}）へ戻す。
+        // 行を指す URL（/{node}/{id}）へ送ると、同じ画面に 2 通りの入口ができる
+        if ($model instanceof Page) {
+            return redirect()
+                ->route('vein.page', ['node' => $node])
+                ->with('message.success', $this->savedMessage($record, '保存しました'));
+        }
+
+        if ($model instanceof Entry) {
             return redirect()
                 ->route('vein.edit', ['node' => $node, 'id' => $record->getKey()])
                 ->with('message.success', $this->savedMessage($record, '保存しました'));

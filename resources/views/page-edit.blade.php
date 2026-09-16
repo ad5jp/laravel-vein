@@ -2,9 +2,20 @@
 
 @section('content')
 <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="__page_head">
         <h1 class="mb-0">{{ $model->menuName() }} 編集</h1>
+        <div class="d-flex gap-2">
+            {{-- 公開側の URL を持っているノードでは、そこへ出られるようにする。
+                 下書きなど、まだ見られない状態のときは null を返してもらう。
+                 一覧に戻るボタンは置かない。この型は一覧を持たない --}}
+            @if (method_exists($record, 'publicUrl') && $record->publicUrl())
+            <a href="{{ $record->publicUrl() }}" class="btn btn-outline-secondary" target="_blank" rel="noopener">
+                <i class="bi bi-box-arrow-up-right"></i> 公開ページ
+            </a>
+            @endif
+        </div>
     </div>
+    <div class="__edit_body">
     <section class="section">
         @if ($errors->any())
         <div class="alert alert-danger">
@@ -21,11 +32,12 @@
             @foreach ($editFields as $editField)
             {!! $editField->render($record) !!}
             @endforeach
-            <div class="text-end">
-                <button type="submit" class="btn btn-primary">更新</button>
-            </div>
+            {{-- 削除は渡さない。この型は 1 行しか持たず、消す先が無い --}}
+            @include('vein::parts.save-bar', ['label' => '更新'])
         </form>
     </section>
+    @include('vein::parts.section-nav', ['editFields' => $editFields])
+    </div>
 </div>
 
 @include('vein::parts.uploader')
