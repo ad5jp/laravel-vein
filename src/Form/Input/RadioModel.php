@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class RadioModel extends SelectModel implements Form, SearchForm
 {
+    protected bool $labels_group = true;
+
     public function renderInline(Model $values): string
     {
         $value = $this->getValue($values);

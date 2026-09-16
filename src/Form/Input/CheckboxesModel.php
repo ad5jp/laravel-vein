@@ -42,6 +42,8 @@ class CheckboxesModel extends FormControl implements Form
         parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
 
+    protected bool $labels_group = true;
+
     public function renderInline(Model $values): string
     {
         [$relation_name, $saving_field] = $this->parseRelationKey($values, $this->key);

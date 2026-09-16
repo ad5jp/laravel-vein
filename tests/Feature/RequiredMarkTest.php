@@ -159,6 +159,37 @@ class RequiredMarkTest extends TestCase
         $this->assertStringContainsString('text-danger', $html);
     }
 
+    /**
+     * 見出しには印を出さない。
+     *
+     * 子レコードは 0 件でも保存できるため、「1 行以上要る」と読めてしまう。
+     * 必須なのは行の中の欄で、印もそちらに出る。
+     */
+    public function test_子レコードの見出しには印を出さない(): void
+    {
+        $entry = $this->entry(['records.*.caption' => ['required']]);
+        $entry->setAttribute('id', 1);
+        $entry->exists = true;
+
+        $html = (new Records(key: 'records', label: '画像'))->render($entry);
+
+        $this->assertStringNotContainsString('<h5>画像<span class="text-danger', $html);
+        $this->assertStringContainsString('aria-required="true"', $html, '行の欄には出る');
+    }
+
+    /** ラベルの id は、指す相手がいる欄だけが持つ。並べたときに重なるため。 */
+    public function test_ラベルの識別子は選ぶ欄だけが持つ(): void
+    {
+        $entry = $this->entry([]);
+
+        $text = (new InputText(key: 'title', label: 'タイトル'))->render($entry);
+        $this->assertStringNotContainsString('id="__l_', $text);
+
+        $radio = (new RadioEnum(key: 'status', label: '公開状態', enum: TestStatus::class))->render($entry);
+        $this->assertStringContainsString('id="__l_status"', $radio);
+        $this->assertStringContainsString('aria-labelledby="__l_status"', $radio);
+    }
+
     public function test_子レコードの規則が無ければ印は出ない(): void
     {
         $entry = $this->entry(['records.*.caption' => ['nullable']]);

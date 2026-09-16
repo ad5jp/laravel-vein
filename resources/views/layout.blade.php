@@ -226,12 +226,6 @@ $(function () {
 // 見た目が変わらないと二度押しになる
 $(function () {
   $(document).on('submit', 'form', function () {
-    // 保存バーを持つフォームだけを対象にする。送信を JS で止める画面
-    // （分類の一覧など）まで巻き込むと、押したきり戻せなくなる
-    if (! $(this).find('.__save_bar').length) {
-      return;
-    }
-
     // type を書いていないボタンも既定は送信。属性ではなく解決後の型で見る
     const $pressed = $(document.activeElement).closest('button')
       .filter(function () { return this.type === 'submit'; });
@@ -239,13 +233,15 @@ $(function () {
       ? $pressed
       : $(this).find('.__save_bar button').filter(function () { return this.type === 'submit'; }).last();
 
-    if (!$button.length) {
+    // 保存バーの中のボタンだけを対象にする。フォームで見ると、削除ボタンが
+    // 外れる（見た目は保存バーの中だが、送信先は別のフォーム）。
+    // 送信を JS で止める画面まで巻き込むと、押したきり戻せなくなる
+    if (! $button.length || ! $button.closest('.__save_bar').length) {
       return;
     }
 
-    // 文言は元のまま活かす（「更新」→「更新しています…」「登録」→「登録しています…」）。
-    // 保存バーの外のボタン（検索など）は文言を変えず、二度押しだけ止める
-    if ($button.closest('.__save_bar').length && $button.hasClass('btn-primary')) {
+    // 文言は元のまま活かす（「更新」→「更新しています…」「登録」→「登録しています…」）
+    if ($button.hasClass('btn-primary')) {
       $button.text($button.text().trim() + 'しています…');
     }
 

@@ -105,10 +105,26 @@ abstract class FormControl implements ScopesErrorKeys
             .($this->isRequired($values) ? ' aria-required="true"' : '');
     }
 
+    /**
+     * 囲みから見えているラベルを指すか。
+     *
+     * 入力が複数ある欄（選ぶ欄）だけが使う。指す先が無いのに id だけ配ると、
+     * 同じ名前の欄が並んだときに重なる。
+     */
+    protected bool $labels_group = false;
+
     /** 選ぶ欄の囲みから、見えているラベルを指すための属性。 */
     protected function labelledByAttribute(): string
     {
-        return $this->label === null ? '' : sprintf(' aria-labelledby="__l_%s"', e($this->key));
+        return $this->labelId() === null
+            ? ''
+            : sprintf(' aria-labelledby="%s"', e($this->labelId()));
+    }
+
+    /** ラベルに振る id。指す相手がいる欄だけが持つ。 */
+    protected function labelId(): ?string
+    {
+        return $this->labels_group && $this->label !== null ? '__l_'.$this->key : null;
     }
 
     /**
@@ -274,9 +290,11 @@ abstract class FormControl implements ScopesErrorKeys
         if ($this->label) {
             $id = $this->inputId();
 
+            $labelId = $this->labelId();
+
             $html = sprintf(
-                '<label class="form-label" id="__l_%s"%s>%s%s</label>%s',
-                e($this->key),
+                '<label class="form-label"%s%s>%s%s</label>%s',
+                $labelId === null ? '' : sprintf(' id="%s"', e($labelId)),
                 $id === null ? '' : sprintf(' for="%s"', e($id)),
                 e($this->label),
                 // 必須は目で分かるようにする。読み上げには入力側の aria-required が伝える

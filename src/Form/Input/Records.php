@@ -112,25 +112,9 @@ class Records extends FormControl implements DeletesRelated, Form
         // （タイルと 1 行の子レコードは、もともと低いので切り替える先がない）
         $html .= '<div class="__records_head">';
         if ($this->label) {
-            // 1 行に収める形ではラベルを隠すため、必須の印もそこでは見えない。
-            // 中に必須の欄があるときは、見出しの側に出す
-            // 印は規則が正。手で立てた required だけを見ると、規則から拾った分を
-            // 取りこぼす。畳んだときは行のラベルごと隠れるので、見出しが唯一の
-            // 出し先になる（畳むかどうかは画面側で決まるため、常に出す）
-            $required = array_reduce(
-                $editFields,
-                fn (bool $carry, $editField) => $carry
-                    || ($editField instanceof FormControl
-                        && FormControl::ruleRequires($this->child_rules[$editField->key] ?? null))
-                    || ($editField instanceof FormControl && $editField->required),
-                false,
-            );
-
-            $html .= sprintf(
-                '<h5>%s%s</h5>',
-                e($this->label),
-                $required ? '<span class="text-danger ms-1" aria-hidden="true">*</span>' : '',
-            );
+            // 見出しに必須の印は出さない。子レコードは 0 件でも保存できるため、
+            // 「1 行以上要る」と読めてしまう。必須なのは行の中の欄で、そちらに出る
+            $html .= sprintf('<h5>%s</h5>', e($this->label));
         }
         if (! $this->as_tiles && ! $single) {
             $html .= '<div class="__records_view btn-group btn-group-sm" role="group" aria-label="表示の切り替え">'
@@ -369,7 +353,9 @@ class Records extends FormControl implements DeletesRelated, Form
             .sprintf(
                 '<button type="button" class="btn btn-sm btn-outline-secondary __records_remove"'
                 .' aria-label="%s"><i class="bi bi-trash" aria-hidden="true"></i></button>',
-                e(sprintf('%d 行目の%sを削除', $index + 1, $this->label ?? '行')),
+                // 何行目かは入れない。「追加」で増えた行は雛形の複製で、
+                // 番号が振り直されないため嘘になる
+                e(sprintf('この%sを削除', $this->label ?? '行')),
             )
             .'</div>';
     }
@@ -437,11 +423,12 @@ class Records extends FormControl implements DeletesRelated, Form
         // ラベルと入力を結ぶ id も、名前と同じ規則で行ごとに分ける。
         // 分けないと、どの行のラベルを押しても 1 行目の欄に入ってしまう
         return preg_replace_callback(
-            '/\b(id|for)="__f_(.*?)"/',
+            '/\b(id|for|aria-labelledby)="__([fl])_(.*?)"/',
             fn (array $matches) => sprintf(
-                '%s="__f_%s"',
+                '%s="__%s_%s"',
                 $matches[1],
-                $this->wrapKey($matches[2], $index),
+                $matches[2],
+                $this->wrapKey($matches[3], $index),
             ),
             $html,
         );
