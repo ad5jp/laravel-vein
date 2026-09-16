@@ -76,8 +76,12 @@ $(function () {
     display: flex; align-items: center; color: #ADB5BD; cursor: grab; font-size: 1.25rem;}
 .__records_handle:active {cursor: grabbing;}
 .__records_list_item.is-sortable:hover .__records_handle {color: #6C757D;}
-/* ドラッグ中に空く場所。どこへ入るかが分かるようにする */
-.__records_placeholder {border: 2px dashed #ADB5BD; border-radius: 0.375rem; background: #F8F9FA;}
+/* ドラッグ中に空く場所。どこへ入るかが分かるようにする。
+   点線は outline で描く。border だと、その 2px 分だけ後ろの要素が下へずれる */
+.__records_placeholder {
+    outline: 2px dashed #ADB5BD; outline-offset: -2px;
+    border-radius: 0.375rem; background: #F8F9FA;
+}
 /* 見出しの行と、畳むボタン */
 .__records_head {display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem;}
 .__records_head h5 {margin: 0;}
@@ -182,7 +186,8 @@ $(function () {
 .__records_tile_placeholder {
     display: inline-block; vertical-align: top; width: 11.5rem;
     margin: 0 0.75rem 0.75rem 0;
-    border: 2px dashed #ADB5BD; border-radius: 0.5rem; background: #F8F9FA;
+    outline: 2px dashed #ADB5BD; outline-offset: -2px;
+    border-radius: 0.5rem; background: #F8F9FA;
 }
 /* モーダルは 1 行分の幅しかないので、欄を横に並べず縦に積む */
 .__records_tile_modal .modal-body > .row > [class*="col-"] {flex: 0 0 100%; max-width: 100%;}
@@ -325,8 +330,10 @@ $(function () {
                 .css({ width: item.outerWidth(), height: item.outerHeight() });
         },
         start: function (event, ui) {
-            // 空いた場所を掴んだ行と同じ高さにして、落ちる位置を指の近くに保つ
-            ui.placeholder.height(ui.helper.outerHeight());
+            // 空いた場所を掴んだ行と同じ高さにして、落ちる位置を指の近くに保つ。
+            // height() は枠線を含まない高さを入れるため、点線の 2px 分だけ後ろが
+            // 下がってしまう。外形で合わせる
+            ui.placeholder.outerHeight(ui.helper.outerHeight());
             $(this).sortable('refreshPositions');
 
             // 空いた場所の左端を控える。持ち上げた行は位置が絶対値に変わっているため、
