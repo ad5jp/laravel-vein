@@ -84,12 +84,18 @@ abstract class FormControl implements ScopesErrorKeys
         return $this->labelled_input ? '__f_'.$this->key : null;
     }
 
-    /** 入力に付ける id 属性。結びつけない欄では空文字。 */
-    protected function idAttribute(): string
+    /**
+     * 入力に付ける属性。ラベルと結ぶ id と、必須であること。
+     *
+     * HTML の required は付けない。一覧で畳んだ欄が必須だと、ブラウザが
+     * 「見えない欄が空だ」と言って送信を止め、しかも何も示せなくなる。
+     */
+    protected function inputAttributes(): string
     {
         $id = $this->inputId();
 
-        return $id === null ? '' : sprintf(' id="%s"', e($id));
+        return ($id === null ? '' : sprintf(' id="%s"', e($id)))
+            .($this->required ? ' aria-required="true"' : '');
     }
 
     /**
@@ -221,9 +227,11 @@ abstract class FormControl implements ScopesErrorKeys
             $id = $this->inputId();
 
             $html = sprintf(
-                '<label class="form-label"%s>%s</label>%s',
+                '<label class="form-label"%s>%s%s</label>%s',
                 $id === null ? '' : sprintf(' for="%s"', e($id)),
                 e($this->label),
+                // 必須は目で分かるようにする。読み上げには入力側の aria-required が伝える
+                $this->required ? '<span class="text-danger ms-1" aria-hidden="true">*</span>' : '',
                 $html,
             );
         }

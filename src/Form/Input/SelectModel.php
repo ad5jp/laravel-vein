@@ -42,7 +42,7 @@ class SelectModel extends FormControl implements Form, SearchForm
 
         $html = '';
 
-        $html .= sprintf('<select name="%s" class="form-select"%s>', e($this->key), $this->idAttribute());
+        $html .= sprintf('<select name="%s" class="form-select"%s>', e($this->key), $this->inputAttributes());
         $html .= '<option value="">-- 選択してください --</option>';
         foreach ($this->parseOptions() as $model_value => $model_label) {
             $html .= sprintf('<option value="%s"%s>%s</option>', e($model_value), ($model_value === $value ? ' selected' : ''), e($model_label));

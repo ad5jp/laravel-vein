@@ -48,7 +48,7 @@ class InputNumber extends FormControl implements Form, SearchForm
             $this->renderStep(),
             e($this->key),
             e($value),
-            $this->idAttribute(),
+            $this->inputAttributes(),
         );
 
         return $html;

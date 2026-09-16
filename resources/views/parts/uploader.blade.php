@@ -42,7 +42,13 @@ $(function () {
         .then(veinReadJson)
         .then(data => {
             const key = $uploader.data('key');
-            const $preview_item = $('<div class="__uploader_preview_item col-6 col-md-3"><img src=""><input type="hidden" name="" value=""><button class="__uploader_preview_remove" type="button"></button></div>');
+            // 代替テキストと名前は、描画済みの分（FileUpload::previewHtml）と揃える
+            const $label = $uploader.closest('[class*="col-"]').find('label').first();
+            // ラベルには必須の印が入ることがある。名前には含めない
+            const label = $label.clone().children().remove().end().text().trim();
+            const $preview_item = $('<div class="__uploader_preview_item col-6 col-md-3"><img src="" alt=""><input type="hidden" name="" value=""><button class="__uploader_preview_remove" type="button"></button></div>');
+            $preview_item.find('img').attr('alt', label);
+            $preview_item.find('.__uploader_preview_remove').attr('aria-label', label ? label + 'を外す' : '画像を外す');
             $preview_item.find('img').attr('src', data.preview);
             $preview_item.find('input').attr('name', key);
             $preview_item.find('input').attr('value', data.value);
@@ -115,7 +121,12 @@ $(function () {
     border-top-right-radius: 0; border-bottom-right-radius: 0;
 }
 .__records_list:is(.is-single, .is-compact) .__records_list_item > .__records_remove {
-    position: static; width: auto; height: auto; margin: 0 0 0 -1px;
+    /* 束ねた欄（input-group）の中の入力は Bootstrap が position: relative にする。
+       ごみ箱が static のままだと入力の枠が手前に来て、重ねた 1px の線だけ
+       行によって色が変わる。並びの後ろにあるごみ箱を手前に出して揃える。
+       カードのときに右上へ浮かせる位置指定は、ここでは邪魔なので外す */
+    position: relative; inset: auto;
+    width: auto; height: auto; margin: 0 0 0 -1px;
     display: flex; align-items: center;
     border-top-left-radius: 0; border-bottom-left-radius: 0;
 }
@@ -202,7 +213,7 @@ function veinSyncTile($tile) {
     var $slot = $tile.find('.__records_tile_image').empty();
 
     if ($img.length) {
-        $slot.append($('<img>').attr('src', $img.attr('src')));
+        $slot.append($('<img>').attr({ src: $img.attr('src'), alt: $img.attr('alt') || '' }));
     } else {
         $slot.append($('<span class="__records_tile_blank">画像なし</span>'));
     }

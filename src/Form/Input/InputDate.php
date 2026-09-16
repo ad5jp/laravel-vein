@@ -25,7 +25,7 @@ class InputDate extends FormControl implements Form, SearchForm
             '<input type="date" name="%s" value="%s" class="form-control"%s>',
             e($this->key),
             e($value),
-            $this->idAttribute(),
+            $this->inputAttributes(),
         );
 
         return $html;

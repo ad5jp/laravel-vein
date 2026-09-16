@@ -82,6 +82,15 @@
     /* 上のバーと見出しの行を足した、画面上部で隠れる高さ */
     :root { --vein-offset-top: calc(var(--vein-navbar-height) + var(--vein-page-head-height)); }
 
+    /* いま触っている欄が分かるようにする。Bootstrap の既定は、この画面の色だと
+       白地に 1.34:1 でほとんど見えない。数十の欄を順に送ると行方が分からなくなる */
+    .form-control:focus,
+    .form-select:focus,
+    .__uploader_input:focus {
+        border-color: var(--bs-primary);
+        box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.45);
+    }
+
     /* 画面の中へ運ばれるとき（Tab での移動、ページ内検索、アンカー）に、
        上で隠れている分だけ手前で止める。要素ごとの scroll-margin-top では
        新しく増えた移動手段を取りこぼす */
@@ -196,6 +205,51 @@ $(function () {
   // メニューの開け閉めでも本文の幅が変わり、見出しが折り返す行数が変わる。
   // 幅の変化は resize では拾えないので、動きが終わってから測り直す
   document.addEventListener('vein:sidebar-toggled', () => setTimeout(apply, 600));
+});
+
+// 押したことが分かるようにする。画像を含む画面では往復に数秒かかり、
+// 見た目が変わらないと二度押しになる
+$(function () {
+  $(document).on('submit', 'form', function () {
+    const $pressed = $(document.activeElement).closest('button[type="submit"]');
+    const $button = $pressed.length
+      ? $pressed
+      : $(this).find('button[type="submit"]').first();
+
+    if ($button.hasClass('btn-primary')) {
+      $button.text('保存しています…');
+    }
+
+    // 送信が始まってから無効にする。同じ処理の中で無効にすると、
+    // ブラウザによっては送信そのものが取り消される
+    setTimeout(() => $button.prop('disabled', true), 0);
+  });
+});
+
+// 打ちかけのまま画面を離れると、入力が黙って消える。
+// 削除には確認があるのに、こちらには無かった
+$(function () {
+  const form = document.querySelector('.__edit_body form');
+
+  if (!form) {
+    return;
+  }
+
+  let dirty = false;
+  let saving = false;
+
+  form.addEventListener('input', () => { dirty = true; });
+  form.addEventListener('change', () => { dirty = true; });
+  form.addEventListener('submit', () => { saving = true; });
+
+  window.addEventListener('beforeunload', (event) => {
+    if (!dirty || saving) {
+      return;
+    }
+
+    event.preventDefault();
+    event.returnValue = '';
+  });
 });
 
 function toggleSidebar() {

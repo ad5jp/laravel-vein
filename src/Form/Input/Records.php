@@ -311,7 +311,11 @@ class Records extends FormControl implements DeletesRelated, Form
         return sprintf('<div class="list-group-item __records_list_item%s">', $this->sort_column === null ? '' : ' is-sortable')
             .$handle
             .$this->renderFields($record, $editFields, $index, $as_template)
-            .'<button type="button" class="btn btn-sm btn-outline-secondary __records_remove"><i class="bi bi-trash"></i></button>'
+            .sprintf(
+                '<button type="button" class="btn btn-sm btn-outline-secondary __records_remove"'
+                .' aria-label="%s"><i class="bi bi-trash" aria-hidden="true"></i></button>',
+                e(sprintf('この%sを削除', $this->label ?? '行')),
+            )
             .'</div>';
     }
 

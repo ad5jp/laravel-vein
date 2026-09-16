@@ -45,7 +45,7 @@ class SelectEnum extends FormControl implements Form, SearchForm
 
         $html = '';
 
-        $html .= sprintf('<select name="%s" class="form-select"%s>', e($this->key), $this->idAttribute());
+        $html .= sprintf('<select name="%s" class="form-select"%s>', e($this->key), $this->inputAttributes());
         $html .= '<option value="">-- 選択してください --</option>';
         foreach ($this->parseOptions() as $enum_value => $enum_label) {
             $html .= sprintf('<option value="%s"%s>%s</option>', e($enum_value), ($enum_value === $value?->value ? ' selected' : ''), e($enum_label));

@@ -49,7 +49,13 @@ class Group extends FormControl implements Form, SearchForm
 
             $html .= $for === null
                 ? sprintf('<span class="input-group-text">%s</span>', e($child))
-                : sprintf('<label class="input-group-text" for="%s">%s</label>', e($for), e($child));
+                : sprintf(
+                    '<label class="input-group-text" for="%s">%s%s</label>',
+                    e($for),
+                    e($child),
+                    // 必須の印は、欄の上に出すラベルと揃える
+                    $next->required ? '<span class="text-danger ms-1" aria-hidden="true">*</span>' : '',
+                );
         }
 
         $html .= '</div>';
