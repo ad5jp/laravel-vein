@@ -6,7 +6,7 @@
 ?><style>
 .__uploader_preview_item {position: relative;}
 .__uploader_preview_item img {width: 100%; aspect-ratio: 1; object-fit: contain; background: #EEE; border: 1px solid #EEE;}
-.__uploader_preview_remove {position: absolute; right: -0; top: -10px; width: 30px; height: 30px; border: none; background: #000; opacity: 0.7;}
+.__uploader_preview_remove {position: absolute; right: 0; top: -10px; width: 30px; height: 30px; border: none; background: #000; opacity: 0.7;}
 .__uploader_preview_remove::before {content: ""; position: absolute; left: 49%; top: 0; display: block; width: 2px; height: 30px; background: #FFF; transform: rotate(45deg);}
 .__uploader_preview_remove::after {content: ""; position: absolute; left: 49%; top: 0; display: block; width: 2px; height: 30px; background: #FFF; transform: rotate(-45deg);}
 </style>
@@ -74,7 +74,7 @@ $(function () {
 
 <!-- TODO 別ファイルに切り出し -->
 <style>
-.__records_list_item {position: relative; padding-right: 3rem;}
+.__records_list_item {padding-right: 3rem;}
 .__records_list_item > .__records_remove {position: absolute; right: 0.5rem; top: 0; bottom: 0; width: 2rem; height: 2rem; margin: auto;}
 /* 並べ替えるもの。つまむところを左に置き、その分だけ中身を右へ寄せる */
 .__records_list_item.is-sortable {padding-left: 2.25rem;}
@@ -84,10 +84,12 @@ $(function () {
 .__records_list_item.is-sortable:hover .__records_handle {color: #6C757D;}
 /* ドラッグ中に空く場所。どこへ入るかが分かるようにする。
    点線は outline で描く。border だと、その 2px 分だけ後ろの要素が下へずれる */
-.__records_placeholder {
+.__records_placeholder,
+.__records_tile_placeholder {
     outline: 2px dashed #ADB5BD; outline-offset: -2px;
-    border-radius: 0.375rem; background: #F8F9FA;
+    background: #F8F9FA;
 }
+.__records_placeholder {border-radius: 0.375rem;}
 /* 見出しの行と、畳むボタン */
 .__records_head {display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem;}
 .__records_head h5 {margin: 0;}
@@ -99,7 +101,7 @@ $(function () {
    ラベルと段組みを外し、入力欄そのものを行として見せる。
    何の欄かは見出しで分かるので、行ごとのラベルは重複になる */
 .__records_list:is(.is-single, .is-compact) .__records_list_item {
-    display: flex; align-items: stretch;
+    display: flex;
     /* カードの枠と入力欄の枠で二重になるため、行側の枠と背景は外す */
     border: 0; background: transparent;
     padding: 0.25rem 0 0.25rem 1.75rem;
@@ -112,7 +114,7 @@ $(function () {
     margin: 0 !important;
 }
 .__records_list:is(.is-single, .is-compact) .__records_list_item > .row > [class*="col-"] {
-    flex: 1 1 auto; max-width: none; padding: 0;
+    flex: 1 1 auto; padding: 0;
 }
 .__records_list:is(.is-single, .is-compact) .__records_list_item .form-label {display: none;}
 /* 入力とごみ箱をくっつける。枠線を 1px 重ねて 1 つの部品に見せる */
@@ -166,10 +168,12 @@ $(function () {
 /* grid や flex で並べると、jQuery UI が「縦一列」と見なして横の入れ替えができない。
    inline-block なら横並びと判定される */
 .__records_tiles {font-size: 0;}
-.__records_tile {
+.__records_tile,
+.__records_tile_placeholder {
     display: inline-block; vertical-align: top; width: 11.5rem;
-    margin: 0 0.75rem 0.75rem 0; font-size: 1rem;
+    margin: 0 0.75rem 0.75rem 0;
 }
+.__records_tile {font-size: 1rem;}
 .__records_tile_face {
     display: block; width: 100%; text-align: left; cursor: pointer;
     background: #FFF; border: 1px solid #DEE2E6; border-radius: 0.5rem; padding: 0.5rem;
@@ -194,15 +198,11 @@ $(function () {
 .__records_tile.is-error .__records_tile_face {
     border-color: #DC3545; box-shadow: 0 0 0 0.125rem rgba(220, 53, 69, 0.25);
 }
-/* 落とす先の枠。タイルと同じ形にしないと、全幅の帯になる */
-.__records_tile_placeholder {
-    display: inline-block; vertical-align: top; width: 11.5rem;
-    margin: 0 0.75rem 0.75rem 0;
-    outline: 2px dashed #ADB5BD; outline-offset: -2px;
-    border-radius: 0.5rem; background: #F8F9FA;
-}
+/* 落とす先の枠。形はタイルと共通で、角の丸みだけタイルに合わせる
+   （全幅の帯にならないよう、並べ方もタイルと同じにしてある） */
+.__records_tile_placeholder {border-radius: 0.5rem;}
 /* モーダルは 1 行分の幅しかないので、欄を横に並べず縦に積む */
-.__records_tile_modal .modal-body > .row > [class*="col-"] {flex: 0 0 100%; max-width: 100%;}
+.__records_tile_modal .modal-body > .row > [class*="col-"] {flex: 0 0 100%;}
 </style>
 <script>
 // タイルの表側を、モーダルの中身から組み立てる。

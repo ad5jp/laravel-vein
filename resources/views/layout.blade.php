@@ -24,8 +24,10 @@
     <style>
     /* 弾かれた欄を目で追えるようにする。@see src/Form/Input/FormControl.php */
     .__has_error .form-control,
-    .__has_error .form-select,
-    .__has_error input[type="file"] { border-color: #DC3545; }
+    .__has_error .form-select { border-color: #DC3545; }
+    /* ファイルを選ぶ欄は枠を持たない。色を指定しても何も描かれないので、
+       外側に線を引く */
+    .__has_error .__uploader_input { outline: 2px solid #DC3545; outline-offset: 2px; }
     .__has_error .form-label { color: #DC3545; }
     .__field_error { color: #DC3545; font-size: 0.875em; margin: 0.25rem 0 0; }
     .__field_hint { color: #6C757D; font-size: 0.8125rem; margin: 0.25rem 0 0; }
@@ -48,7 +50,6 @@
         background: #FFF5F3;
         border-bottom: 1px solid #F0E3E0;
     }
-    .__page_head h1 { margin: 0; }
 
     /* 本体と目次を横に並べる。
        min-width: 0 が無いと、中に幅の広いものがあるときに本体が縮まず、目次が画面の外へ出る */
@@ -60,10 +61,8 @@
         margin: 2.5rem 0 1.25rem;
         padding-bottom: 0.5rem;
         border-bottom: 2px solid #DEE2E6;
-        /* 目次から飛んだときに、見出しが画面の上端に貼り付かないようにする */
-        scroll-margin-top: calc(var(--vein-offset-top) + 1rem);
     }
-    .__form_section:first-child { margin-top: 0; }
+    .__form_section:first-of-type { margin-top: 0; }
     .__form_section--title { margin: 0; font-size: 1.05rem; font-weight: 700; color: #495057; }
     .__form_section--note { margin: 0.25rem 0 0; font-size: 0.875rem; color: #6C757D; }
 
@@ -91,10 +90,12 @@
         box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.45);
     }
 
-    /* 画面の中へ運ばれるとき（Tab での移動、ページ内検索、アンカー）に、
-       上で隠れている分だけ手前で止める。要素ごとの scroll-margin-top では
-       新しく増えた移動手段を取りこぼす */
-    html { scroll-padding-top: var(--vein-offset-top); }
+    /* 画面の中へ運ばれるとき（目次からのジャンプ、Tab での移動、ページ内検索）に、
+       上で隠れている分だけ手前で止める。1rem は、貼り付いた見出しにぴったり
+       着けず、少し離して見せるための余白。
+       欄ごとの scroll-margin-top では新しく増えた移動手段を取りこぼすうえ、
+       両方書くと足し算になって余計に下がる */
+    html { scroll-padding-top: calc(var(--vein-offset-top) + 1rem); }
 
     /* メニューは見出しの行より手前に置く。見出しの行を貼り付けた際に重なり順を
        与えたため、番号を持たないメニューが下になり、狭い画面では開いても
