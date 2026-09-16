@@ -7,6 +7,7 @@ namespace AD5jp\Vein\Form\Input;
 use AD5jp\Vein\Form\Concerns\ResolvesRelations;
 use AD5jp\Vein\Form\Contracts\DeletesRelated;
 use AD5jp\Vein\Form\Contracts\Form;
+use AD5jp\Vein\Form\Contracts\ScopesErrorKeys;
 use AD5jp\Vein\Form\InputManager;
 use AD5jp\Vein\Node\Contracts\Record;
 use Exception;
@@ -128,7 +129,7 @@ class Records extends FormControl implements DeletesRelated, Form
 
         // 「追加」で複製されるテンプレート。JS が [0] を実際の添字に置換する
         $html .= '<script type="application/xml">';
-        $html .= $this->renderItem($record_model->newInstance(), $editFields, 0);
+        $html .= $this->renderItem($record_model->newInstance(), $editFields, 0, true);
         $html .= '</script>';
         $html .= '</div><!--//.__records-->';
 
@@ -260,11 +261,11 @@ class Records extends FormControl implements DeletesRelated, Form
      *
      * @param  Form[]  $editFields
      */
-    private function renderItem(Model $record, array $editFields, int $index): string
+    private function renderItem(Model $record, array $editFields, int $index, bool $as_template = false): string
     {
         return $this->as_tiles
-            ? $this->renderTile($record, $editFields, $index)
-            : $this->renderRow($record, $editFields, $index);
+            ? $this->renderTile($record, $editFields, $index, $as_template)
+            : $this->renderRow($record, $editFields, $index, $as_template);
     }
 
     /**
@@ -272,7 +273,7 @@ class Records extends FormControl implements DeletesRelated, Form
      *
      * @param  Form[]  $editFields
      */
-    private function renderFields(Model $record, array $editFields, int $index): string
+    private function renderFields(Model $record, array $editFields, int $index, bool $as_template = false): string
     {
         $row = sprintf(
             '<input type="hidden" name="%s" value="%s" />',
@@ -282,9 +283,16 @@ class Records extends FormControl implements DeletesRelated, Form
 
         foreach ($editFields as $editField) {
             // 検証のキーは images.0.caption の形になる。どの行が弾かれたのかを
-            // 行の中で示せるよう、親のキーと添字を渡しておく
-            if ($editField instanceof FormControl) {
-                $editField->withErrorKeyPrefix(sprintf('%s.%d', $this->key, $index));
+            // 行の中で示せるよう、親のキーと添字を渡しておく。Row / Group で
+            // 束ねた欄にも届くよう、受け口は ScopesErrorKeys で判定する。
+            // 「追加」の雛形は添字 0 で描くが、まだ入力されていない行なので、
+            // 0 行目のエラーを引き継がないよう、どれにも当たらないキーを渡す
+            if ($editField instanceof ScopesErrorKeys) {
+                $editField->withErrorKeyPrefix(sprintf(
+                    '%s.%s',
+                    $this->key,
+                    $as_template ? '__template' : $index,
+                ));
             }
 
             $row .= $editField->render($record);
@@ -293,7 +301,7 @@ class Records extends FormControl implements DeletesRelated, Form
         return $this->wrapKeys($row, $index);
     }
 
-    private function renderRow(Model $record, array $editFields, int $index): string
+    private function renderRow(Model $record, array $editFields, int $index, bool $as_template = false): string
     {
         $handle = $this->sort_column === null
             ? ''
@@ -302,7 +310,7 @@ class Records extends FormControl implements DeletesRelated, Form
 
         return sprintf('<div class="list-group-item __records_list_item%s">', $this->sort_column === null ? '' : ' is-sortable')
             .$handle
-            .$this->renderFields($record, $editFields, $index)
+            .$this->renderFields($record, $editFields, $index, $as_template)
             .'<button type="button" class="btn btn-sm btn-outline-secondary __records_remove"><i class="bi bi-trash"></i></button>'
             .'</div>';
     }
@@ -313,7 +321,7 @@ class Records extends FormControl implements DeletesRelated, Form
      * タイルの表側は空で出す。画像も見出しも、モーダルの中身から画面側で写す。
      * 同じ画像を 2 回埋め込まずに済み、アップロードし直したときも自動でついてくる。
      */
-    private function renderTile(Model $record, array $editFields, int $index): string
+    private function renderTile(Model $record, array $editFields, int $index, bool $as_template = false): string
     {
         $modalId = sprintf(
             '__rec_%s_%d',
@@ -342,7 +350,7 @@ class Records extends FormControl implements DeletesRelated, Form
             e($modalId),
             e($modalId),
             e($title),
-            $this->renderFields($record, $editFields, $index),
+            $this->renderFields($record, $editFields, $index, $as_template),
             e($title),
         );
     }

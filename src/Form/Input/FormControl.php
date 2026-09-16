@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Form\Input;
 
+use AD5jp\Vein\Form\Contracts\ScopesErrorKeys;
 use Closure;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
-abstract class FormControl
+abstract class FormControl implements ScopesErrorKeys
 {
     /**
      * エラーを引くときのキーの接頭辞。

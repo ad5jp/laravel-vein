@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Form\Input;
 
 use AD5jp\Vein\Form\Contracts\Form;
+use AD5jp\Vein\Form\Contracts\ScopesErrorKeys;
 use AD5jp\Vein\Form\Contracts\SearchForm;
 use Exception;
 use Illuminate\Contracts\Support\Arrayable;
@@ -41,6 +42,24 @@ class Group extends FormControl implements Form, SearchForm
         $html .= '</div>';
 
         return $html;
+    }
+
+    /**
+     * 束ねた欄も、子レコードの中では行ごとの接頭辞が要る。
+     *
+     * Group そのものは値を持たない（key は '__'）ため、受け取った接頭辞は子へ渡す。
+     */
+    public function withErrorKeyPrefix(?string $prefix): static
+    {
+        parent::withErrorKeyPrefix($prefix);
+
+        foreach ($this->children as $child) {
+            if ($child instanceof ScopesErrorKeys) {
+                $child->withErrorKeyPrefix($prefix);
+            }
+        }
+
+        return $this;
     }
 
     /**
