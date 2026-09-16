@@ -115,6 +115,7 @@ class FileUpload extends FormControl implements DeletesRelated, Form
             '<div class="__uploader" data-key="%s">'
             .'<div class="__uploader_preview row mb-2">%s</div>'
             .'<input type="file" class="__uploader_input">'
+            .'<p class="__uploader_status form-text mb-0"></p>'
             .'</div>',
             e($this->key),
             $preview_html,

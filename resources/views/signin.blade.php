@@ -6,7 +6,6 @@
 <div class="container max-width-sm">
     <h1 class="page-title">ログイン</h1>
     <section class="section">
-        {{-- TODO メッセージ --}}
         <form action="{{ route('vein.signin') }}" method="post">
             @csrf
             <div class="mb-3">

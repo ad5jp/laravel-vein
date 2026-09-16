@@ -72,13 +72,14 @@ $(function() {
                 fetch(sort_api, {
                     method: 'POST',
                     body: payload,
+                    headers: {
+                        "Accept": "application/json"
+                    },
                 })
-                .then(response => response.json())
-                .then(data => {
-
-                })
+                .then(veinReadJson)
                 .catch((error) => {
                     console.error(error);
+                    alert('並べ替えを保存できませんでした。画面を読み込み直してください。');
                 });
             } catch (e) {
                 console.error(e);
@@ -102,20 +103,10 @@ $(document).on('submit', '.__edit_form', function () {
                 "Accept": "application/json"
             },
         })
-        .then(async response => {
-            const json = await response.json();
-            if (!response.ok) {
-                console.error(json);
-                alert(json.message);
-                throw new Error(json.message);
-            }
-            return json;
-        })
-        .then(data => {
-
-        })
+        .then(veinReadJson)
         .catch((error) => {
             console.error(error);
+            alert(error.message);
         });
 
     } catch (e) {
@@ -184,12 +175,13 @@ $(document).on('click', '.__delete_button', function () {
                 "Accept": "application/json"
             },
         })
-        .then(response => response.json())
-        .then(data => {
+        .then(veinReadJson)
+        .then(() => {
             $form.remove();
         })
         .catch((error) => {
             console.error(error);
+            alert(error.message);
         });
 
     } catch (e) {
