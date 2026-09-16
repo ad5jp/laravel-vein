@@ -69,19 +69,21 @@ class EditController extends Controller
             abort(404);
         }
 
-        // バリデーション
-        if ($model->editValidatorRules()) {
+        // フィールド情報取得
+        $manager = new InputManager;
+        $editFields = $manager->parseEditField($model->editFields());
+
+        // バリデーション（required を指定した要素の規則と、モデル側の規則を併せる）
+        $rules = array_merge($this->rulesFromFields($editFields, $model), $model->editValidatorRules());
+
+        if ($rules) {
             Validator::make(
                 $request->all(),
-                $model->editValidatorRules(),
+                $rules,
                 $model->editValidatorMessages(),
                 $model->editValidatorAttributes(),
             )->validate();
         }
-
-        // フィールド情報取得
-        $manager = new InputManager;
-        $editFields = $manager->parseEditField($model->editFields());
 
         // 保存
         $record = DB::transaction(function () use ($record, $editFields, $request) {

@@ -10,7 +10,6 @@ use AD5jp\Vein\Form\Contracts\SearchForm;
 use BackedEnum;
 use Closure;
 use Exception;
-use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use ReflectionEnum;
 
@@ -54,12 +53,8 @@ class SelectEnum extends FormControl implements Form, SearchForm
         return $html;
     }
 
-    public function beforeSave(Model $model, Arrayable|array $request): Model
+    protected function applyBeforeSave(Model $model, array $request): Model
     {
-        if ($request instanceof Arrayable) {
-            $request = $request->toArray();
-        }
-
         $value = $request[$this->key] ?? null;
 
         if ($value !== null) {

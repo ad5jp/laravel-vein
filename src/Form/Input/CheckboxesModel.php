@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Form\Input;
 
+use AD5jp\Vein\Form\Concerns\ResolvesRelations;
 use AD5jp\Vein\Form\Contracts\Form;
 use Closure;
 use Exception;
-use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 
 class CheckboxesModel extends FormControl implements Form
 {
+    use ResolvesRelations;
+
     public function __construct(
         public string $key,
         public string $model,
@@ -43,7 +44,7 @@ class CheckboxesModel extends FormControl implements Form
 
     public function renderInline(Model $values): string
     {
-        [$relation_name, $saving_field] = $this->parseKey($values, $this->key);
+        [$relation_name, $saving_field] = $this->parseRelationKey($values, $this->key);
 
         $value = $values->$relation_name->map(fn (Model $related) => $related->$saving_field)->all() ?: $this->default;
         $value = old($this->key, $value);
@@ -66,22 +67,18 @@ class CheckboxesModel extends FormControl implements Form
         return $html;
     }
 
-    public function beforeSave(Model $model, Arrayable|array $request): Model
+    protected function applyBeforeSave(Model $model, array $request): Model
     {
         // DO NOTHING
         return $model;
     }
 
-    public function afterSave(Model $model, Arrayable|array $request): Model
+    protected function applyAfterSave(Model $model, array $request): Model
     {
-        if ($request instanceof Arrayable) {
-            $request = $request->toArray();
-        }
-
         // リレーションを差分更新する
 
         // キーの検査
-        [$relation_name, $saving_field] = $this->parseKey($model, $this->key);
+        [$relation_name, $saving_field] = $this->parseRelationKey($model, $this->key);
 
         // リレーションオブジェクトを取得
         /** @var HasMany $has_many */
@@ -146,30 +143,6 @@ class CheckboxesModel extends FormControl implements Form
     /**
      * @return array{0: string, 1:string}
      */
-    private function parseKey(Model $model, string $key): array
-    {
-        $segments = explode(':', $key);
-
-        if (count($segments) !== 2) {
-            throw new Exception('CheckboxesEnum の key '.$key.' の形式が不正です（relation_name:saving_field）');
-        }
-
-        [$relation_name, $saving_field] = $segments;
-
-        foreach ([$relation_name, Str::camel($relation_name)] as $relation_method_name) {
-            if (method_exists($model, $relation_method_name)) {
-                $relation = $model->$relation_method_name();
-                if ($relation instanceof HasMany) {
-                    return [$relation_name, $saving_field];
-                } else {
-                    throw new Exception('Model '.get_class($model).' の '.$relation_name.'() は HasMany リレーションではありません');
-                }
-            }
-        }
-
-        throw new Exception('Model '.get_class($model).' にリレーション '.$relation_name.' が定義されていません');
-    }
-
     protected function regulateValue(mixed $value): mixed
     {
         if ($value === null) {
