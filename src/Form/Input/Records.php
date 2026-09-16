@@ -91,7 +91,11 @@ class Records extends FormControl implements DeletesRelated, Form
         // 入力欄構築
         $html = '';
 
-        $html .= sprintf('<div class="__records mt-5 mb-5" data-nextkey="%s">', $records->count());
+        $html .= sprintf(
+            '<div class="__records mt-5 mb-5" data-records="%s" data-nextkey="%s">',
+            e($this->key),
+            $records->count(),
+        );
 
         // 欄が 1 つしか無い子レコードは、ラベルと段組みを使わず 1 行に収める。
         // 何の欄かは見出し（h5）で分かるので、行ごとのラベルは重複になる

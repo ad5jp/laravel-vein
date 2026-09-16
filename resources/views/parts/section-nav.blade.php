@@ -17,6 +17,9 @@
 @if (count($sections) >= 2)
 <style>
 .__section_nav {
+    /* 目次は「欄まで運ぶ」ためのもの。読み上げやキーボードでも先に届くよう
+       並びの先頭に置き、見た目だけを右へ寄せる */
+    order: 1;
     position: sticky;
     /* 上のバーと見出しの行の下に潜らせない */
     top: calc(var(--vein-offset-top) + 1rem);
@@ -36,6 +39,7 @@
 }
 .__section_nav--list { margin: 0; padding: 0; list-style: none; border-left: 2px solid #DEE2E6; }
 .__section_nav--list a {
+    overflow-wrap: anywhere;
     display: block;
     padding: 0.35rem 0 0.35rem 0.75rem;
     margin-left: -2px;

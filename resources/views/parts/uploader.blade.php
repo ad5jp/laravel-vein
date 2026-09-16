@@ -79,15 +79,17 @@ $(function () {
 .__records_list_item > .__records_remove {position: absolute; right: 0.5rem; top: 0; bottom: 0; width: 2rem; height: 2rem; margin: auto;}
 /* 並べ替えるもの。つまむところを左に置き、その分だけ中身を右へ寄せる */
 .__records_list_item.is-sortable {padding-left: 2.25rem;}
-.__records_handle {position: absolute; left: 0.5rem; top: 0; bottom: 0; height: 2rem; margin: auto;
-    display: flex; align-items: center; color: #ADB5BD; cursor: grab; font-size: 1.25rem;}
+/* 掴むところ。字の幅しか無いと当たり判定が細く、掴み損ねる */
+.__records_handle {position: absolute; left: 0.5rem; top: 0; bottom: 0; width: 2rem; height: 2rem; margin: auto;
+    display: flex; align-items: center; justify-content: center;
+    color: #6C757D; cursor: grab; font-size: 1.25rem;}
 .__records_handle:active {cursor: grabbing;}
 .__records_list_item.is-sortable:hover .__records_handle {color: #6C757D;}
 /* ドラッグ中に空く場所。どこへ入るかが分かるようにする。
    点線は outline で描く。border だと、その 2px 分だけ後ろの要素が下へずれる */
 .__records_placeholder,
 .__records_tile_placeholder {
-    outline: 2px dashed #ADB5BD; outline-offset: -2px;
+    outline: 2px dashed #6C757D; outline-offset: -2px;
     background: #F8F9FA;
 }
 .__records_placeholder {border-radius: 0.375rem;}
@@ -129,16 +131,14 @@ $(function () {
        行によって色が変わる。並びの後ろにあるごみ箱を手前に出して揃える。
        カードのときに右上へ浮かせる位置指定は、ここでは邪魔なので外す */
     position: relative; inset: auto;
-    width: auto; height: auto; margin: 0 0 0 -1px;
+    width: auto; margin: 0 0 0 -1px;
     display: flex; align-items: center;
     border-top-left-radius: 0; border-bottom-left-radius: 0;
-}
-/* 弾かれた欄は、その下に理由が出て行が高くなる。ごみ箱まで一緒に伸びると、
-   入力とくっついて見えなくなる。入力欄の高さに留める */
-.__records_list:is(.is-single, .is-compact) .__records_list_item:has(.__field_error) > .__records_remove {
-    align-self: flex-start;
-    /* 入力欄の高さ。Bootstrap の .form-control と同じ式だが、ごみ箱は btn-sm で
+    /* 入力欄の高さに留める。本文欄のように背の高い欄や、弾かれて理由が出た行で
+       一緒に伸びると、当たり判定が広くなりすぎて誤って押しやすい。
+       高さは Bootstrap の .form-control と同じ式だが、ごみ箱は btn-sm で
        文字が小さいため em ではなく rem で置く */
+    align-self: flex-start;
     height: calc(1.5rem + 0.75rem + 2px);
 }
 
@@ -186,10 +186,13 @@ $(function () {
     background: #F8F9FA; border-radius: 0.375rem;
 }
 .__records_tile_image img {max-width: 100%; max-height: 100%; object-fit: contain;}
-.__records_tile_blank {color: #ADB5BD; font-size: 0.8125rem;}
+.__records_tile_blank {color: #6C757D; font-size: 0.8125rem;}
 .__records_tile_label {
-    display: block; font-size: 0.8125rem; line-height: 1.4; min-height: 2.8em;
-    max-height: 2.8em; overflow: hidden; color: #212529;
+    /* 2 行で切る。切れたことが分かるよう、末尾に … を出す */
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+    font-size: 0.8125rem; line-height: 1.4;
+    /* 1 行の行でもタイルの高さが揃うよう、2 行分は確保する */
+    height: 2.8em; overflow: hidden; color: #212529;
 }
 .__records_tile_badge:not(:empty) {
     display: inline-block; margin-top: 0.25rem; padding: 0 0.375rem;
@@ -266,6 +269,28 @@ $(document).on('hidden.bs.modal input change', '.__records_tile', function () {
 
 // カード表示 / 一覧表示の切り替え。行が高いと並べ替えづらく、全体も見渡せない。
 // 掴んだ瞬間に自動で畳むと画面が飛ぶため、切り替えは明示的に行う
+// 畳んだ状態は覚えておく。並べ替えのために畳む → 弾かれて描き直される、の
+// たびに開き直すのは手間になる
+function veinViewKey($records) {
+    return 'vein:view:' + location.pathname + ':' + ($records.data('records') || '');
+}
+
+$(function () {
+    $('.__records').each(function () {
+        const $records = $(this);
+
+        try {
+            if (localStorage.getItem(veinViewKey($records)) !== 'compact') {
+                return;
+            }
+        } catch (e) {
+            return;   // 覚えられない設定でも、切り替えそのものは使える
+        }
+
+        $records.find('.__records_view button[data-view="compact"]').trigger('click');
+    });
+});
+
 $(document).on('click', '.__records_view button', function () {
     const $btn = $(this);
     const $list = $btn.closest('.__records').find('.__records_list');
@@ -273,6 +298,12 @@ $(document).on('click', '.__records_view button', function () {
     const compact = $btn.data('view') === 'compact';
 
     $list.toggleClass('is-compact', compact);
+
+    try {
+        localStorage.setItem(veinViewKey($btn.closest('.__records')), compact ? 'compact' : 'detail');
+    } catch (e) {
+        // 覚えられなくても、切り替えそのものは効く
+    }
 
     $btn.addClass('active').attr('aria-pressed', 'true')
         .siblings().removeClass('active').attr('aria-pressed', 'false');
