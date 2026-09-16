@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Http\Controllers;
 
 use AD5jp\Vein\Form\InputManager;
-use AD5jp\Vein\Node\NodeManager;
 use AD5jp\Vein\Node\Contracts\Entry;
 use AD5jp\Vein\Node\Contracts\Page;
 use AD5jp\Vein\Node\Contracts\Taxonomy;
-use Illuminate\Database\Eloquent\Model;
+use AD5jp\Vein\Node\NodeManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +20,7 @@ class EditController extends Controller
 {
     public function init(string $node, mixed $id = null): View
     {
-        $manager = new NodeManager();
+        $manager = new NodeManager;
         $model = $manager->resolve($node);
 
         if ($model === null) {
@@ -40,7 +39,7 @@ class EditController extends Controller
         }
 
         // フィールド情報取得
-        $manager = new InputManager();
+        $manager = new InputManager;
         $editFields = $manager->parseEditField($model->editFields());
 
         return view($view, [
@@ -53,7 +52,7 @@ class EditController extends Controller
 
     public function save(Request $request, string $node, mixed $id = null): RedirectResponse|JsonResponse
     {
-        $manager = new NodeManager();
+        $manager = new NodeManager;
         $model = $manager->resolve($node);
 
         if ($model === null) {
@@ -80,7 +79,7 @@ class EditController extends Controller
         }
 
         // フィールド情報取得
-        $manager = new InputManager();
+        $manager = new InputManager;
         $editFields = $manager->parseEditField($model->editFields());
 
         // 保存
@@ -107,14 +106,14 @@ class EditController extends Controller
 
     public function delete(string $node, mixed $id): RedirectResponse|JsonResponse
     {
-        $manager = new NodeManager();
+        $manager = new NodeManager;
         $model = $manager->resolve($node);
 
         if ($model === null) {
             abort(404);
         }
 
-        if (!$model instanceof Entry && !$model instanceof Taxonomy) {
+        if (! $model instanceof Entry && ! $model instanceof Taxonomy) {
             abort(404);
         }
 

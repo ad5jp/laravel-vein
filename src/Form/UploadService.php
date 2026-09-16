@@ -24,15 +24,15 @@ class UploadService
 
         $svg = sprintf(
             '<svg xmlns="http://www.w3.org/2000/svg" width="%s" height="40">'
-            . '<style>'
-            . '    text {font-size: 20px; fill: #333; }'
-            . '</style>'
-            . '<text x="10" y="30">%s</text>'
-            . '</svg>',
+            .'<style>'
+            .'    text {font-size: 20px; fill: #333; }'
+            .'</style>'
+            .'<text x="10" y="30">%s</text>'
+            .'</svg>',
             $width,
             $text
         );
 
-        return 'data:image/svg+xml;base64,' . base64_encode($svg);
+        return 'data:image/svg+xml;base64,'.base64_encode($svg);
     }
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace AD5jp\Vein\Form\Contracts;
 
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 interface Form

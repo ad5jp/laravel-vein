@@ -27,10 +27,10 @@ class SelectEnum extends FormControl implements Form, SearchForm
         public ?Closure $afterSaving = null,
         public ?Closure $searching = null,
     ) {
-        if (!enum_exists($enum)) {
+        if (! enum_exists($enum)) {
             throw new Exception("{$enum} は Enum ではありません");
         }
-        if (!is_subclass_of($enum, BackedEnum::class)) {
+        if (! is_subclass_of($enum, BackedEnum::class)) {
             throw new Exception("{$enum} は BackedEnum ではありません");
         }
 
@@ -64,13 +64,14 @@ class SelectEnum extends FormControl implements Form, SearchForm
 
         if ($value !== null) {
             if (is_numeric($value)) {
-                $value = (int)$value;
+                $value = (int) $value;
             }
 
             $value = ($this->enum)::from($value);
         }
 
         $model->{$this->key} = $value;
+
         return $model;
     }
 
@@ -102,9 +103,9 @@ class SelectEnum extends FormControl implements Form, SearchForm
 
         $ref = new ReflectionEnum($this->enum);
         if ($ref->getBackingType()->getName() === 'int') {
-            return ($this->enum)::tryFrom((int)$value);
+            return ($this->enum)::tryFrom((int) $value);
         }
 
-        return ($this->enum)::tryFrom((string)$value);
+        return ($this->enum)::tryFrom((string) $value);
     }
 }

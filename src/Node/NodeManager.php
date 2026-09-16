@@ -14,9 +14,9 @@ class NodeManager
         $namespaces = config('vein.model_namespaces');
 
         foreach ($namespaces as $namespace) {
-            $model_classname = $namespace . '\\' . Str::pascal($node_name);
+            $model_classname = $namespace.'\\'.Str::pascal($node_name);
             if (class_exists($model_classname)) {
-                return new $model_classname();
+                return new $model_classname;
             }
         }
 

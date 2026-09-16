@@ -16,13 +16,13 @@ class ServiceProvider extends SupportServiceProvider
     public function boot(): void
     {
         // routing
-        $this->loadRoutesFrom(__DIR__ . '/../routes/vein.php');
+        $this->loadRoutesFrom(__DIR__.'/../routes/vein.php');
 
         // views
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'vein');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'vein');
 
         FacadesView::composer('vein::*', function (View $view) {
-            $manager = new NavigationManager();
+            $manager = new NavigationManager;
             $navs = $manager->generate();
             $view->with('navs', $navs);
         });
@@ -47,15 +47,15 @@ class ServiceProvider extends SupportServiceProvider
 
         // publish config & assets
         $this->publishes([
-            __DIR__ . '/../config/vein.php' => config_path('vein.php'),
-            //__DIR__ . '/../assets/admin.css' => public_path('vein-assets/admin.css'),
-            //__DIR__ . '/../assets/bootstrap.js' => public_path('vein-assets/bootstrap.js'),
-            __DIR__ . '/../assets' => public_path('vein-assets'),
+            __DIR__.'/../config/vein.php' => config_path('vein.php'),
+            // __DIR__ . '/../assets/admin.css' => public_path('vein-assets/admin.css'),
+            // __DIR__ . '/../assets/bootstrap.js' => public_path('vein-assets/bootstrap.js'),
+            __DIR__.'/../assets' => public_path('vein-assets'),
         ]);
     }
 
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/vein.php', 'vein');
+        $this->mergeConfigFrom(__DIR__.'/../config/vein.php', 'vein');
     }
 }

@@ -12,7 +12,6 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class Records extends FormControl implements Form
@@ -24,7 +23,7 @@ class Records extends FormControl implements Form
         $record_model = $relation->getRelated();
 
         // フィールド情報取得
-        $manager = new InputManager();
+        $manager = new InputManager;
         $editFields = $manager->parseEditField($record_model->editFields());
 
         // リレーションデータ取得
@@ -111,7 +110,7 @@ class Records extends FormControl implements Form
         $record_model = $relation->getRelated();
         $foreign_key = $relation->getForeignKeyName();
 
-        $manager = new InputManager();
+        $manager = new InputManager;
         $editFields = $manager->parseEditField($record_model->editFields());
 
         /** @var Collection<Model> */
@@ -134,7 +133,7 @@ class Records extends FormControl implements Form
 
         // delete missing records
         $request_records_keys = array_column($request_records, $record_model->getKeyName());
-        $exist_records->filter(fn (Model $row) => !in_array($row->getKey(), $request_records_keys))
+        $exist_records->filter(fn (Model $row) => ! in_array($row->getKey(), $request_records_keys))
             ->each(fn (Model $row) => $row->delete());
 
         return $model;
@@ -146,20 +145,20 @@ class Records extends FormControl implements Form
             if (method_exists($model, $relation_method_name)) {
                 $relation = $model->$relation_method_name();
 
-                if (!$relation instanceof HasMany) {
-                    throw new Exception('Model ' . get_class($model) . ' の ' . $relation_method_name . '() は HasMany リレーションではありません');
+                if (! $relation instanceof HasMany) {
+                    throw new Exception('Model '.get_class($model).' の '.$relation_method_name.'() は HasMany リレーションではありません');
                 }
 
                 $file_model = $relation->getRelated();
-                if (!$file_model instanceof Record) {
-                    throw new Exception('Model ' . get_class($file_model) . ' は File インターフェイスを実装していません');
+                if (! $file_model instanceof Record) {
+                    throw new Exception('Model '.get_class($file_model).' は File インターフェイスを実装していません');
                 }
 
                 return $relation;
             }
         }
 
-        throw new Exception('Model ' . get_class($model) . ' にリレーション ' . $key . ' が定義されていません');
+        throw new Exception('Model '.get_class($model).' にリレーション '.$key.' が定義されていません');
     }
 
     private function wrapName(array $matches, int $index): string
