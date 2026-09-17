@@ -49,6 +49,10 @@ abstract class TestCase extends Orchestra
 
             $config->set('database.default', 'testing');
 
+            // SQLite は既定で外部キーを見ない。利用側（ad5jp）は外部キーを入れるので、
+            // ここを切ったままだと削除の順序を間違えてもテストで出ない。
+            $config->set('database.connections.testing.foreign_key_constraints', true);
+
             $config->set('auth.defaults.guard', 'web');
             $config->set('auth.guards.web', [
                 'driver' => 'session',
@@ -74,6 +78,10 @@ abstract class TestCase extends Orchestra
      *
      * 親 1 件に子 N 件がぶら下がる最小構成。Records フォームコントロールの
      * 挙動（AD5-58 以降）を確かめられる形にしてある。
+     *
+     * ファイルへの参照には外部キー（RESTRICT）を張ってある。利用側（ad5jp）が
+     * 入れる形と同じで、ここを張っておかないと削除の順序を間違えてもテストで出ない。
+     * 指されている行が残っている間はファイルを消せない、が効くようになる。
      */
     protected function createFixtureSchema(): void
     {
@@ -86,10 +94,22 @@ abstract class TestCase extends Orchestra
             $table->timestamps();
         });
 
+        Schema::create((new TestFile)->getTable(), function ($table): void {
+            $table->id();
+            $table->string('file_name');
+            $table->string('file_path');
+            $table->string('mime_type');
+            $table->unsignedBigInteger('file_size');
+            $table->timestamps();
+        });
+
         Schema::create((new TestEntry)->getTable(), function ($table): void {
             $table->id();
             $table->string('title');
             $table->text('body')->nullable();
+            // 親が直接ファイルを指す形（ad5jp の m_works.thumbnail_file_id にあたる）
+            $table->foreignId('test_file_id')->nullable()
+                ->constrained('test_files')->restrictOnDelete();
             $table->timestamps();
         });
 
@@ -100,20 +120,15 @@ abstract class TestCase extends Orchestra
             $table->softDeletes();
         });
 
-        Schema::create((new TestFile)->getTable(), function ($table): void {
-            $table->id();
-            $table->string('file_name');
-            $table->string('file_path');
-            $table->string('mime_type');
-            $table->unsignedBigInteger('file_size');
-            $table->timestamps();
-        });
-
         Schema::create((new TestRecord)->getTable(), function ($table): void {
             $table->id();
+            // 親は TestEntry と TestSoftEntry の 2 種類が入るため、外部キーは張らない
+            // （張ると論理削除側のテストが親を作れなくなる）
             $table->foreignId('test_entry_id');
             $table->string('caption')->nullable();
-            $table->foreignId('test_file_id')->nullable();
+            // 参照（他人を指す）なので、指されている間は消させない
+            $table->foreignId('test_file_id')->nullable()
+                ->constrained('test_files')->restrictOnDelete();
             $table->json('tags')->nullable();
             $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();

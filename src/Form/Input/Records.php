@@ -14,6 +14,8 @@ use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class Records extends FormControl implements DeletesRelated, Form
 {
@@ -231,6 +233,13 @@ class Records extends FormControl implements DeletesRelated, Form
             }
 
             $record->save();
+
+            // 子の入力欄にも保存後の処理がある（FileUpload は旧ファイルをここで消す）。
+            // 親の外部キーが新しいファイルに向いたあとでなければ消せない
+            foreach ($editFields as $editField) {
+                $record = $editField->afterSave($record, $request_record);
+            }
+
             $position++;
         }
 
@@ -242,33 +251,84 @@ class Records extends FormControl implements DeletesRelated, Form
                 fn ($key) => $this->isFilledKey($key),
             ),
         );
-        $exist_records->filter(fn (Model $row) => ! in_array((string) $row->getKey(), $request_records_keys, true))
-            ->each(fn (Model $row) => $row->delete());
+        // 画面から外された行。持っていたファイルも一緒に片付ける。
+        // 行だけ消すとファイルが誰からも指されないまま残る
+        $removed = $exist_records
+            ->filter(fn (Model $row) => ! in_array((string) $row->getKey(), $request_records_keys, true));
+
+        $deleting_fields = array_values(array_filter(
+            $editFields,
+            static fn ($editField) => $editField instanceof DeletesRelated,
+        ));
+
+        $files = [];
+
+        foreach ($removed as $row) {
+            foreach ($deleting_fields as $editField) {
+                $files = array_merge($files, $editField->collectFiles($row, true));
+            }
+        }
+
+        $removed->each(fn (Model $row) => $row->delete());
+
+        foreach ($files as $pending) {
+            $path = $pending->file->getFilePath();
+            $disk = $pending->disk;
+
+            DB::afterCommit(static fn () => Storage::disk($disk)->delete($path));
+
+            $pending->file->delete();
+        }
 
         return $model;
     }
 
     /**
-     * 親が削除されるとき、子レコードも消す。
+     * 親が削除されるとき、子が持っているファイルを「あとで消す対象」として返す。
      *
-     * 子がさらにファイルを持つことがあるので、子の editFields も辿る。
+     * **親を消したあとでは辿れない。** 外部キーの ON DELETE CASCADE で子行が
+     * 落ちてしまい、リレーションが空を返すため、集めるのは必ず親より前。
      */
-    public function deleteRelated(Model $model): void
+    public function collectFiles(Model $model, bool $row_will_be_removed): array
     {
-        $relation = $this->relation($model);
+        $files = [];
 
-        $manager = new InputManager;
-        $editFields = $manager->parseEditField($relation->getRelated()->editFields());
-
+        // 子行は必ず消えるので、親が残る場合でも子のファイルは集める
         foreach ($model->{$this->key} as $record) {
-            foreach ($editFields as $editField) {
-                if ($editField instanceof DeletesRelated) {
-                    $editField->deleteRelated($record);
-                }
+            foreach ($this->childDeletingFields($model) as $editField) {
+                $files = array_merge($files, $editField->collectFiles($record, true));
+            }
+        }
+
+        return $files;
+    }
+
+    public function deleteRows(Model $model): void
+    {
+        foreach ($model->{$this->key} as $record) {
+            foreach ($this->childDeletingFields($model) as $editField) {
+                $editField->deleteRows($record);
             }
 
             $record->delete();
         }
+    }
+
+    /**
+     * 子の入力欄のうち、片付けを受け持つものだけ。
+     *
+     * @return list<DeletesRelated>
+     */
+    private function childDeletingFields(Model $model): array
+    {
+        $relation = $this->relation($model);
+
+        $editFields = (new InputManager)->parseEditField($relation->getRelated()->editFields());
+
+        return array_values(array_filter(
+            $editFields,
+            static fn ($editField) => $editField instanceof DeletesRelated,
+        ));
     }
 
     /**
