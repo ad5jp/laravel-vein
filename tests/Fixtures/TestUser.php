@@ -19,4 +19,14 @@ class TestUser extends Authenticatable
     protected $fillable = ['name', 'email', 'password'];
 
     protected $hidden = ['password', 'remember_token'];
+
+    /**
+     * 実運用と同じく、ハッシュ化はモデルが受け持つ。
+     *
+     * InputPassword はハッシュ化しない前提なので、ここを外すと平文が入る。
+     */
+    protected function casts(): array
+    {
+        return ['password' => 'hashed'];
+    }
 }
