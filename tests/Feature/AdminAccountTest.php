@@ -31,6 +31,29 @@ class AdminAccountTest extends TestCase
         ]);
     }
 
+    /**
+     * ログインできて、かつノードでもある行を作ってログインする。
+     *
+     * 利用側の管理者マスタと同じ形。Fixtures に置くと NodeManager が拾って
+     * メニューが増えるため、その場で作る。
+     */
+    private function signInAsNode(string $title = '本人'): TestEntry
+    {
+        $user = new class extends TestEntry implements AuthenticatableContract
+        {
+            use Authenticatable;
+        };
+
+        $user->title = $title;
+        $user->save();
+
+        config()->set('auth.providers.test_users.model', $user::class);
+
+        $this->actingAs($user);
+
+        return $user;
+    }
+
     private function url(string $path): string
     {
         return sprintf('/%s/%s', config('vein.admin_uri'), $path);
@@ -207,6 +230,51 @@ class AdminAccountTest extends TestCase
             ->assertSee('いまのパスワードが違います。');
     }
 
+    /**
+     * 自分のパスワードは、この欄では変えない。
+     *
+     * 専用の画面は「いまのパスワード」を求めるのに、一覧から自分の行を開けば
+     * 素通りで変えられた。**迂回路があるほうに合わせる。**
+     */
+    public function test_自分の行ではパスワード欄を出さない(): void
+    {
+        $me = $this->signInAsNode();
+
+        $html = (new InputPassword(key: 'password', label: 'パスワード'))
+            ->hint('変えないときは空のままにします')
+            ->renderColumn($me);
+
+        $this->assertStringNotContainsString('type="password"', $html);
+        // 消すだけだと、どこで変えるのか分からなくなる
+        $this->assertStringContainsString(route('vein.password'), $html);
+        // 当てはまらなくなったヒントは残さない
+        $this->assertStringNotContainsString('空のままにします', $html);
+    }
+
+    /** 画面を隠すだけでは足りない。組み立てた POST でも書き換えさせない。 */
+    public function test_自分の行は送られてきても書き換えない(): void
+    {
+        $me = $this->signInAsNode();
+
+        $saved = (new InputPassword(key: 'password'))->beforeSave($me, ['password' => 'yokose-1']);
+
+        $this->assertNull($saved->getAttribute('password'));
+    }
+
+    /** ほかの人の行では、今までどおり欄が出て、設定できる。 */
+    public function test_ほかの人の行では今までどおり設定できる(): void
+    {
+        $this->signInAsNode();
+
+        $other = TestEntry::create(['title' => 'ほかの人']);
+
+        $html = (new InputPassword(key: 'password', label: 'パスワード'))->renderColumn($other);
+        $this->assertStringContainsString('type="password"', $html);
+
+        $saved = (new InputPassword(key: 'password'))->beforeSave($other, ['password' => 'secret-9']);
+        $this->assertSame('secret-9', $saved->getAttribute('password'));
+    }
+
     // ── 自分が誰か分かる ────────────────────────────
 
     /**
@@ -234,17 +302,7 @@ class AdminAccountTest extends TestCase
      */
     public function test_呼び名は一覧の先頭列から取る(): void
     {
-        // ログインできて、かつノードでもあるモデル（利用側の管理者マスタと同じ形）。
-        // Fixtures に置くと NodeManager が拾ってメニューが増えるため、その場で作る
-        $user = new class extends TestEntry implements AuthenticatableContract
-        {
-            use Authenticatable;
-        };
-
-        $user->title = '呼ばれたい名前';
-        $user->save();
-
-        $this->actingAs($user);
+        $this->signInAsNode('呼ばれたい名前');
 
         $this->assertSame('呼ばれたい名前', AdminGuard::displayName());
     }
