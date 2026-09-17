@@ -4,6 +4,16 @@
 <div class="container max-width-sm">
   <h1 class="page-title">パスワードの変更</h1>
   <section class="section">
+    @if ($errors->any())
+    <div class="alert alert-danger">
+      <ul class="mb-0">
+        @foreach ($errors->all() as $error)
+        <li>{{ $error }}</li>
+        @endforeach
+      </ul>
+    </div>
+    @endif
+
     <form action="{{ route('vein.password') }}" method="post">
       @csrf
       <div class="mb-3">
