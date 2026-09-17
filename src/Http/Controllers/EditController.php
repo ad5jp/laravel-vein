@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Http\Controllers;
 
+use AD5jp\Vein\Auth\LockoutGuard;
 use AD5jp\Vein\Form\InputManager;
 use AD5jp\Vein\Node\Contracts\Entry;
 use AD5jp\Vein\Node\Contracts\Page;
@@ -143,6 +144,18 @@ class EditController extends Controller
 
         // 対象データ取得
         $record = $model->findOrFail($id);
+
+        // 管理者が自分を締め出すのを止める。経路はここ 1 つなので、
+        // 一覧からでも編集画面からでも効く
+        $reason = LockoutGuard::reasonToKeep($record);
+
+        if ($reason !== null) {
+            if ($model instanceof Entry) {
+                return back()->with('message.error', $reason);
+            }
+
+            return response()->json(['message' => $reason], 422);
+        }
 
         // 削除（子レコードとファイルも片付ける）
         (new NodeDeleter)->delete($record);
