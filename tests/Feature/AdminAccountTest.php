@@ -187,6 +187,23 @@ class AdminAccountTest extends TestCase
         $this->assertTrue(Hash::check('secret-1', $user->fresh()->getAuthPassword()));
     }
 
+    /** 弾いた理由が画面に出る。出さないと、押しても何も起きないように見える。 */
+    public function test_弾いた理由が画面に出る(): void
+    {
+        $user = $this->makeUser(password: 'secret-1');
+
+        $this->actingAs($user)->post($this->url('password'), [
+            'current_password' => 'まちがい',
+            'password' => 'secret-2',
+            'password_confirmation' => 'secret-2',
+        ]);
+
+        $this->actingAs($user)
+            ->get($this->url('password'))
+            ->assertOk()
+            ->assertSee('いまのパスワードが違います。');
+    }
+
     // ── 締め出し防止 ────────────────────────────────
 
     public function test_自分自身は消せない(): void
