@@ -286,7 +286,9 @@ class FileUpload extends FormControl implements DeletesRelated, Form
             $new_file->setFileName($json['file_name']);
             $new_file->setFilePath($store_path);
             $new_file->setMimeType($mime_type);
-            $new_file->setFileSize($json['file_size']);
+            // 送られてきた file_size も hidden input 由来なので信用しない。
+            // 置いた実体から取る（mime_type と同じ扱い）
+            $new_file->setFileSize(Storage::disk($this->disk)->size($store_path));
             $new_file->save();
 
             $model->$foreign_key = $new_file->getKey();
