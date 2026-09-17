@@ -37,7 +37,8 @@
             @endforeach
             @include('vein::parts.save-bar', [
                 'label' => '更新',
-                'deleteLabel' => 'この'.$model->menuName().'を削除',
+                'deleteLabel' => $deleteReason === null ? 'この'.$model->menuName().'を削除' : null,
+                'deleteNote' => $deleteReason,
             ])
         </form>
     </section>

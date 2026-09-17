@@ -8,6 +8,9 @@
  * 削除のフォームは別にある（フォームは入れ子にできない）。ボタンの form 属性で
  * そちらへ送り、見た目だけをこの行に持ってくる。$deleteLabel を渡した画面にだけ出る。
  *
+ * 消せない行（自分自身・最後の 1 人）では $deleteLabel の代わりに $deleteNote が
+ * 来る。ボタンを出さず、なぜ無いのかをその場に書く。
+ *
  * @see resources/views/entry-edit.blade.php
  * @see resources/views/entry-add.blade.php
  */
@@ -32,11 +35,19 @@
 }
 /* 更新との距離を、その画面で取れるだけ取る */
 .__save_bar--delete { margin-right: auto; }
+.__save_bar--note {
+    margin: 0 auto 0 0;
+    /* ボタンより小さく、灰色で。押せるものと見間違えさせない */
+    font-size: 0.875rem;
+    color: #6C757D;
+}
 </style>
 <div class="__save_bar">
-    @isset($deleteLabel)
+    @if (! empty($deleteLabel))
     <button type="submit" form="delete"
         class="btn btn-sm btn-outline-danger __confirm_delete __save_bar--delete">{{ $deleteLabel }}</button>
-    @endisset
+    @elseif (! empty($deleteNote))
+    <p class="__save_bar--note"><i class="bi bi-lock" aria-hidden="true"></i> {{ $deleteNote }}</p>
+    @endif
     <button type="submit" class="btn btn-primary">{{ $label }}</button>
 </div>
