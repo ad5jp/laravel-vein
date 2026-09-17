@@ -124,11 +124,35 @@ class NodeDeleter
             return [];
         }
 
-        $editFields = (new InputManager)->parseEditField($record->editFields());
+        return $this->collectDeleting((new InputManager)->parseEditField($record->editFields()));
+    }
 
-        return array_values(array_filter(
-            $editFields,
-            static fn ($editField) => $editField instanceof DeletesRelated,
-        ));
+    /**
+     * 束ねているだけの要素（Row / Group）の中も辿る。
+     *
+     * 横に並べたい画像欄は Row の中に置かれる。最上位だけを見ていると、
+     * その画像がレコードも実体も残り、どこからも辿れない孤児になる。
+     *
+     * @param  array<mixed>  $editFields
+     * @return list<DeletesRelated>
+     */
+    private function collectDeleting(array $editFields): array
+    {
+        $found = [];
+
+        foreach ($editFields as $editField) {
+            if ($editField instanceof DeletesRelated) {
+                $found[] = $editField;
+
+                // 子レコードの分は Records 自身が受け持つので、その中は辿らない
+                continue;
+            }
+
+            if (is_object($editField) && property_exists($editField, 'children') && is_array($editField->children)) {
+                $found = array_merge($found, $this->collectDeleting($editField->children));
+            }
+        }
+
+        return $found;
     }
 }
