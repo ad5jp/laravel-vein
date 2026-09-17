@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Tests\Feature;
 
+use AD5jp\Vein\Auth\AdminGuard;
 use AD5jp\Vein\Auth\LockoutGuard;
 use AD5jp\Vein\Form\Input\InputPassword;
 use AD5jp\Vein\Tests\Fixtures\TestEntry;
 use AD5jp\Vein\Tests\Fixtures\TestUser;
 use AD5jp\Vein\Tests\TestCase;
+use Illuminate\Auth\Authenticatable;
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Support\Facades\Hash;
 
 /**
@@ -202,6 +205,127 @@ class AdminAccountTest extends TestCase
             ->get($this->url('password'))
             ->assertOk()
             ->assertSee('いまのパスワードが違います。');
+    }
+
+    // ── 自分が誰か分かる ────────────────────────────
+
+    /**
+     * ログイン中のアカウントをヘッダーに出す。
+     *
+     * 管理者が複数居ると、「自分は消せない」も「パスワードの変更」も、どの
+     * アカウントの話なのか画面から読み取れなくなる。
+     */
+    public function test_ヘッダーにログイン中のアカウントが出る(): void
+    {
+        $this->actingAs($this->makeUser('me@example.com'))
+            ->get($this->url(''))
+            ->assertOk()
+            ->assertSee('me@example.com')
+            // 操作（パスワードの変更・ログアウト）はここにぶら下げる
+            ->assertSee('パスワードの変更')
+            ->assertSee('ログアウト');
+    }
+
+    /**
+     * 呼び名はノードの一覧の先頭列から取る。
+     *
+     * どの列が名前かは導入先ごとに違う。取り決めを新しく作らず、一覧でその行を
+     * 見分けるために選ばれた列をそのまま使う。
+     */
+    public function test_呼び名は一覧の先頭列から取る(): void
+    {
+        // ログインできて、かつノードでもあるモデル（利用側の管理者マスタと同じ形）。
+        // Fixtures に置くと NodeManager が拾ってメニューが増えるため、その場で作る
+        $user = new class extends TestEntry implements AuthenticatableContract
+        {
+            use Authenticatable;
+        };
+
+        $user->title = '呼ばれたい名前';
+        $user->save();
+
+        $this->actingAs($user);
+
+        $this->assertSame('呼ばれたい名前', AdminGuard::displayName());
+    }
+
+    /** ノードでなければ name 列を見る。それも無ければメールアドレスだけで出す。 */
+    public function test_ノードでなければ_name_列を使う(): void
+    {
+        $this->actingAs($this->makeUser('only-mail@example.com'));
+
+        $this->assertSame('管理者', AdminGuard::displayName());
+        $this->assertSame('only-mail@example.com', AdminGuard::label());
+    }
+
+    /** ログインしていない画面には出さない。 */
+    public function test_ログイン前は出さない(): void
+    {
+        $this->makeUser('me@example.com');
+
+        $this->get($this->url('signin'))
+            ->assertOk()
+            ->assertDontSee('me@example.com');
+    }
+
+    /**
+     * 一覧で自分の行が分かる。
+     *
+     * ログインできるモデルをノードにした状態を作る（provider をノードへ向ける）。
+     * TestEntry と TestUser は別の表で、どちらも id が 1 から振られる。1 件目
+     * どうしなら重なるので、それを使って「自分」を作る。
+     */
+    public function test_一覧で自分の行に印が付く(): void
+    {
+        $me = TestEntry::create(['title' => 'わたし']);
+        TestEntry::create(['title' => 'ほかの人']);
+
+        config()->set('auth.providers.test_users.model', TestEntry::class);
+
+        $user = $this->makeUser();
+        $this->assertSame($me->getKey(), $user->getKey(), 'id が重ならないと「自分」にならない');
+
+        $html = $this->actingAs($user)
+            ->get($this->url('test_entry'))
+            ->assertOk()
+            ->getContent();
+
+        // 並び順に頼らず、印がどの行に付いたかで見る
+        $this->assertMatchesRegularExpression('/わたし\s*<span class="badge[^"]*">自分<\/span>/u', $html);
+        $this->assertSame(1, substr_count($html, '>自分</span>'), '印が付くのは 1 行だけ');
+    }
+
+    /**
+     * 消せない行では、削除ボタンを出さずに理由を書く。
+     *
+     * 押させて「元に戻せません」を通らせたうえで断ると、確認の重みが薄れる。
+     */
+    public function test_消せない行では削除ボタンを出さない(): void
+    {
+        $entry = TestEntry::create(['title' => '最後の 1 人']);
+
+        config()->set('auth.providers.test_users.model', TestEntry::class);
+
+        // id を重ねない。ここで見たいのは「自分」ではなく「最後の 1 人」の側
+        $this->makeUser('first@example.com');
+
+        $this->actingAs($this->makeUser('second@example.com'))
+            ->get($this->url("test_entry/{$entry->getKey()}"))
+            ->assertOk()
+            ->assertSee('ログインできる人が居なくなるため削除できません。')
+            // 文言ではなくボタンそのもので見る。削除フォームへ送る唯一の要素
+            ->assertDontSee('form="delete"', false);
+    }
+
+    /** ふつうの行では、今までどおり削除ボタンが出る。 */
+    public function test_消せる行では削除ボタンが出る(): void
+    {
+        $entry = TestEntry::create(['title' => '消せる']);
+
+        $this->actingAs($this->makeUser())
+            ->get($this->url("test_entry/{$entry->getKey()}"))
+            ->assertOk()
+            ->assertSee('form="delete"', false);
     }
 
     // ── 締め出し防止 ────────────────────────────────
