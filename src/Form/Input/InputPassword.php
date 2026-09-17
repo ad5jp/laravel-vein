@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Form\Input;
 
+use AD5jp\Vein\Auth\LockoutGuard;
 use AD5jp\Vein\Form\Contracts\Form;
 use Illuminate\Database\Eloquent\Model;
 
@@ -24,10 +25,36 @@ use Illuminate\Database\Eloquent\Model;
  *   1. 保存済みの値を画面に出さない（素の InputText だと value にハッシュが載る）
  *   2. 空で送られたら、その欄を保存の対象から外す（変えないつもりの保存で消さない）
  *   3. 確認用の再入力と突き合わせる（打ち間違いで入れなくなるのを防ぐ）
+ *   4. **自分自身の行では欄を出さない**（下記）
+ *
+ * ## 自分のパスワードはここでは変えない
+ *
+ * 専用の画面（@see PasswordController）は「いまのパスワード」を求める。席を離れた
+ * 隙に変えられるのを防ぐためだが、**一覧から自分の行を開いて変えられるなら、その
+ * 関門は意味を持たない。** 迂回路があるほうに合わせて、ここでは変えさせない。
+ *
+ * 欄を消すだけだと、どこで変えるのか分からなくなるので行き先を置く。
  */
 class InputPassword extends FormControl implements Form
 {
     protected bool $labelled_input = true;
+
+    /** その行が、いまログインしている本人か。 */
+    private function isSelf(Model $model): bool
+    {
+        return LockoutGuard::isCurrentUser($model);
+    }
+
+    public function renderColumn(Model $values): string
+    {
+        if ($this->isSelf($values)) {
+            // 「変えないときは空のままにします」は当てはまらなくなる。必須の印も外す
+            $this->hint = null;
+            $this->required = false;
+        }
+
+        return parent::renderColumn($values);
+    }
 
     /** 確認用の欄の名前。Laravel の confirmed 規則がこの形を探す。 */
     private function confirmationKey(): string
@@ -37,6 +64,16 @@ class InputPassword extends FormControl implements Form
 
     public function renderInline(Model $values): string
     {
+        if ($this->isSelf($values)) {
+            return sprintf(
+                '<p class="__field_hint mb-0">%s<a href="%s">%s</a>%s</p>',
+                e('自分のパスワードは'),
+                e(route('vein.password')),
+                e('パスワードの変更'),
+                e('から変えます。'),
+            );
+        }
+
         // value 属性そのものを付けない。空文字を入れるのではなく、出さない
         return sprintf(
             '<input type="password" name="%s" class="form-control" autocomplete="new-password"%s>'
@@ -57,6 +94,12 @@ class InputPassword extends FormControl implements Form
      */
     protected function applyBeforeSave(Model $model, array $request): Model
     {
+        // 欄を出していないので、送られてきても受け取らない。
+        // 画面を隠すだけでは、組み立てた POST で書き換えられる
+        if ($this->isSelf($model)) {
+            return $model;
+        }
+
         $value = $request[$this->key] ?? null;
 
         if ($value === null || $value === '') {
@@ -76,6 +119,10 @@ class InputPassword extends FormControl implements Form
      */
     public function validationRules(Model $model): array
     {
+        if ($this->isSelf($model)) {
+            return [];
+        }
+
         $rules = ['confirmed'];
 
         if ($this->required && ! $model->exists) {
