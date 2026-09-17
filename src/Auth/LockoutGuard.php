@@ -38,6 +38,17 @@ class LockoutGuard
         return null;
     }
 
+    /**
+     * その行が、いまログインしている本人か。
+     *
+     * 一覧で「これは自分」と示すために使う。消せない理由（reasonToKeep）とは分ける。
+     * 最後の 1 人も消せないが、それは「自分」ではない。
+     */
+    public static function isCurrentUser(Model $record): bool
+    {
+        return self::isSignInModel($record) && self::isSelf($record);
+    }
+
     private static function isSignInModel(Model $record): bool
     {
         $model = AdminGuard::model();

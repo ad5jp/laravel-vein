@@ -30,9 +30,14 @@ class EditController extends Controller
         }
 
         // 更新対象レコード取得
+        $deleteReason = null;
+
         if ($model instanceof Entry) {
             $record = $model->findOrFail($id);
             $view = 'vein::entry-edit';
+            // 消せない行では、押させてから弾くのではなく最初からボタンを出さない。
+            // 「元に戻せません」を通らせておいて断るのは、確認の重みを削る
+            $deleteReason = LockoutGuard::reasonToKeep($record);
         } elseif ($model instanceof Page) {
             $record = $model->firstOrNew();
             $view = 'vein::page-edit';
@@ -49,6 +54,7 @@ class EditController extends Controller
             'model' => $model,
             'record' => $record,
             'editFields' => $editFields,
+            'deleteReason' => $deleteReason,
         ]);
     }
 
