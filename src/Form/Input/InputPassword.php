@@ -47,13 +47,26 @@ class InputPassword extends FormControl implements Form
 
     public function renderColumn(Model $values): string
     {
-        if ($this->isSelf($values)) {
-            // 「変えないときは空のままにします」は当てはまらなくなる。必須の印も外す
-            $this->hint = null;
-            $this->required = false;
+        if (! $this->isSelf($values)) {
+            return parent::renderColumn($values);
         }
 
-        return parent::renderColumn($values);
+        // 「変えないときは空のままにします」は当てはまらなくなる。必須の印も外す。
+        //
+        // **元に戻す。** 欄の実体は行をまたいで使い回される（@see Records::renderFields）
+        // ので、消したままにすると次の行からヒントと必須の印が落ちる
+        $hint = $this->hint;
+        $required = $this->required;
+
+        $this->hint = null;
+        $this->required = false;
+
+        try {
+            return parent::renderColumn($values);
+        } finally {
+            $this->hint = $hint;
+            $this->required = $required;
+        }
     }
 
     /** 確認用の欄の名前。Laravel の confirmed 規則がこの形を探す。 */

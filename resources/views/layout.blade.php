@@ -128,6 +128,14 @@
     .__account:hover,
     .__account:focus-visible,
     .__account.show { color: #FFF; }
+    /* キーボードで辿ったときに、どこに居るかが分かるようにする。
+       .btn の既定は box-shadow が透明で、この配色では何も描かれない。
+       色を濃くするだけ（0.75 → 1.0 の白）では差が付かず、見えない */
+    .__account:focus-visible {
+        outline: 2px solid #FFF;
+        outline-offset: 2px;
+        border-radius: 3px;
+    }
     .__account--name {
         min-width: 0;
         overflow: hidden;

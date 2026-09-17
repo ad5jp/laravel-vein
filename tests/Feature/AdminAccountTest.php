@@ -251,6 +251,27 @@ class AdminAccountTest extends TestCase
         $this->assertStringNotContainsString('空のままにします', $html);
     }
 
+    /**
+     * 自分の行を描いても、次の行のヒントと必須の印が残る。
+     *
+     * 欄の実体は行をまたいで使い回される（@see Records::renderFields）。自分の行で
+     * 消しっぱなしにすると、後ろの行から黙って落ちる。
+     */
+    public function test_自分の行を描いても次の行に影響しない(): void
+    {
+        $me = $this->signInAsNode();
+        $other = TestEntry::create(['title' => 'ほかの人']);
+
+        $field = (new InputPassword(key: 'password', label: 'パスワード', required: true))
+            ->hint('変えないときは空のままにします');
+
+        $field->renderColumn($me);
+        $html = $field->renderColumn($other);
+
+        $this->assertStringContainsString('空のままにします', $html);
+        $this->assertStringContainsString('text-danger', $html, '必須の印');
+    }
+
     /** 画面を隠すだけでは足りない。組み立てた POST でも書き換えさせない。 */
     public function test_自分の行は送られてきても書き換えない(): void
     {
