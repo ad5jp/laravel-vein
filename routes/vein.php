@@ -11,6 +11,7 @@ use AD5jp\Vein\Http\Controllers\PasswordController;
 use AD5jp\Vein\Http\Controllers\SigninController;
 use AD5jp\Vein\Http\Controllers\UploadController;
 use AD5jp\Vein\Http\Middleware\Authenticate;
+use AD5jp\Vein\Http\Middleware\AuthenticateSession;
 use Illuminate\Support\Facades\Route;
 
 $admin_uri = config('vein.admin_uri');
@@ -21,7 +22,9 @@ Route::group(['middleware' => ['web'], 'prefix' => $admin_uri], static function 
 
     $guard = AdminGuard::name();
 
-    Route::group(['middleware' => [Authenticate::class.":{$guard}"]], static function (): void {
+    // AuthenticateSession は Authenticate より後ろ。既定のガードが差し替わってから
+    // 効かせる（@see AuthenticateSession のコメント）
+    Route::group(['middleware' => [Authenticate::class.":{$guard}", AuthenticateSession::class]], static function (): void {
         Route::get('/', [HomeController::class, 'init'])->name('vein.home');
 
         // /{node} が 1 セグメントを総取りするので、その前に置く
