@@ -65,6 +65,25 @@ class NodeDeletionTest extends TestCase
         Storage::disk(config('vein.upload_disk'))->assertMissing($this->path);
     }
 
+    /**
+     * 束ねた中に置いた画像欄も片付ける。
+     *
+     * 横に並べたい画像欄は Row の中に置かれる。最上位だけを見ていると、その画像は
+     * レコードも実体も残り、どこからも辿れない孤児になる。画面からは消えているので
+     * 気づけない。
+     */
+    public function test_束ねた中の画像欄も片付く(): void
+    {
+        $file = $this->fileRecord();
+        $entry = TestEntry::create(['title' => '親', 'test_file_id' => $file->id]);
+
+        (new NodeDeleter)->delete($entry->fresh());
+
+        $this->assertNull(TestEntry::find($entry->id));
+        $this->assertNull(TestFile::find($file->id), '画像のレコードが残っている');
+        Storage::disk(config('vein.upload_disk'))->assertMissing($this->path);
+    }
+
     public function test_論理削除では既定で子レコードもファイルも残る(): void
     {
         $entry = TestSoftEntry::create(['title' => '親']);
