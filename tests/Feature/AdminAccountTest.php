@@ -386,6 +386,48 @@ class AdminAccountTest extends TestCase
             ->assertSee('form="delete"', false);
     }
 
+    // ── パスワードが変わったら席を空ける ──────────────
+
+    /**
+     * ほかの管理者にパスワードを変えられたら、その人のセッションは切れる。
+     *
+     * `logoutOtherDevices()` は自分にしか使えないため、他人のパスワードを変えても
+     * その人のセッションは残っていた。**乗っ取られた人のパスワードを変える**という、
+     * いちばん効いてほしい場面で効かないことになる。
+     */
+    public function test_パスワードを変えられた人のセッションが切れる(): void
+    {
+        $user = $this->makeUser(password: 'secret-1');
+
+        $this->actingAs($user)->get($this->url(''))->assertOk();
+
+        // 別の管理者が、この人のパスワードを変えた
+        $user->forceFill(['password' => 'secret-2'])->save();
+
+        $this->get($this->url(''))->assertRedirect(route('vein.signin'));
+    }
+
+    /**
+     * 自分で変えたときは、その画面の操作を続けられる。
+     *
+     * 画面で「変えたあともこの画面の操作は続けられます」と約束している。
+     * ここで切れると、変えた直後に締め出されたように見える。
+     */
+    public function test_自分で変えたときは締め出されない(): void
+    {
+        $user = $this->makeUser(password: 'secret-1');
+
+        $this->actingAs($user)->get($this->url(''))->assertOk();
+
+        $this->post($this->url('password'), [
+            'current_password' => 'secret-1',
+            'password' => 'secret-2',
+            'password_confirmation' => 'secret-2',
+        ])->assertSessionHasNoErrors();
+
+        $this->get($this->url(''))->assertOk();
+    }
+
     // ── 締め出し防止 ────────────────────────────────
 
     public function test_自分自身は消せない(): void
