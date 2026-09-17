@@ -6,6 +6,7 @@ namespace AD5jp\Vein\Tests\Fixtures;
 
 use AD5jp\Vein\Form\Input\FileUpload;
 use AD5jp\Vein\Form\Input\Records;
+use AD5jp\Vein\Form\Input\Row;
 use AD5jp\Vein\Node\Contracts\Entry;
 use AD5jp\Vein\Node\Helpers\EntryHelper;
 use Illuminate\Database\Eloquent\Model;
@@ -66,8 +67,11 @@ class TestEntry extends Model implements Entry
         return [
             ['title', 'タイトル'],
             ['body', '本文', 'textarea'],
-            // 親が直接持つファイル。子（TestRecord）が持つ分とは別経路で片付く
-            new FileUpload(key: 'file', label: '画像'),
+            // 親が直接持つファイル。子（TestRecord）が持つ分とは別経路で片付く。
+            // Row の中に置いてあるのは、束ねた中の欄も辿れることを確かめるため
+            new Row(children: [
+                new FileUpload(key: 'file', label: '画像'),
+            ]),
             new Records(key: 'records', label: '子レコード'),
         ];
     }
