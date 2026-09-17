@@ -144,6 +144,9 @@
          狭い画面からログアウトできなくなる --}}
     <ul class="navbar-nav ms-auto">
       <li class="nav-item">
+        <a class="nav-link" href="{{ route('vein.password') }}">パスワードの変更</a>
+      </li>
+      <li class="nav-item">
         <button class="nav-link" form="signout">ログアウト</button>
       </li>
     </ul>

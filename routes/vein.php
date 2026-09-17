@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use AD5jp\Vein\Auth\AdminGuard;
 use AD5jp\Vein\Http\Controllers\AddController;
 use AD5jp\Vein\Http\Controllers\EditController;
 use AD5jp\Vein\Http\Controllers\HomeController;
 use AD5jp\Vein\Http\Controllers\ListController;
+use AD5jp\Vein\Http\Controllers\PasswordController;
 use AD5jp\Vein\Http\Controllers\SigninController;
 use AD5jp\Vein\Http\Controllers\UploadController;
 use AD5jp\Vein\Http\Middleware\Authenticate;
@@ -17,10 +19,15 @@ Route::group(['middleware' => ['web'], 'prefix' => $admin_uri], static function 
     Route::get('/signin', [SigninController::class, 'init'])->name('vein.signin');
     Route::post('/signin', [SigninController::class, 'signin'])->middleware('throttle:5,1');
 
-    $guard = config('vein.admin_guard') ?? config('auth.defaults.guard');
+    $guard = AdminGuard::name();
 
     Route::group(['middleware' => [Authenticate::class.":{$guard}"]], static function (): void {
         Route::get('/', [HomeController::class, 'init'])->name('vein.home');
+
+        // /{node} が 1 セグメントを総取りするので、その前に置く
+        Route::get('/password', [PasswordController::class, 'init'])->name('vein.password');
+        Route::post('/password', [PasswordController::class, 'update']);
+
         Route::get('/{node}', [ListController::class, 'init'])->name('vein.list');
         Route::get('/page/{node}', [EditController::class, 'init'])->name('vein.page');
         Route::post('/page/{node}', [EditController::class, 'save']);
