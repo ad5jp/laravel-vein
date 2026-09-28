@@ -9,6 +9,7 @@ use AD5jp\Vein\Tests\Fixtures\TestEntry;
 use AD5jp\Vein\Tests\Fixtures\TestFile;
 use AD5jp\Vein\Tests\Fixtures\TestRecord;
 use AD5jp\Vein\Tests\Fixtures\TestSoftEntry;
+use AD5jp\Vein\Tests\Fixtures\TestSortableEntry;
 use AD5jp\Vein\Tests\Fixtures\TestTaxonomy;
 use AD5jp\Vein\Tests\Fixtures\TestUser;
 use Illuminate\Contracts\Config\Repository;
@@ -111,6 +112,14 @@ abstract class TestCase extends Orchestra
             // 親が直接ファイルを指す形（ad5jp の m_works.thumbnail_file_id にあたる）
             $table->foreignId('test_file_id')->nullable()
                 ->constrained('test_files')->restrictOnDelete();
+            $table->timestamps();
+        });
+
+        Schema::create((new TestSortableEntry)->getTable(), function ($table): void {
+            $table->id();
+            $table->string('title');
+            $table->string('group')->nullable();
+            $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
         });
 

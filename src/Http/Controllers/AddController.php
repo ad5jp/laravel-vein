@@ -6,6 +6,7 @@ namespace AD5jp\Vein\Http\Controllers;
 
 use AD5jp\Vein\Form\InputManager;
 use AD5jp\Vein\Node\Contracts\Entry;
+use AD5jp\Vein\Node\Contracts\Sortable;
 use AD5jp\Vein\Node\Contracts\Taxonomy;
 use AD5jp\Vein\Node\NodeManager;
 use Illuminate\Http\RedirectResponse;
@@ -87,6 +88,20 @@ class AddController extends Controller
 
             if ($model instanceof Taxonomy && $orderColumn = $model->orderColumn()) {
                 $record->$orderColumn = ($model->max($orderColumn) ?? 0) + 1;
+            }
+
+            // 並べ替えできるノードは、同じグループの末尾に入れる。並び順の入力欄は持たないので、
+            // ここで決めないと全件が 0 で並び、足した行が先頭に紛れ込む
+            if ($model instanceof Sortable) {
+                $column = $model->sortColumn();
+
+                if (! array_key_exists($column, $record->getAttributes())) {
+                    $groupColumn = $model->sortGroupColumn();
+                    $max = $model->newQuery()
+                        ->when($groupColumn !== null, fn ($query) => $query->where($groupColumn, $record->getAttribute($groupColumn)))
+                        ->max($column);
+                    $record->$column = ($max ?? 0) + 1;
+                }
             }
 
             $record->save();

@@ -5,9 +5,16 @@
     <div class="__page_head">
         <h1 class="mb-0">{{ $model->menuName() }}</h1>
         {{-- 「新規」だけでは何が増えるのか読み取れないため、名前を入れる --}}
-        <a href="{{ route('vein.add', ['node' => $node]) }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> {{ $model->menuName() }}を追加
-        </a>
+        <div class="d-flex gap-2">
+            @if ($model instanceof \AD5jp\Vein\Node\Contracts\Sortable)
+            <a href="{{ route('vein.order', ['node' => $node]) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-down-up"></i> 並べ替え
+            </a>
+            @endif
+            <a href="{{ route('vein.add', ['node' => $node]) }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> {{ $model->menuName() }}を追加
+            </a>
+        </div>
     </div>
     <section class="section">
         @if (count($searchFields) > 0)

@@ -36,6 +36,7 @@ Route::group(['middleware' => ['web'], 'prefix' => $admin_uri], static function 
         Route::post('/page/{node}', [EditController::class, 'save']);
         Route::get('/{node}/add', [AddController::class, 'init'])->name('vein.add');
         Route::post('/{node}/add', [AddController::class, 'save']);
+        Route::get('/{node}/order', [ListController::class, 'order'])->name('vein.order');
         Route::post('/{node}/sort', [ListController::class, 'sort'])->name('vein.sort');
         Route::get('/{node}/{id}', [EditController::class, 'init'])->name('vein.edit');
         Route::post('/{node}/{id}', [EditController::class, 'save']);
