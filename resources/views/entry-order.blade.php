@@ -20,7 +20,7 @@
     <p class="text-secondary">行をドラッグして並べ替えます。動かしたときにその場で保存され、この順で公開側にも出ます。</p>
 
     @foreach ($groups as $value => $group)
-    <section class="mb-4">
+    <section class="section">
         @if ($group['label'] !== null)
         <h2 class="h5">{{ $group['label'] }}</h2>
         @endif
