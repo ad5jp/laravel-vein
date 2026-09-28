@@ -14,6 +14,12 @@ class TestSearchableEntry extends TestEntry
 {
     protected $table = 'test_entries';
 
+    // EntryHelper は self::class から名前を作るので、継承元の TestEntry と同じ名前になる
+    public function menuName(): string
+    {
+        return 'TestSearchableEntry';
+    }
+
     public function editValidatorRules(): array
     {
         return [

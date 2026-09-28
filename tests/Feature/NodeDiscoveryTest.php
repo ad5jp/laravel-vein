@@ -23,7 +23,7 @@ class NodeDiscoveryTest extends TestCase
         $labels = array_map(fn ($nav) => $nav->label, $navs);
         sort($labels);
 
-        $this->assertSame(['TestEntry', 'TestSoftEntry'], $labels);
+        $this->assertSame(['TestEntry', 'TestSearchableEntry', 'TestSoftEntry', 'TestTaxonomy'], $labels);
     }
 
     public function test_abstract_と_enum_が同居していても管理画面が開ける(): void
@@ -47,7 +47,7 @@ class NodeDiscoveryTest extends TestCase
 
         $navs = (new NavigationManager)->generate();
 
-        $this->assertCount(2, $navs);
+        $this->assertCount(4, $navs);
     }
 
     public function test_node_でないクラスは解決されない(): void

@@ -118,7 +118,7 @@ class TaxonomyListTest extends TestCase
         $this->assertStringNotContainsString('aria-required', $html);
     }
 
-    public function test_追加と保存と並べ替えは今までどおりJSONで返る(): void
+    public function test_追加と保存と並べ替えは今までどおり_json_で返る(): void
     {
         $admin = $this->admin();
 
