@@ -2,12 +2,12 @@
 
 @section('content')
 <style>
-/* 1 件ずつ持って動かすものなので、表のように線でつなげず、独立した札として並べる */
-.__order_list { display: flex; flex-direction: column; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+/* 行は枠で囲まない。掴めることは取っ手・カーソル・乗せたときの背景（layout の __drag_item）で伝える */
+.__order_list { margin: 0; padding: 0; list-style: none; }
 .__order_item {
     display: flex; align-items: center; gap: 0.5rem;
     padding: 0.5rem 0.75rem 0.5rem 0.25rem;
-    border: 1px solid #DEE2E6; border-radius: 0.375rem;
+    border-radius: 0.375rem;
 }
 </style>
 <div class="container">
@@ -20,7 +20,7 @@
     <p class="text-secondary">行をドラッグして並べ替えます。動かしたときにその場で保存され、この順で公開側にも出ます。</p>
 
     @foreach ($groups as $value => $group)
-    <section class="section">
+    <section class="mb-4">
         @if ($group['label'] !== null)
         <h2 class="h5">{{ $group['label'] }}</h2>
         @endif
