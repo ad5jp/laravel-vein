@@ -21,6 +21,8 @@
         </form>
         @endif
 
+        {{-- 列が多いと狭い画面で画面ごと横に流れる。表だけを横に送る --}}
+        <div class="table-responsive">
         <table class="table">
             <thead>
                 <tr>
@@ -44,6 +46,7 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
 
         {!! $entries->links() !!}
     </section>

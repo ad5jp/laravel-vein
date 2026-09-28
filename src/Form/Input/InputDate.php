@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class InputDate extends FormControl implements Form, SearchForm
 {
+    protected bool $labelled_input = true;
+
     public function renderInline(Model $values): string
     {
         $value = $this->getValue($values);
@@ -20,9 +22,10 @@ class InputDate extends FormControl implements Form, SearchForm
         }
 
         $html = sprintf(
-            '<input type="date" name="%s" value="%s" class="form-control">',
+            '<input type="date" name="%s" value="%s" class="form-control"%s>',
             e($this->key),
             e($value),
+            $this->inputAttributes($values),
         );
 
         return $html;

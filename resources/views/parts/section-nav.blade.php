@@ -17,10 +17,13 @@
 @if (count($sections) >= 2)
 <style>
 .__section_nav {
+    /* 目次は「欄まで運ぶ」ためのもの。読み上げやキーボードでも先に届くよう
+       並びの先頭に置き、見た目だけを右へ寄せる */
+    order: 1;
     position: sticky;
     /* 上のバーと見出しの行の下に潜らせない */
-    top: calc(var(--vein-offset-top, 59px) + 1rem);
-    max-height: calc(100vh - var(--vein-offset-top, 59px) - 2rem);
+    top: calc(var(--vein-offset-top) + 1rem);
+    max-height: calc(100vh - var(--vein-offset-top) - 2rem);
     overflow-y: auto;
     align-self: flex-start;
     width: 13rem;
@@ -36,6 +39,7 @@
 }
 .__section_nav--list { margin: 0; padding: 0; list-style: none; border-left: 2px solid #DEE2E6; }
 .__section_nav--list a {
+    overflow-wrap: anywhere;
     display: block;
     padding: 0.35rem 0 0.35rem 0.75rem;
     margin-left: -2px;
@@ -45,10 +49,10 @@
     text-decoration: none;
     line-height: 1.4;
 }
-.__section_nav--list a:hover { color: #0D6EFD; }
+.__section_nav--list a:hover { color: var(--bs-primary); }
 .__section_nav--list a.is-current {
-    border-left-color: #0D6EFD;
-    color: #0D6EFD;
+    border-left-color: var(--bs-primary);
+    color: var(--bs-primary);
     font-weight: 700;
 }
 /* 画面が狭いときは横に置く余地がない */
@@ -91,11 +95,12 @@
                 + 20;
         }
 
-        function atBottom() {
-            return window.innerHeight + window.scrollY >= document.body.scrollHeight - 2;
-        }
-
-        // いま画面の上端に一番近い見出しを現在地とする
+        // いま画面の上端に一番近い見出しを現在地とする。
+        //
+        // 末尾の見出しへ飛ぶと、それ以上スクロールできないぶん手前の見出しが
+        // 現在地のままになることがある。末尾を特別扱いして合わせようとしたが、
+        // 押した項目を覚える形も含めて何度か外したので、今は素直な判定だけにしている。
+        // 印が 1 つずれても、飛び先そのものは正しい
         function mark() {
             let current = 0;
 
@@ -105,12 +110,6 @@
                 }
             });
 
-            // 最後の見出しは、これ以上スクロールできないため上端まで来ない。
-            // 末尾まで運んだら最後を現在地にする
-            if (atBottom()) {
-                current = sections.length - 1;
-            }
-
             links.forEach((a, i) => a.classList.toggle('is-current', i === current));
         }
 
@@ -118,6 +117,9 @@
         mark();
         window.addEventListener('scroll', mark, { passive: true });
         window.addEventListener('resize', () => { measure(); mark(); });
+        // メニューを開け閉めすると本文の幅が変わり、見出しの行数も変わる。
+        // 幅の変化は resize では拾えないので、動きが終わってから測り直す
+        document.addEventListener('vein:sidebar-toggled', () => setTimeout(() => { measure(); mark(); }, 600));
     }
 
     if (document.readyState === 'loading') {

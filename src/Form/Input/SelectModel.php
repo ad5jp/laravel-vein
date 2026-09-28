@@ -33,6 +33,8 @@ class SelectModel extends FormControl implements Form, SearchForm
         parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
 
+    protected bool $labelled_input = true;
+
     public function renderInline(Model $values): string
     {
         $value = $this->getValue($values);
@@ -40,7 +42,7 @@ class SelectModel extends FormControl implements Form, SearchForm
 
         $html = '';
 
-        $html .= sprintf('<select name="%s" class="form-select">', e($this->key));
+        $html .= sprintf('<select name="%s" class="form-select"%s>', e($this->key), $this->inputAttributes($values));
         $html .= '<option value="">-- 選択してください --</option>';
         foreach ($this->parseOptions() as $model_value => $model_label) {
             $html .= sprintf('<option value="%s"%s>%s</option>', e($model_value), ($model_value === $value ? ' selected' : ''), e($model_label));

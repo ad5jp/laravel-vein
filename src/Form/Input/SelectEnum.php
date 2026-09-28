@@ -36,6 +36,8 @@ class SelectEnum extends FormControl implements Form, SearchForm
         parent::__construct($key, $label, $default, $colSize, $required, $beforeSaving, $afterSaving, $searching);
     }
 
+    protected bool $labelled_input = true;
+
     public function renderInline(Model $values): string
     {
         $value = $this->getValue($values);
@@ -43,7 +45,7 @@ class SelectEnum extends FormControl implements Form, SearchForm
 
         $html = '';
 
-        $html .= sprintf('<select name="%s" class="form-select">', e($this->key));
+        $html .= sprintf('<select name="%s" class="form-select"%s>', e($this->key), $this->inputAttributes($values));
         $html .= '<option value="">-- 選択してください --</option>';
         foreach ($this->parseOptions() as $enum_value => $enum_label) {
             $html .= sprintf('<option value="%s"%s>%s</option>', e($enum_value), ($enum_value === $value?->value ? ' selected' : ''), e($enum_label));

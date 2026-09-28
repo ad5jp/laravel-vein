@@ -6,7 +6,7 @@
 ?><style>
 .__uploader_preview_item {position: relative;}
 .__uploader_preview_item img {width: 100%; aspect-ratio: 1; object-fit: contain; background: #EEE; border: 1px solid #EEE;}
-.__uploader_preview_remove {position: absolute; right: -0; top: -10px; width: 30px; height: 30px; border: none; background: #000; opacity: 0.7;}
+.__uploader_preview_remove {position: absolute; right: 0; top: -10px; width: 30px; height: 30px; border: none; background: #000; opacity: 0.7;}
 .__uploader_preview_remove::before {content: ""; position: absolute; left: 49%; top: 0; display: block; width: 2px; height: 30px; background: #FFF; transform: rotate(45deg);}
 .__uploader_preview_remove::after {content: ""; position: absolute; left: 49%; top: 0; display: block; width: 2px; height: 30px; background: #FFF; transform: rotate(-45deg);}
 </style>
@@ -42,7 +42,13 @@ $(function () {
         .then(veinReadJson)
         .then(data => {
             const key = $uploader.data('key');
-            const $preview_item = $('<div class="__uploader_preview_item col-6 col-md-3"><img src=""><input type="hidden" name="" value=""><button class="__uploader_preview_remove" type="button"></button></div>');
+            // 代替テキストと名前は、描画済みの分（FileUpload::previewHtml）と揃える
+            const $label = $uploader.closest('[class*="col-"]').find('label').first();
+            // ラベルには必須の印が入ることがある。名前には含めない
+            const label = $label.clone().children().remove().end().text().trim();
+            const $preview_item = $('<div class="__uploader_preview_item col-6 col-md-3"><img src="" alt=""><input type="hidden" name="" value=""><button class="__uploader_preview_remove" type="button"></button></div>');
+            $preview_item.find('img').attr('alt', label);
+            $preview_item.find('.__uploader_preview_remove').attr('aria-label', label ? label + 'を外す' : '画像を外す');
             $preview_item.find('img').attr('src', data.preview);
             $preview_item.find('input').attr('name', key);
             $preview_item.find('input').attr('value', data.value);
@@ -60,6 +66,7 @@ $(function () {
     });
 
     $(document).on('click', '.__uploader_preview_remove', function () {
+        document.dispatchEvent(new CustomEvent('vein:changed'));
         const $item = $(this).closest('.__uploader_preview_item');
         $item.remove();
     });
@@ -68,20 +75,23 @@ $(function () {
 
 <!-- TODO 別ファイルに切り出し -->
 <style>
-.__records_list_item {position: relative; padding-right: 3rem;}
+.__records_list_item {padding-right: 3rem;}
 .__records_list_item > .__records_remove {position: absolute; right: 0.5rem; top: 0; bottom: 0; width: 2rem; height: 2rem; margin: auto;}
 /* 並べ替えるもの。つまむところを左に置き、その分だけ中身を右へ寄せる */
 .__records_list_item.is-sortable {padding-left: 2.25rem;}
-.__records_handle {position: absolute; left: 0.5rem; top: 0; bottom: 0; height: 2rem; margin: auto;
-    display: flex; align-items: center; color: #ADB5BD; cursor: grab; font-size: 1.25rem;}
+/* 掴むところ。字の幅しか無いと当たり判定が細く、掴み損ねる */
+.__records_handle {position: absolute; left: 0.5rem; top: 0; bottom: 0; width: 2rem; height: 2rem; margin: auto;
+    display: flex; align-items: center; justify-content: center;
+    color: #6C757D; cursor: grab; font-size: 1.25rem;}
 .__records_handle:active {cursor: grabbing;}
-.__records_list_item.is-sortable:hover .__records_handle {color: #6C757D;}
 /* ドラッグ中に空く場所。どこへ入るかが分かるようにする。
    点線は outline で描く。border だと、その 2px 分だけ後ろの要素が下へずれる */
-.__records_placeholder {
-    outline: 2px dashed #ADB5BD; outline-offset: -2px;
-    border-radius: 0.375rem; background: #F8F9FA;
+.__records_placeholder,
+.__records_tile_placeholder {
+    outline: 2px dashed #6C757D; outline-offset: -2px;
+    background: #F8F9FA;
 }
+.__records_placeholder {border-radius: 0.375rem;}
 /* 見出しの行と、畳むボタン */
 .__records_head {display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem;}
 .__records_head h5 {margin: 0;}
@@ -92,9 +102,8 @@ $(function () {
    一覧で表示したとき（is-compact）は同じ形にする。
    ラベルと段組みを外し、入力欄そのものを行として見せる。
    何の欄かは見出しで分かるので、行ごとのラベルは重複になる */
-.__records_list:is(.is-single, .is-compact) {border: 0;}
 .__records_list:is(.is-single, .is-compact) .__records_list_item {
-    display: flex; align-items: stretch;
+    display: flex;
     /* カードの枠と入力欄の枠で二重になるため、行側の枠と背景は外す */
     border: 0; background: transparent;
     padding: 0.25rem 0 0.25rem 1.75rem;
@@ -107,7 +116,7 @@ $(function () {
     margin: 0 !important;
 }
 .__records_list:is(.is-single, .is-compact) .__records_list_item > .row > [class*="col-"] {
-    flex: 1 1 auto; max-width: none; padding: 0;
+    flex: 1 1 auto; padding: 0;
 }
 .__records_list:is(.is-single, .is-compact) .__records_list_item .form-label {display: none;}
 /* 入力とごみ箱をくっつける。枠線を 1px 重ねて 1 つの部品に見せる */
@@ -116,25 +125,30 @@ $(function () {
     border-top-right-radius: 0; border-bottom-right-radius: 0;
 }
 .__records_list:is(.is-single, .is-compact) .__records_list_item > .__records_remove {
-    position: static; width: auto; height: auto; margin: 0 0 0 -1px;
+    /* 束ねた欄（input-group）の中の入力は Bootstrap が position: relative にする。
+       ごみ箱が static のままだと入力の枠が手前に来て、重ねた 1px の線だけ
+       行によって色が変わる。並びの後ろにあるごみ箱を手前に出して揃える。
+       カードのときに右上へ浮かせる位置指定は、ここでは邪魔なので外す */
+    position: relative; inset: auto;
+    width: auto; margin: 0 0 0 -1px;
     display: flex; align-items: center;
     border-top-left-radius: 0; border-bottom-left-radius: 0;
-}
-/* 弾かれた欄は、その下に理由が出て行が高くなる。ごみ箱まで一緒に伸びると、
-   入力とくっついて見えなくなる。入力欄の高さに留める */
-.__records_list:is(.is-single, .is-compact) .__records_list_item:has(.__field_error) > .__records_remove {
-    align-self: flex-start;
-    /* 入力欄の高さ。Bootstrap の .form-control と同じ式だが、ごみ箱は btn-sm で
+    /* 入力欄の高さに留める。本文欄のように背の高い欄や、弾かれて理由が出た行で
+       一緒に伸びると、当たり判定が広くなりすぎて誤って押しやすい。
+       高さは Bootstrap の .form-control と同じ式だが、ごみ箱は btn-sm で
        文字が小さいため em ではなく rem で置く */
+    align-self: flex-start;
     height: calc(1.5rem + 0.75rem + 2px);
 }
 
 /* 一覧で表示したとき。並べ替えるときや、全体を見渡したいときに切り替える。
    先頭の欄だけを残し、あとは隠す。Row で横に並べた欄も、見渡すだけなら先頭で
    見分けが付く（並べたまま残すと、欄どうしが継ぎ目なくくっついて読みにくい）。
-   display: none でも値は送信されるので、この状態で保存しても中身は失われない */
-.__records_list.is-compact .__records_list_item > .row ~ .row,
-.__records_list.is-compact .__records_list_item > .row > [class*="col-"] ~ [class*="col-"] {
+   display: none でも値は送信されるので、この状態で保存しても中身は失われない。
+   ただし弾かれた欄は隠さない。理由はその欄のそばに出しているため、一緒に
+   隠れると「どこが悪いのか」が行のどこにも残らなくなる */
+.__records_list.is-compact .__records_list_item > .row ~ .row:not(:has(.__field_error)),
+.__records_list.is-compact .__records_list_item > .row > [class*="col-"] ~ [class*="col-"]:not(:has(.__field_error)) {
     display: none;
 }
 /* 先頭が複数行の欄でも、一覧では 1 行に収める */
@@ -148,31 +162,34 @@ $(function () {
     background: #FFF; box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.18);
     cursor: grabbing; pointer-events: none;
 }
-/* 複製には指が乗らないので、hover の色が付かない。掴んでいる間は濃いままにする */
-.__records_dragging .__records_handle {color: #6C757D;}
 /* タイル。画像を持つ行はこちらで並べる */
 /* grid や flex で並べると、jQuery UI が「縦一列」と見なして横の入れ替えができない。
    inline-block なら横並びと判定される */
 .__records_tiles {font-size: 0;}
-.__records_tile {
+.__records_tile,
+.__records_tile_placeholder {
     display: inline-block; vertical-align: top; width: 11.5rem;
-    margin: 0 0.75rem 0.75rem 0; font-size: 1rem;
+    margin: 0 0.75rem 0.75rem 0;
 }
+.__records_tile {font-size: 1rem;}
 .__records_tile_face {
     display: block; width: 100%; text-align: left; cursor: pointer;
     background: #FFF; border: 1px solid #DEE2E6; border-radius: 0.5rem; padding: 0.5rem;
 }
-.__records_tile_face:hover {border-color: #0D6EFD;}
+.__records_tile_face:hover {border-color: var(--bs-primary);}
 .__records_tile_image {
     display: flex; align-items: center; justify-content: center;
     height: 7rem; margin-bottom: 0.5rem; overflow: hidden;
     background: #F8F9FA; border-radius: 0.375rem;
 }
 .__records_tile_image img {max-width: 100%; max-height: 100%; object-fit: contain;}
-.__records_tile_blank {color: #ADB5BD; font-size: 0.8125rem;}
+.__records_tile_blank {color: #6C757D; font-size: 0.8125rem;}
 .__records_tile_label {
-    display: block; font-size: 0.8125rem; line-height: 1.4; min-height: 2.8em;
-    max-height: 2.8em; overflow: hidden; color: #212529;
+    /* 2 行で切る。切れたことが分かるよう、末尾に … を出す */
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+    font-size: 0.8125rem; line-height: 1.4;
+    /* 1 行の行でもタイルの高さが揃うよう、2 行分は確保する */
+    height: 2.8em; overflow: hidden; color: #212529;
 }
 .__records_tile_badge:not(:empty) {
     display: inline-block; margin-top: 0.25rem; padding: 0 0.375rem;
@@ -182,15 +199,11 @@ $(function () {
 .__records_tile.is-error .__records_tile_face {
     border-color: #DC3545; box-shadow: 0 0 0 0.125rem rgba(220, 53, 69, 0.25);
 }
-/* 落とす先の枠。タイルと同じ形にしないと、全幅の帯になる */
-.__records_tile_placeholder {
-    display: inline-block; vertical-align: top; width: 11.5rem;
-    margin: 0 0.75rem 0.75rem 0;
-    outline: 2px dashed #ADB5BD; outline-offset: -2px;
-    border-radius: 0.5rem; background: #F8F9FA;
-}
+/* 落とす先の枠。形はタイルと共通で、角の丸みだけタイルに合わせる
+   （全幅の帯にならないよう、並べ方もタイルと同じにしてある） */
+.__records_tile_placeholder {border-radius: 0.5rem;}
 /* モーダルは 1 行分の幅しかないので、欄を横に並べず縦に積む */
-.__records_tile_modal .modal-body > .row > [class*="col-"] {flex: 0 0 100%; max-width: 100%;}
+.__records_tile_modal .modal-body > .row > [class*="col-"] {flex: 0 0 100%;}
 </style>
 <script>
 // タイルの表側を、モーダルの中身から組み立てる。
@@ -201,7 +214,7 @@ function veinSyncTile($tile) {
     var $slot = $tile.find('.__records_tile_image').empty();
 
     if ($img.length) {
-        $slot.append($('<img>').attr('src', $img.attr('src')));
+        $slot.append($('<img>').attr({ src: $img.attr('src'), alt: $img.attr('alt') || '' }));
     } else {
         $slot.append($('<span class="__records_tile_blank">画像なし</span>'));
     }
@@ -242,6 +255,8 @@ $(function () {
         tolerance: 'pointer',
         placeholder: '__records_tile_placeholder',
         forcePlaceholderSize: true,
+        // 並び順はそのまま保存される。打ち込んだのと同じく「変えた」こと
+        update: () => document.dispatchEvent(new CustomEvent('vein:changed')),
     });
 });
 
@@ -251,6 +266,32 @@ $(document).on('hidden.bs.modal input change', '.__records_tile', function () {
 
 // カード表示 / 一覧表示の切り替え。行が高いと並べ替えづらく、全体も見渡せない。
 // 掴んだ瞬間に自動で畳むと画面が飛ぶため、切り替えは明示的に行う
+// 畳んだ状態は覚えておく。並べ替えのために畳む → 弾かれて描き直される、の
+// たびに開き直すのは手間になる
+function veinViewKey($records) {
+    // 同じ種類の画面では同じ覚え方にする。パスの末尾はレコードの id なので落とす
+    // （/admin/work/12 と /admin/work/add を分けない）
+    const node = location.pathname.replace(/\/[^\/]+$/, '');
+
+    return 'vein:view:' + node + ':' + ($records.data('records') || '');
+}
+
+$(function () {
+    $('.__records').each(function () {
+        const $records = $(this);
+
+        try {
+            if (localStorage.getItem(veinViewKey($records)) !== 'compact') {
+                return;
+            }
+        } catch (e) {
+            return;   // 覚えられない設定でも、切り替えそのものは使える
+        }
+
+        $records.find('.__records_view button[data-view="compact"]').trigger('click');
+    });
+});
+
 $(document).on('click', '.__records_view button', function () {
     const $btn = $(this);
     const $list = $btn.closest('.__records').find('.__records_list');
@@ -258,6 +299,12 @@ $(document).on('click', '.__records_view button', function () {
     const compact = $btn.data('view') === 'compact';
 
     $list.toggleClass('is-compact', compact);
+
+    try {
+        localStorage.setItem(veinViewKey($btn.closest('.__records')), compact ? 'compact' : 'detail');
+    } catch (e) {
+        // 覚えられなくても、切り替えそのものは効く
+    }
 
     $btn.addClass('active').attr('aria-pressed', 'true')
         .siblings().removeClass('active').attr('aria-pressed', 'false');
@@ -269,6 +316,7 @@ $(document).on('click', '.__records_view button', function () {
 });
 
 $(document).on('click', '.__records_add', function () {
+    document.dispatchEvent(new CustomEvent('vein:changed'));
     const $records = $(this).closest('.__records');
 
     const index = $records.data('nextkey');
@@ -355,12 +403,16 @@ $(function () {
                 ui.helper.offset({ top: current.top, left: left });
             }
         },
+        // 並び順はそのまま保存される。打ち込んだのと同じく「変えた」こと
+        update: () => document.dispatchEvent(new CustomEvent('vein:changed')),
     });
 });
 $(document).on('click', '.__records_remove', function () {
     if (!confirm('この行を削除しますか？')) {
         return;
     }
+
+    document.dispatchEvent(new CustomEvent('vein:changed'));
 
     const $tile = $(this).closest('.__records_tile');
 

@@ -17,6 +17,9 @@
     bottom: 0;
     z-index: 10;
     display: flex;
+    /* 削除のラベルは「この○○を削除」で、名前が長いと 1 行に収まらない。
+       折り返さないと更新ボタンが縦に潰れる */
+    flex-wrap: wrap;
     justify-content: flex-end;
     align-items: center;
     gap: 0.75rem;

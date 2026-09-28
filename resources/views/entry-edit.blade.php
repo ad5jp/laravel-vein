@@ -16,6 +16,9 @@
         </div>
     </div>
     <div class="__edit_body">
+    {{-- 目次は「欄まで運ぶ」ためのもの。キーボードと読み上げでも先に届くよう
+         本体より前に置き、見た目だけ右へ寄せる（CSS の order） --}}
+    @include('vein::parts.section-nav', ['editFields' => $editFields])
     <section class="section">
         @if ($errors->any())
         <div class="alert alert-danger">
@@ -38,7 +41,6 @@
             ])
         </form>
     </section>
-    @include('vein::parts.section-nav', ['editFields' => $editFields])
     </div>
 
     {{-- 送り先だけ置く。ボタンは保存バーの中にあり、form 属性でここへ送る
