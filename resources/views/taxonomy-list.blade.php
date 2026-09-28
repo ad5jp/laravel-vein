@@ -22,7 +22,7 @@ $scopeIds = static fn (string $html, string $suffix): string => preg_replace(
             <form class="row align-items-end mb-3 __edit_form" data-id="{{ $taxonomy->getKey() }}">
                 @csrf
                 @if ($model->orderColumn())
-                <div class="col __sort_handle bg-light py-2" style="flex-basis: 20px;"><i class="bi bi-list"></i></div>
+                <div class="col-auto __sort_handle __drag_grip" aria-hidden="true"><i class="bi bi-grip-vertical"></i></div>
                 @endif
                 <div class="col" style="flex-basis: calc(100% - 280px);">
                     <div class="row">
@@ -42,7 +42,7 @@ $scopeIds = static fn (string $html, string $suffix): string => preg_replace(
         <form class="row align-items-end mb-3 __add_form">
             @csrf
             @if ($model->orderColumn())
-            <div class="col __sort_handle bg-light py-2" style="flex-basis: 20px; opacity: 0;"><i class="bi bi-list"></i></div>
+            <div class="col-auto __drag_grip" style="visibility: hidden;" aria-hidden="true"><i class="bi bi-grip-vertical"></i></div>
             @endif
             <div class="col" style="flex-basis: calc(100% - 280px);">
                 <div class="row">
@@ -69,8 +69,13 @@ const token = '{{ csrf_token() }}';
 @if ($model->orderColumn())
 <script>
 $(function() {
+    // 行は入力欄を持つので、掴めるのは左の取っ手だけにする（欄をなぞって行が動かないように）
     $(".__list").sortable({
         handle: ".__sort_handle",
+        axis: "y",
+        tolerance: "pointer",
+        placeholder: "mb-3 __drag_placeholder",
+        forcePlaceholderSize: true,
         update: function () {
             try {
                 const ids = [];
