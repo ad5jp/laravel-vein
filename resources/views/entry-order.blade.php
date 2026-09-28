@@ -1,6 +1,15 @@
 @extends('vein::layout')
 
 @section('content')
+<style>
+/* 1 件ずつ持って動かすものなので、表のように線でつなげず、独立した札として並べる */
+.__order_list { display: flex; flex-direction: column; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+.__order_item {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 0.75rem 0.5rem 0.25rem;
+    border: 1px solid #DEE2E6; border-radius: 0.375rem;
+}
+</style>
 <div class="container">
     <div class="__page_head">
         <h1 class="mb-0">{{ $model->menuName() }}の並べ替え</h1>
@@ -19,9 +28,9 @@
         @if ($group['entries']->isEmpty())
         <p class="text-secondary mb-0">登録がありません。</p>
         @else
-        <ul class="list-group __order_list" data-group="{{ $value }}">
+        <ul class="__order_list" data-group="{{ $value }}">
             @foreach ($group['entries'] as $entry)
-            <li class="list-group-item d-flex align-items-center gap-2 __drag_item" data-id="{{ $entry->getKey() }}">
+            <li class="__order_item __drag_item" data-id="{{ $entry->getKey() }}">
                 <span class="__drag_grip" aria-hidden="true"><i class="bi bi-grip-vertical"></i></span>
                 <span>{{ $entry->sortItemLabel() }}</span>
             </li>
@@ -42,7 +51,7 @@ $(function () {
     $('.__order_list').sortable({
         axis: 'y',
         tolerance: 'pointer',
-        placeholder: 'list-group-item __drag_placeholder',
+        placeholder: '__order_item __drag_placeholder',
         forcePlaceholderSize: true,
         update: function () {
             const $list = $(this);
