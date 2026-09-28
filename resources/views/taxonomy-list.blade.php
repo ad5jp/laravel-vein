@@ -1,5 +1,16 @@
 @extends('vein::layout')
 
+@php
+// 行ごとに同じ欄を描くので、ラベルと欄を結ぶ id を行ごとに分ける。
+// 分けないと、どの行のラベルを押しても 1 行目の欄に入る。
+// 書き換えの規則は Records::wrapKeys() と同じ（__f_ / __l_ で始まる id だけを対象にする）
+$scopeIds = static fn (string $html, string $suffix): string => preg_replace(
+    '/\b(id|for|aria-labelledby)="__([fl])_(.*?)"/',
+    '$1="__$2_$3__'.$suffix.'"',
+    $html,
+);
+@endphp
+
 @section('content')
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -16,13 +27,14 @@
                 <div class="col" style="flex-basis: calc(100% - 280px);">
                     <div class="row">
                         @foreach ($editFields as $editField)
-                        {!! $editField->renderColumn($taxonomy) !!}
+                        {!! $scopeIds($editField->renderColumn($taxonomy), 'r'.$taxonomy->getKey()) !!}
                         @endforeach
                     </div>
                 </div>
                 <div class="col" style="flex-basis: 200px;">
-                    <button class="btn btn-primary">EDIT</button>
-                    <button class="btn btn-outline-danger __delete_button __confirm_delete" type="button">DELETE</button>
+                    <button class="btn btn-primary">保存</button>
+                    <button class="btn btn-outline-danger __delete_button __confirm_delete" type="button">削除</button>
+                    <span class="__row_status small ms-1" role="status"></span>
                 </div>
             </form>
             @endforeach
@@ -35,12 +47,13 @@
             <div class="col" style="flex-basis: calc(100% - 280px);">
                 <div class="row">
                     @foreach ($editFields as $editField)
-                        {!! $editField->renderColumn($model) !!}
+                        {!! $scopeIds($editField->renderColumn($model), 'new') !!}
                     @endforeach
                 </div>
             </div>
             <div class="col __col_action" style="flex-basis: 200px;">
-                <button class="btn btn-primary">ADD</button>
+                <button class="btn btn-primary">追加</button>
+                <span class="__row_status small ms-1" role="status"></span>
             </div>
         </form>
     </section>
@@ -90,106 +103,169 @@ $(function() {
 </script>
 @endif
 <script>
-$(document).on('submit', '.__edit_form', function () {
-    try {
-        const key = $(this).data('id');
-        const api = edit_api.replace('9999', key);
-        const payload = new FormData($(this)[0]);
+// 行ごとに送るので、画面を移動しない。保存バーを目印にする layout の離脱の確認は
+// この画面では働かないため、打ちかけの行をここで数える
+const dirtyForms = new Set();
+let leaving = false;
 
-        fetch(api, {
-            method: 'POST',
-            body: payload,
-            headers: {
-                "Accept": "application/json"
-            },
-        })
-        .then(veinReadJson)
-        .catch((error) => {
-            console.error(error);
-            alert(error.message);
-        });
+$(document).on('input change', '.__edit_form, .__add_form', function () {
+    dirtyForms.add(this);
+    $(this).find('.__row_status').text('');
+});
 
-    } catch (e) {
-        console.error(e);
+// 行の送信は画面を離れない。それ以外の送信（ログアウト等）は、layout と同じく黙って通す
+document.addEventListener('submit', (event) => {
+    if (!event.target.matches('.__edit_form, .__add_form')) {
+        leaving = true;
     }
+});
+
+window.addEventListener('beforeunload', (event) => {
+    if (dirtyForms.size === 0 || leaving) {
+        return;
+    }
+
+    event.preventDefault();
+    event.returnValue = '';
+});
+
+// 422 のときは errors を返す。veinReadJson は message しか残さないので、ここで読む。
+// 転送された応答や JSON でない応答は失敗として扱う。fetch は転送先の HTML を 200 で
+// 受け取るため、そのままだと「削除できなかった」が「削除できた」に見える
+async function readResult(response) {
+    let json = null;
+
+    try {
+        json = await response.json();
+    } catch (e) {
+        json = null;
+    }
+
+    return { ok: response.ok && !response.redirected && json !== null, status: response.status, json: json };
+}
+
+function clearErrors($form) {
+    $form.find('.__has_error').removeClass('__has_error');
+    $form.find('.__field_error').remove();
+}
+
+// 弾かれた欄を、ほかの編集画面と同じ見た目で示す。@see src/Form/Input/FormControl.php
+function showErrors($form, errors) {
+    Object.keys(errors || {}).forEach((key) => {
+        const $input = $form.find('[name="' + key + '"], [name="' + key + '[]"]').first();
+        const $column = $input.closest('[class*="col-"]');
+
+        if (!$column.length) {
+            return;
+        }
+
+        $column.addClass('__has_error');
+        $column.append($('<p class="__field_error"></p>').text(errors[key][0]));
+    });
+}
+
+function failed($form, result) {
+    if (result.status === 422 && result.json && result.json.errors) {
+        showErrors($form, result.json.errors);
+        $form.find('.__row_status').text('保存できませんでした');
+        return;
+    }
+
+    alert((result.json && result.json.message) || '処理できませんでした。時間をおいて試してください。');
+}
+
+$(document).on('submit', '.__edit_form', function () {
+    const $form = $(this);
+    const api = edit_api.replace('9999', $form.data('id'));
+
+    clearErrors($form);
+    $form.find('.__row_status').text('');
+
+    fetch(api, {
+        method: 'POST',
+        body: new FormData(this),
+        headers: {
+            "Accept": "application/json"
+        },
+    })
+    .then(readResult)
+    .then((result) => {
+        if (!result.ok) {
+            failed($form, result);
+            return;
+        }
+
+        dirtyForms.delete($form[0]);
+        $form.find('.__row_status').text('保存しました');
+    })
+    .catch((error) => {
+        console.error(error);
+        alert('処理できませんでした。時間をおいて試してください。');
+    });
 
     return false;
 });
 
+// 追加できたら一覧を読み直す。画面の上で行を複製すると、入力した値も id も写らない
 $(document).on('submit', '.__add_form', function () {
-    try {
-        const payload = new FormData($(this)[0]);
+    const $form = $(this);
 
-        fetch(add_api, {
-            method: 'POST',
-            body: payload,
-            headers: {
-                "Accept": "application/json"
-            },
-        })
-        .then(async response => {
-            const json = await response.json();
-            if (!response.ok) {
-                console.error(json);
-                alert(json.message);
-                throw new Error(json.message);
-            }
-            return json;
-        })
-        .then(data => {
-            console.log(data);
-            const clone = $(this).clone();
-            clone.addClass('__edit_form');
-            clone.removeClass('__add_form');
-            clone.data('id', data.key);
-            clone.find('.__col_action').empty();
-            clone.find('.__col_action').append('<button class="btn btn-primary">EDIT</button>');
-            clone.find('.__col_action').append('<button class="btn btn-outline-danger __delete_button __confirm_delete" type="button">DELETE</button>');
-            clone.find('.__sort_handle').css('opacity', 1);
-            clone.appendTo($('.__list'));
+    clearErrors($form);
 
-            $(this)[0].reset();
-        })
-        .catch((error) => {
-            console.error(error);
-        });
+    fetch(add_api, {
+        method: 'POST',
+        body: new FormData(this),
+        headers: {
+            "Accept": "application/json"
+        },
+    })
+    .then(readResult)
+    .then((result) => {
+        if (!result.ok) {
+            failed($form, result);
+            return;
+        }
 
-    } catch (e) {
-        console.error(e);
-    }
+        // 追加した行は保存済み。ほかの行に打ちかけがあれば、読み直す前に確認が出る
+        dirtyForms.delete($form[0]);
+        location.reload();
+    })
+    .catch((error) => {
+        console.error(error);
+        alert('処理できませんでした。時間をおいて試してください。');
+    });
 
     return false;
 });
 
 $(document).on('click', '.__delete_button', function () {
-    try {
-        const $form = $(this).closest('form');
-        const key = $form.data('id');
-        const api = delete_api.replace('9999', key);
-        const payload = new FormData($form[0]);
+    const $form = $(this).closest('form');
+    const api = delete_api.replace('9999', $form.data('id'));
 
-        fetch(api, {
-            method: 'POST',
-            body: payload,
-            headers: {
-                "Accept": "application/json"
-            },
-        })
-        .then(veinReadJson)
-        .then(() => {
-            $form.remove();
-        })
-        .catch((error) => {
-            console.error(error);
-            alert(error.message);
-        });
+    fetch(api, {
+        method: 'POST',
+        body: new FormData($form[0]),
+        headers: {
+            "Accept": "application/json"
+        },
+    })
+    .then(readResult)
+    .then((result) => {
+        // 使われている行は消せない。行は画面に残し、理由を出す
+        if (!result.ok) {
+            failed($form, result);
+            return;
+        }
 
-    } catch (e) {
-        console.error(e);
-    }
+        dirtyForms.delete($form[0]);
+        $form.remove();
+    })
+    .catch((error) => {
+        console.error(error);
+        alert('処理できませんでした。時間をおいて試してください。');
+    });
 
     return false;
 });
-
 </script>
 @endsection
