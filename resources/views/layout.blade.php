@@ -185,6 +185,25 @@
            働きしかしない。打ち消したうえで、畳むのは余白で行う */
         .md-sidebar-hide .sidebar { left: auto; margin-left: -200px; margin-right: 0; }
     }
+
+    /* 並べ替えの画面と分類の一覧のドラッグ。どこを掴めて、どこへ入るかを見せる。
+       詳細画面の中の行（Records）は parts/uploader.blade.php に同じ決まりがある。直すときは両方 */
+    .__drag_item { cursor: grab; background: #FFF; }
+    .__drag_item:hover { background: #F8F9FA; }
+    .__drag_item:active { cursor: grabbing; }
+    .__drag_grip {
+        flex: none; width: 2rem; height: 2rem;
+        display: flex; align-items: center; justify-content: center;
+        color: #6C757D; font-size: 1.25rem; cursor: grab;
+    }
+    .__drag_grip:active { cursor: grabbing; }
+    /* 点線は outline で描く。border だと、その 2px 分だけ後ろの行が下へずれる */
+    .__drag_placeholder {
+        outline: 2px dashed #6C757D; outline-offset: -2px;
+        background: #F8F9FA; border-radius: 0.375rem;
+    }
+    /* 持ち上げた行。影で「浮いている」ことを示す */
+    .ui-sortable-helper { box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); background: #FFF; }
     </style>
 </head>
 <body class="@yield('body_class')">

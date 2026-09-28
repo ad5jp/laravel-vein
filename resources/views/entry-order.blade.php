@@ -21,8 +21,8 @@
         @else
         <ul class="list-group __order_list" data-group="{{ $value }}">
             @foreach ($group['entries'] as $entry)
-            <li class="list-group-item d-flex align-items-center gap-2" data-id="{{ $entry->getKey() }}">
-                <span class="__sort_handle text-secondary" aria-hidden="true"><i class="bi bi-list"></i></span>
+            <li class="list-group-item d-flex align-items-center gap-2 __drag_item" data-id="{{ $entry->getKey() }}">
+                <span class="__drag_grip" aria-hidden="true"><i class="bi bi-grip-vertical"></i></span>
                 <span>{{ $entry->sortItemLabel() }}</span>
             </li>
             @endforeach
@@ -38,8 +38,12 @@ const sort_api = '{{ route("vein.sort", [$node]) }}';
 const token = '{{ csrf_token() }}';
 
 $(function () {
+    // 行は入力欄を持たないので、行のどこを掴んでも動かせるようにする
     $('.__order_list').sortable({
-        handle: '.__sort_handle',
+        axis: 'y',
+        tolerance: 'pointer',
+        placeholder: 'list-group-item __drag_placeholder',
+        forcePlaceholderSize: true,
         update: function () {
             const $list = $(this);
             const $status = $list.nextAll('.__order_status').first();
