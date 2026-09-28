@@ -7,6 +7,7 @@ namespace AD5jp\Vein\Form\Input;
 use AD5jp\Vein\Form\Concerns\ResolvesRelations;
 use AD5jp\Vein\Form\Contracts\DeletesRelated;
 use AD5jp\Vein\Form\Contracts\Form;
+use AD5jp\Vein\Form\PendingFileDeletion;
 use AD5jp\Vein\Form\UploadService;
 use AD5jp\Vein\Node\Contracts\File;
 use Closure;
@@ -130,21 +131,33 @@ class FileUpload extends FormControl implements DeletesRelated, Form
     }
 
     /**
-     * 親が削除されるとき、紐づくファイルのレコードと実体を消す。
+     * 親が削除されるとき、紐づくファイルを「あとで消す対象」として返す。
+     *
+     * ここでは消さない。親がまだこのファイルを指しているため、先に消すと
+     * 外部キーに弾かれる。実際に消すのは親が消えたあと（NodeDeleter）。
      */
-    public function deleteRelated(Model $model): void
+    public function collectFiles(Model $model, bool $row_will_be_removed): array
     {
+        // 行が残るなら、その行がまだ指しているのでファイルは消せない（外部キーに弾かれる）
+        if (! $row_will_be_removed) {
+            return [];
+        }
+
         $this->relation($model);
 
         $file = $model->{$this->key};
 
         if (! $file instanceof Model || ! $file instanceof File) {
-            return;
+            return [];
         }
 
-        $this->deleteAfterCommit($file->getFilePath());
-        $file->delete();
+        return [new PendingFileDeletion($file, $this->disk)];
     }
+
+    /**
+     * ファイルのレコードは NodeDeleter が最後に消す。ここでは何もしない。
+     */
+    public function deleteRows(Model $model): void {}
 
     /**
      * 中身から形式を判定し、許可した拡張子に対応するものだけを通す。
@@ -192,6 +205,30 @@ class FileUpload extends FormControl implements DeletesRelated, Form
         DB::afterRollBack(static fn () => Storage::disk($disk)->delete($path));
     }
 
+    /**
+     * 差し替えで不要になった旧ファイル。保存が済むまで消せないので控えておく。
+     *
+     * @var list<Model&File>
+     */
+    private array $pending_old_files = [];
+
+    /**
+     * 親の外部キーが新しいファイルに向いたあとで、旧ファイルのレコードを消す。
+     *
+     * 実体の削除は applyBeforeSave で afterCommit に予約済み。ここで消すのは
+     * レコードだけ。
+     */
+    protected function applyAfterSave(Model $model, array $request): Model
+    {
+        foreach ($this->pending_old_files as $old_file) {
+            $old_file->delete();
+        }
+
+        $this->pending_old_files = [];
+
+        return $model;
+    }
+
     protected function applyBeforeSave(Model $model, array $request): Model
     {
         $belongsTo = $this->relation($model);
@@ -208,14 +245,16 @@ class FileUpload extends FormControl implements DeletesRelated, Form
             return $model;
         }
 
-        // 変化があり、かつ変更前の値があるなら、変更前のファイルとモデルを削除する
+        // 変化があり、かつ変更前の値があるなら、変更前のファイルを片付ける。
+        // ただしレコードの削除は保存の後（applyAfterSave）。この時点では $model が
+        // まだ旧ファイルを指しており、先に消すと外部キーに弾かれる
         if ($model->{$this->key}) {
             /** @var Model&File $old_file */
             $old_file = $model->{$this->key};
             // 実体の削除はコミット後。ここで消すと、後続が失敗したときに
             // DB にはレコードがあるのに実体だけ無い状態になる
             $this->deleteAfterCommit($old_file->getFilePath());
-            $old_file->delete();
+            $this->pending_old_files[] = $old_file;
         }
 
         // 変更後の値がなけれれば null にして終了

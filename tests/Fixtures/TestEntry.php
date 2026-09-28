@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace AD5jp\Vein\Tests\Fixtures;
 
+use AD5jp\Vein\Form\Input\FileUpload;
 use AD5jp\Vein\Form\Input\Records;
 use AD5jp\Vein\Node\Contracts\Entry;
 use AD5jp\Vein\Node\Helpers\EntryHelper;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -22,7 +24,7 @@ class TestEntry extends Model implements Entry
 
     protected $table = 'test_entries';
 
-    protected $fillable = ['title', 'body'];
+    protected $fillable = ['title', 'body', 'test_file_id'];
 
     /**
      * editValidatorRules() が呼ばれたときの主キーを控える。
@@ -42,6 +44,11 @@ class TestEntry extends Model implements Entry
         return [];
     }
 
+    public function file(): BelongsTo
+    {
+        return $this->belongsTo(TestFile::class, 'test_file_id');
+    }
+
     public function records(): HasMany
     {
         return $this->hasMany(TestRecord::class, 'test_entry_id');
@@ -59,6 +66,8 @@ class TestEntry extends Model implements Entry
         return [
             ['title', 'タイトル'],
             ['body', '本文', 'textarea'],
+            // 親が直接持つファイル。子（TestRecord）が持つ分とは別経路で片付く
+            new FileUpload(key: 'file', label: '画像'),
             new Records(key: 'records', label: '子レコード'),
         ];
     }
