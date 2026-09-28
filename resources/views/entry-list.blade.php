@@ -35,9 +35,14 @@
             </thead>
             <tbody>
                 @foreach ($entries as $entry)
+                @php($isMe = \AD5jp\Vein\Auth\LockoutGuard::isCurrentUser($entry))
                 <tr class="align-middle">
                     @foreach ($listFields as $listField)
-                    <td>{{ $listField->getValue($entry) }}</td>
+                    {{-- ログインできるノードでは、自分の行だけ印を付ける。
+                         自分は消せないので、どれが自分か分からないと理由が通じない --}}
+                    <td>{{ $listField->getValue($entry) }}@if ($isMe && $loop->first)
+                        <span class="badge text-bg-secondary ms-2">自分</span>
+                        @endif</td>
                     @endforeach
                     <td>
                         <a href="{{ route('vein.edit', ['node' => $node, 'id' => $entry->getKey()]) }}" class="btn btn-sm btn-primary">編集</a>

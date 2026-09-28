@@ -110,6 +110,60 @@
        両方書くと足し算になって余計に下がる */
     html { scroll-padding-top: calc(var(--vein-offset-top) + 1rem); }
 
+    /* ヘッダーのアカウント。誰として操作しているかを常に出し、その人に対する
+       操作（パスワードの変更・ログアウト）をまとめる。
+       畳まれた中に入れない。開くボタンごと隠れると、狭い画面からログアウト
+       できなくなる（この行は navbar の折りたたみの外に置いている） */
+    .__account {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        /* 名前が長くても、ヘッダーの他の要素を押し出さない */
+        max-width: min(16rem, 45vw);
+        padding: 0.25rem 0.5rem;
+        border: 0;
+        background: none;
+        color: rgba(255, 255, 255, 0.75);
+    }
+    .__account:hover,
+    .__account:focus-visible,
+    .__account.show { color: #FFF; }
+    /* キーボードで辿ったときに、どこに居るかが分かるようにする。
+       .btn の既定は box-shadow が透明で、この配色では何も描かれない。
+       色を濃くするだけ（0.75 → 1.0 の白）では差が付かず、見えない */
+    .__account:focus-visible {
+        outline: 2px solid #FFF;
+        outline-offset: 2px;
+        border-radius: 3px;
+    }
+    .__account--name {
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    .__account--caret { flex: 0 0 auto; font-size: 0.7em; opacity: 0.7; }
+
+    /* メニューの頭に、名前とメールアドレスを縦に並べる。
+       名前だけだと同姓同名や似た名前で取り違える。ログインに使う値まで出す */
+    .__account_head {
+        padding: 0.5rem 1rem 0.625rem;
+        line-height: 1.35;
+    }
+    .__account_head--name { font-weight: 700; }
+    .__account_head--mail {
+        font-size: 0.8125rem;
+        color: #6C757D;
+        /* 長いアドレスでメニューを横に広げない */
+        overflow-wrap: anywhere;
+    }
+    .__account_menu {
+        min-width: 15rem;
+        /* 長いアドレスでメニューが画面からはみ出さないようにする。
+           ここで頭打ちにすると、上の overflow-wrap が働いて折り返す */
+        max-width: min(20rem, calc(100vw - 1.5rem));
+    }
+
     /* メニューは見出しの行より手前に置く。見出しの行を貼り付けた際に重なり順を
        与えたため、番号を持たないメニューが下になり、狭い画面では開いても
        見出しの行に覆われて 1 つも押せなくなっていた */
@@ -140,11 +194,41 @@
     <button class="navbar-brand btn __sidebar_toggle" onclick="toggleSidebar()"
       aria-expanded="true" aria-controls="__sidebar"><i class="bi bi-list" aria-hidden="true"></i> Vein</button>
     @auth
-    {{-- 折りたたまない。畳むと、それを開くボタンがどこにも無く、
-         狭い画面からログアウトできなくなる --}}
+    @php($veinAccountName = \AD5jp\Vein\Auth\AdminGuard::displayName())
+    @php($veinAccountMail = \AD5jp\Vein\Auth\AdminGuard::label())
+    {{-- 誰としてログインしているかを出す。管理者は複数居られるので、これが無いと
+         「自分は消せない」「パスワードを変える」がどのアカウントの話なのか
+         画面から読み取れない --}}
     <ul class="navbar-nav ms-auto">
-      <li class="nav-item">
-        <button class="nav-link" form="signout">ログアウト</button>
+      <li class="nav-item dropdown">
+        <button class="btn __account" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-person-circle" aria-hidden="true"></i>
+          <span class="visually-hidden">ログイン中：</span>
+          <span class="__account--name">{{ $veinAccountName ?? $veinAccountMail }}</span>
+          <i class="bi bi-chevron-down __account--caret" aria-hidden="true"></i>
+        </button>
+        {{-- 本文は明るいので、メニューもそちらに合わせる（ヘッダーだけが暗い） --}}
+        <ul class="dropdown-menu dropdown-menu-end __account_menu" data-bs-theme="light">
+          <li>
+            <div class="__account_head">
+              @isset($veinAccountName)
+              <div class="__account_head--name">{{ $veinAccountName }}</div>
+              @endisset
+              <div class="__account_head--mail">{{ $veinAccountMail }}</div>
+            </div>
+          </li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <a class="dropdown-item" href="{{ route('vein.password') }}">
+              <i class="bi bi-key" aria-hidden="true"></i> パスワードの変更
+            </a>
+          </li>
+          <li>
+            <button class="dropdown-item" form="signout">
+              <i class="bi bi-box-arrow-right" aria-hidden="true"></i> ログアウト
+            </button>
+          </li>
+        </ul>
       </li>
     </ul>
     @endauth
