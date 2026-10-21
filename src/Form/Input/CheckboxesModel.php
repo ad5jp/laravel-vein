@@ -49,7 +49,7 @@ class CheckboxesModel extends FormControl implements Form
         [$relation_name, $saving_field] = $this->parseRelationKey($values, $this->key);
 
         $value = $values->$relation_name->map(fn (Model $related) => $related->$saving_field)->all() ?: $this->default;
-        $value = old($this->key, $value);
+        $value = old($this->scopedKey(), $value);
         $value = array_map($this->regulateValue(...), $value);
 
         $html = '';

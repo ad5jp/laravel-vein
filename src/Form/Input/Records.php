@@ -84,8 +84,8 @@ class Records extends FormControl implements DeletesRelated, Form
 
         // リレーションデータ取得
         $records = $values->{$this->key};
-        // old の対応
-        // TODO Record のプロパティに親と同じプロパティ名があれば、親の old に上書きされる不具合がある
+        // old の対応。ここで作り直すのは行の数と並び。各欄の値は、欄が自分の行の old を引く
+        // （FormControl::scopedKey()）
         if ($old = old($this->key)) {
             $records = collect();
             foreach ($old as $row) {
