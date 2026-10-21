@@ -13,9 +13,9 @@ use Illuminate\Database\Eloquent\Model;
 abstract class FormControl implements ScopesErrorKeys
 {
     /**
-     * エラーを引くときのキーの接頭辞。
+     * エラーと old を引くときのキーの接頭辞。
      *
-     * 子レコードの中では、検証のキーが `images.0.caption` のように親と添字を含む。
+     * 子レコードの中では、検証のキーも old のキーも `images.0.caption` のように親と添字を含む。
      * 描画の時点では自分が何行目かを知らないため、Records が行ごとに教える。
      */
     protected ?string $error_key_prefix = null;
@@ -379,9 +379,7 @@ abstract class FormControl implements ScopesErrorKeys
             return null;
         }
 
-        $key = $this->error_key_prefix === null
-            ? $this->key
-            : $this->error_key_prefix.'.'.$this->key;
+        $key = $this->scopedKey();
 
         $bag = $errors->getBag('default');
 
@@ -400,10 +398,23 @@ abstract class FormControl implements ScopesErrorKeys
         return $this;
     }
 
+    /**
+     * 行の添字まで含めたキー（`images.0.file`）。子レコードの外では key のまま。
+     *
+     * name の書き換え（Records::wrapKeys()）は描画のあとなので、old() は必ずこちらで引く。
+     * key のまま引くと、ほかの行や親の同名の欄の値を拾う。
+     */
+    protected function scopedKey(): string
+    {
+        return $this->error_key_prefix === null
+            ? $this->key
+            : $this->error_key_prefix.'.'.$this->key;
+    }
+
     abstract public function renderInline(Model $values): string;
 
     protected function getValue(Model $values): mixed
     {
-        return old($this->key, $values->{$this->key}) ?? $this->default;
+        return old($this->scopedKey(), $values->{$this->key}) ?? $this->default;
     }
 }

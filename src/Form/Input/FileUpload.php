@@ -83,7 +83,7 @@ class FileUpload extends FormControl implements DeletesRelated, Form
         $preview_html = '';
 
         $file = $values->{$this->key};
-        $old = old($this->key);
+        $old = old($this->scopedKey());
 
         if ($old) {
             if (str_starts_with($old, '{"')) {
